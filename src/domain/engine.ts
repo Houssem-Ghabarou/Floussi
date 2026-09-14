@@ -22,6 +22,10 @@ export interface FinancialInput {
   minimumBalance: Minor;
   /** Discretionary spending per tracked day (positive minor units), including today. */
   dailySpending: Record<LocalDate, Minor>;
+  /** Net balance corrections recorded during the last week (negative = spending that went untracked). */
+  recentBalanceCorrections: Minor;
+  /** Income recorded after the first of those corrections: new money that can make up for the drop. */
+  incomeSinceCorrections: Minor;
   /** First day whose spending is fully tracked (later of cycle start and opening date). */
   trackingStartDate: LocalDate;
   /** Expected routine spending per weekday, index 0 = Sunday. */
@@ -34,6 +38,7 @@ export type StatusReason =
   | 'protected_exceeds_balance'
   | 'no_flexible_money'
   | 'dipping_into_protected'
+  | 'untracked_spending'
   | 'pace_unsustainable'
   | 'pace_above_safe'
   | 'over_today'
@@ -72,6 +77,10 @@ export interface FinancialStatus {
   paceDays: number;
   /** Flexible money left at the income date if the current pace continues. */
   projectedEndFlexible: Minor | null;
+  /** Untracked spending found over the last week. */
+  recentUntrackedSpending: Minor;
+  /** What today's safe pace would be without that untracked spending. */
+  paceWithoutUntracked: Minor;
   riskLevel: RiskLevel;
   reason: StatusReason;
 }
@@ -82,6 +91,10 @@ export const THRESHOLDS = {
   comfortableBelow: 0.7,
   watchAbove: 1.05,
   atRiskAbove: 1.25,
+  /** Untracked spending that removes more than 10% of the daily pace is worth a warning… */
+  untrackedWatchBelow: 0.9,
+  /** …and more than 35% puts the plan at risk. */
+  untrackedAtRiskBelow: 0.65,
 } as const;
 
 function sum(values: number[]): number {
@@ -130,14 +143,25 @@ export function calculateFinancialStatus(input: FinancialInput): FinancialStatus
   const yesterday = addDays(today, -1);
   const spentYesterday = yesterday >= input.trackingStartDate ? (input.dailySpending[yesterday] ?? null) : null;
 
+  // Untracked spending found this week, compared with the pace you'd have without it. Money added after it
+  // was found is left out of that reference: it's new money that can make up for the drop, not hide it.
+  const recentUntrackedSpending = Math.max(0, -input.recentBalanceCorrections);
+  const paceWithoutUntracked = Math.floor(
+    Math.max(0, flexibleStartOfDay - input.incomeSinceCorrections + recentUntrackedSpending) / daysRemaining,
+  );
+
   const { riskLevel, reason } = assessRisk({
     flexibleNow,
     flexibleStartOfDay,
     dailyAllowance,
+    upcomingDailyPace,
+    daysRemaining,
     spentToday,
     spentYesterday,
     currentPace,
     expectedDailyAverage: hasRoutines ? expectedDailyAverage : null,
+    recentUntrackedSpending,
+    paceWithoutUntracked,
   });
 
   return {
@@ -162,6 +186,8 @@ export function calculateFinancialStatus(input: FinancialInput): FinancialStatus
     currentPace,
     paceDays,
     projectedEndFlexible,
+    recentUntrackedSpending,
+    paceWithoutUntracked,
     riskLevel,
     reason,
   };
@@ -171,18 +197,31 @@ interface RiskFactors {
   flexibleNow: Minor;
   flexibleStartOfDay: Minor;
   dailyAllowance: Minor;
+  upcomingDailyPace: Minor;
+  daysRemaining: number;
   spentToday: Minor;
   spentYesterday: Minor | null;
   currentPace: Minor | null;
   expectedDailyAverage: Minor | null;
+  recentUntrackedSpending: Minor;
+  paceWithoutUntracked: Minor;
 }
 
 function assessRisk(f: RiskFactors): { riskLevel: RiskLevel; reason: StatusReason } {
+  // Hard limits first: they don't depend on any spending history.
   if (f.flexibleStartOfDay < 0) return { riskLevel: 'at_risk', reason: 'protected_exceeds_balance' };
   if (f.dailyAllowance === 0) return { riskLevel: 'at_risk', reason: 'no_flexible_money' };
   if (f.flexibleNow < 0) return { riskLevel: 'at_risk', reason: 'dipping_into_protected' };
+  if (f.daysRemaining > 1 && f.upcomingDailyPace === 0) return { riskLevel: 'at_risk', reason: 'no_flexible_money' };
 
   const allowance = f.dailyAllowance;
+
+  if (f.recentUntrackedSpending > 0 && f.paceWithoutUntracked > 0) {
+    const paceKept = allowance / f.paceWithoutUntracked;
+    if (paceKept < THRESHOLDS.untrackedAtRiskBelow) return { riskLevel: 'at_risk', reason: 'untracked_spending' };
+    if (paceKept < THRESHOLDS.untrackedWatchBelow) return { riskLevel: 'watch', reason: 'untracked_spending' };
+  }
+
   if (f.currentPace !== null) {
     if (f.currentPace > allowance * THRESHOLDS.atRiskAbove) {
       return { riskLevel: 'at_risk', reason: 'pace_unsustainable' };

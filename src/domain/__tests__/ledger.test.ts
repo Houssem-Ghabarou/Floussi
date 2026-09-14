@@ -90,6 +90,7 @@ describe('due dates that already passed', () => {
     frequency: 'monthly',
     savingsTarget: 0,
     closedAt: null,
+    startedAt: null,
   };
 
   it('includes this month’s passed due date of a bill added today, instead of assuming it was paid', () => {
@@ -152,6 +153,7 @@ describe('ledger → engine', () => {
         frequency: 'monthly',
         savingsTarget: tnd(100),
         closedAt: null,
+        startedAt: null,
       },
       transactions: [],
       bills: [bill({ name: 'Internet', amount: tnd(50), dueDay: 25 })],
@@ -191,6 +193,7 @@ describe('ledger → engine', () => {
 describe('cycle summary', () => {
   const transactions = [
     tx({ kind: 'expense', amount: tnd(-200), date: '2026-09-05', category: 'food' }),
+    tx({ kind: 'bill_payment', amount: tnd(-700), date: '2026-09-05', billId: 'b1', billDueDate: '2026-09-05' }),
     tx({ kind: 'expense', amount: tnd(-12), date: '2026-09-14', category: 'food' }),
     tx({ kind: 'expense', amount: tnd(-4), date: '2026-09-14', category: 'coffee' }),
     tx({ kind: 'expense', amount: tnd(-130), date: '2026-09-15', category: 'food' }),
@@ -205,19 +208,81 @@ describe('cycle summary', () => {
     settings,
     transactions,
     routines: [workday],
-    startDate: '2026-09-01',
-    endDateExclusive: '2026-09-23',
+    start: { date: '2026-09-14', at: null },
+    end: { date: '2026-09-23', at: null },
   });
+
+  const addsUp = (s: typeof summary) =>
+    s.startingBalance + s.income - s.spending - s.billsPaid - s.savedMoved + s.adjustments === s.endingBalance;
 
   it('reconciles starting and ending balance', () => {
     expect(summary.startingBalance).toBe(tnd(900));
     expect(summary.endingBalance).toBe(tnd(900 - 12 - 4 - 130 + 300 - 50 - 100 - 35));
     expect(summary.income).toBe(tnd(300));
     expect(summary.spending).toBe(tnd(146));
-    expect(summary.historicalSpending).toBe(tnd(200));
     expect(summary.billsPaid).toBe(tnd(50));
     expect(summary.savedMoved).toBe(tnd(100));
     expect(summary.adjustments).toBe(tnd(-35));
+    expect(addsUp(summary)).toBe(true);
+  });
+
+  it('shows history from before tracking in the first cycle only, outside the balance lines', () => {
+    expect(summary.historicalSpending).toBe(tnd(900));
+    expect(summary.categories.find((c) => c.category.id === 'bills')?.actual).toBe(tnd(750));
+
+    const later = summarizeCycle({
+      settings,
+      transactions,
+      routines: [workday],
+      start: { date: '2026-09-16', at: null },
+      end: { date: '2026-09-23', at: null },
+    });
+    expect(later.historicalSpending).toBe(0);
+    expect(later.startingBalance).toBe(tnd(900 - 12 - 4 - 130));
+    expect(addsUp(later)).toBe(true);
+  });
+
+  it('splits payday between cycles at the moment the income was recorded', () => {
+    const payday = [
+      tx({ kind: 'expense', amount: tnd(-4), date: '2026-09-30', category: 'coffee', createdAt: 1_000 }),
+      tx({ kind: 'income', amount: tnd(2500), date: '2026-09-30', category: 'salary', createdAt: 5_000 }),
+      tx({ kind: 'expense', amount: tnd(-12), date: '2026-09-30', category: 'food', createdAt: 9_000 }),
+    ];
+    const boundary = { date: '2026-09-30', at: 5_000 };
+    const ended = summarizeCycle({
+      settings,
+      transactions: payday,
+      routines: [],
+      start: { date: '2026-09-14', at: null },
+      end: boundary,
+    });
+    const next = summarizeCycle({
+      settings,
+      transactions: payday,
+      routines: [],
+      start: boundary,
+      end: { date: '2026-10-01', at: null },
+    });
+
+    expect(ended.income).toBe(0);
+    expect(ended.spending).toBe(tnd(4));
+    expect(ended.endingBalance).toBe(tnd(896));
+    expect(next.startingBalance).toBe(ended.endingBalance);
+    expect(next.income).toBe(tnd(2500));
+    expect(next.endingBalance).toBe(tnd(896 + 2500 - 12));
+    expect(addsUp(ended) && addsUp(next)).toBe(true);
+  });
+
+  it('counts money added today when summarizing everything so far', () => {
+    const result = summarizeCycle({
+      settings,
+      transactions: [tx({ kind: 'income', amount: tnd(300), date: '2026-09-14', category: 'freelance', createdAt: 1 })],
+      routines: [],
+      start: { date: '2026-09-14', at: null },
+      end: { date: '2026-09-15', at: null },
+    });
+    expect(result.income).toBe(tnd(300));
+    expect(result.endingBalance).toBe(tnd(1200));
   });
 
   it('compares actual spending with routines on tracked days only', () => {

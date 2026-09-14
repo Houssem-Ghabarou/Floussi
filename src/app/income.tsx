@@ -82,7 +82,7 @@ export default function IncomeScreen() {
     if (saved > 0) updateCycle({ savingsTarget: previousTarget + saved });
 
     if (startNewCycle) {
-      router.replace('/cycle-end');
+      router.replace({ pathname: '/cycle-end', params: { incomeId: transaction.id } });
       return;
     }
 

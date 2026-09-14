@@ -25,6 +25,11 @@ export type IncomeFrequency = 'monthly' | 'biweekly' | 'weekly' | 'irregular';
 export interface Cycle {
   id: string;
   startDate: LocalDate;
+  /**
+   * When the cycle began (the income that started it was recorded). Transactions on `startDate`
+   * recorded before this moment belong to the previous cycle. Null: the whole start day belongs here.
+   */
+  startedAt: number | null;
   nextIncomeDate: LocalDate;
   expectedIncome: Minor | null;
   incomeLabel: string;

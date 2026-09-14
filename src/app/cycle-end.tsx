@@ -1,9 +1,9 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { suggestNextIncomeDate } from '@/domain/cycle';
-import { addDays, formatShortDate, type LocalDate } from '@/domain/dates';
 import { billOccurrences } from '@/domain/bills';
+import { cycleStart, suggestNextIncomeDate, type CycleBoundary } from '@/domain/cycle';
+import { addDays, formatShortDate, type LocalDate } from '@/domain/dates';
 import { summarizeCycle } from '@/domain/insights';
 import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
 import { useApp } from '@/store/app-store';
@@ -13,17 +13,18 @@ import {
   AppText,
   Button,
   Card,
-  Divider,
   Field,
   haptics,
   MoneyLine,
   SectionTitle,
   SheetScreen,
 } from '@/ui/components';
+import { CycleMoneyCard } from '@/ui/cycle-money-card';
 import { DateChoice } from '@/ui/date-picker';
 import { showToast } from '@/ui/toast';
 
 export default function CycleEndScreen() {
+  const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
   const router = useRouter();
   const financial = useFinancial();
   const startNextCycle = useApp((state) => state.startNextCycle);
@@ -44,25 +45,35 @@ export default function CycleEndScreen() {
   const { currency, data } = financial;
   const m = (value: Minor) => formatMoney(value, currency, { whole: true });
 
+  // The income that ends this cycle starts the next one; everything recorded before it stays here.
+  const income = data.transactions.find((t) => t.id === incomeId && t.kind === 'income');
+  const end: CycleBoundary = income
+    ? { date: income.date, at: income.createdAt }
+    : { date: addDays(today, 1), at: null };
+  const lastDay = income ? income.date : today;
+
   const summary = summarizeCycle({
     settings: data.settings,
     transactions: data.transactions,
     routines: data.routines,
-    startDate: cycle.startDate,
-    endDateExclusive: today,
+    start: cycleStart(cycle),
+    end,
   });
-  const unpaid = billOccurrences(data.bills, data.transactions, cycle.startDate, addDays(today, -1)).filter(
+  const unpaid = billOccurrences(data.bills, data.transactions, cycle.startDate, addDays(lastDay, -1)).filter(
     (occurrence) => !occurrence.paid && occurrence.bill.recurring,
   );
 
   const start = () => {
-    startNextCycle({
-      nextIncomeDate,
-      expectedIncome: parseAmount(expectedText, currency),
-      incomeLabel: cycle.incomeLabel,
-      frequency: cycle.frequency,
-      savingsTarget: parseAmount(savingsText, currency) ?? 0,
-    });
+    startNextCycle(
+      {
+        nextIncomeDate,
+        expectedIncome: parseAmount(expectedText, currency),
+        incomeLabel: cycle.incomeLabel,
+        frequency: cycle.frequency,
+        savingsTarget: parseAmount(savingsText, currency) ?? 0,
+      },
+      income ? { date: income.date, at: income.createdAt } : { date: today, at: Date.now() },
+    );
     haptics.success();
     if (router.canGoBack()) router.back();
     else router.replace('/');
@@ -74,17 +85,17 @@ export default function CycleEndScreen() {
       title="Your cycle"
       footer={<Button label="Start next cycle" onPress={start} disabled={nextIncomeDate <= today} />}>
       <AppText variant="title">
-        {formatShortDate(cycle.startDate)} – {formatShortDate(addDays(today, -1))}
+        {lastDay > cycle.startDate
+          ? `${formatShortDate(cycle.startDate)} – ${formatShortDate(lastDay)}`
+          : formatShortDate(cycle.startDate)}
       </AppText>
 
-      <Card>
-        <MoneyLine label="Started with" value={m(summary.startingBalance)} />
-        <MoneyLine label="Income" value={m(summary.income)} />
-        <MoneyLine label="Spent" value={m(summary.spending + summary.billsPaid)} />
-        <MoneyLine label="Moved to savings" value={m(summary.savedMoved)} />
-        <Divider />
-        <MoneyLine label="Finished with" value={m(summary.endingBalance)} strong />
-      </Card>
+      <CycleMoneyCard summary={summary} currency={currency} endLabel="Finished with" />
+      <AppText variant="caption" tone="muted">
+        {income
+          ? `Everything you recorded before your ${cycle.incomeLabel.toLowerCase()} is counted here. The ${formatMoney(income.amount, currency)} you just added starts your new cycle.`
+          : 'Everything you recorded until now is counted here.'}
+      </AppText>
 
       {summary.expectedDailyAverage !== null ? (
         <>

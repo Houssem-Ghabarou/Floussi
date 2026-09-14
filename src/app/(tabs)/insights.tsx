@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { cycleStart } from '@/domain/cycle';
 import { addDays, daysBetween, formatShortDate } from '@/domain/dates';
 import { summarizeCycle } from '@/domain/insights';
 import { formatMoney, type Minor } from '@/domain/money';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import { AppText, Card, Divider, ListRow, MoneyLine, ProgressBar, Screen, SectionTitle } from '@/ui/components';
+import { CycleMoneyCard } from '@/ui/cycle-money-card';
 import { Space, usePalette } from '@/ui/theme';
 
 export default function InsightsScreen() {
@@ -25,8 +27,8 @@ export default function InsightsScreen() {
     settings,
     transactions,
     routines,
-    startDate: cycle.startDate,
-    endDateExclusive: addDays(today, 1),
+    start: cycleStart(cycle),
+    end: { date: addDays(today, 1), at: null },
   });
   const totalOut = summary.spending + summary.historicalSpending + summary.billsPaid;
   const cycleLength = Math.max(1, daysBetween(cycle.startDate, cycle.nextIncomeDate));
@@ -43,8 +45,11 @@ export default function InsightsScreen() {
 
   const comparisons = summary.categories.filter((insight) => insight.expected > 0);
   const closedCycles = [...cycles]
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))
-    .map((item, index, sorted) => ({ cycle: item, end: sorted[index + 1]?.startDate ?? addDays(today, 1) }))
+    .sort((a, b) => a.startDate.localeCompare(b.startDate) || (a.startedAt ?? 0) - (b.startedAt ?? 0))
+    .map((item, index, sorted) => ({
+      cycle: item,
+      end: sorted[index + 1] ? cycleStart(sorted[index + 1]) : { date: addDays(today, 1), at: null },
+    }))
     .filter(({ cycle: item }) => item.closedAt !== null)
     .reverse();
 
@@ -64,24 +69,7 @@ export default function InsightsScreen() {
       </Card>
 
       <SectionTitle title="Your money this cycle" />
-      <Card>
-        <MoneyLine label="Started with" value={m(summary.startingBalance)} />
-        {summary.income > 0 ? <MoneyLine label="Income" value={mSigned(summary.income)} color={palette.income} /> : null}
-        <MoneyLine label="Spending" value={m(-summary.spending)} />
-        {summary.billsPaid > 0 ? <MoneyLine label="Bills paid" value={m(-summary.billsPaid)} /> : null}
-        {summary.savedMoved > 0 ? <MoneyLine label="Moved to savings" value={m(-summary.savedMoved)} /> : null}
-        {summary.adjustments !== 0 ? (
-          <MoneyLine label="Balance corrections" value={mSigned(summary.adjustments)} />
-        ) : null}
-        <Divider />
-        <MoneyLine label="Now" value={m(summary.endingBalance)} strong />
-        {summary.historicalSpending > 0 ? (
-          <AppText variant="caption" tone="muted">
-            Plus {m(summary.historicalSpending)} spent before you started tracking (already reflected in your starting
-            balance).
-          </AppText>
-        ) : null}
-      </Card>
+      <CycleMoneyCard summary={summary} currency={currency} endLabel="Now" />
 
       <SectionTitle title="Where your money went" />
       <Card>
@@ -157,14 +145,19 @@ export default function InsightsScreen() {
                 settings,
                 transactions,
                 routines,
-                startDate: item.startDate,
-                endDateExclusive: end,
+                start: cycleStart(item),
+                end,
               });
+              const lastDay = end.at === null ? addDays(end.date, -1) : end.date;
               return (
                 <ListRow
                   key={item.id}
                   emoji="📅"
-                  title={`${formatShortDate(item.startDate)} – ${formatShortDate(addDays(end, -1))}`}
+                  title={
+                    lastDay > item.startDate
+                      ? `${formatShortDate(item.startDate)} – ${formatShortDate(lastDay)}`
+                      : formatShortDate(item.startDate)
+                  }
                   subtitle={`Spent ${m(past.spending + past.billsPaid)} · income ${m(past.income)}`}
                   value={m(past.endingBalance)}
                 />

@@ -51,6 +51,7 @@ const MIGRATIONS = [
      position INTEGER NOT NULL DEFAULT 0
    );`,
   'ALTER TABLE bills ADD COLUMN created_on TEXT;',
+  'ALTER TABLE cycles ADD COLUMN started_at INTEGER;',
 ];
 
 let database: SQLiteDatabase | null = null;
@@ -86,6 +87,7 @@ interface CycleRow {
   frequency: string;
   savings_target: number;
   closed_at: number | null;
+  started_at: number | null;
 }
 
 interface TransactionRow {
@@ -139,6 +141,7 @@ export const repository = {
       .map<Cycle>((row) => ({
         id: row.id,
         startDate: row.start_date,
+        startedAt: row.started_at,
         nextIncomeDate: row.next_income_date,
         expectedIncome: row.expected_income,
         incomeLabel: row.income_label,
@@ -206,16 +209,22 @@ export const repository = {
   },
 
   upsertCycle(cycle: Cycle) {
-    db().runSync('INSERT OR REPLACE INTO cycles VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-      cycle.id,
-      cycle.startDate,
-      cycle.nextIncomeDate,
-      cycle.expectedIncome,
-      cycle.incomeLabel,
-      cycle.frequency,
-      cycle.savingsTarget,
-      cycle.closedAt,
-    ]);
+    db().runSync(
+      `INSERT OR REPLACE INTO cycles
+         (id, start_date, next_income_date, expected_income, income_label, frequency, savings_target, closed_at, started_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        cycle.id,
+        cycle.startDate,
+        cycle.nextIncomeDate,
+        cycle.expectedIncome,
+        cycle.incomeLabel,
+        cycle.frequency,
+        cycle.savingsTarget,
+        cycle.closedAt,
+        cycle.startedAt,
+      ],
+    );
   },
 
   upsertTransaction(t: Transaction) {

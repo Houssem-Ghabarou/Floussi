@@ -1,5 +1,23 @@
 import { addDays, addMonths, type LocalDate } from './dates';
-import type { IncomeFrequency } from './types';
+import type { Cycle, IncomeFrequency, Transaction } from './types';
+
+/** The moment that separates two cycles. */
+export interface CycleBoundary {
+  date: LocalDate;
+  /** On `date`, transactions recorded before this timestamp fall before the boundary. Null: none do. */
+  at: number | null;
+}
+
+export function cycleStart(cycle: Cycle): CycleBoundary {
+  return { date: cycle.startDate, at: cycle.startedAt };
+}
+
+export function isBeforeBoundary(transaction: Pick<Transaction, 'date' | 'createdAt'>, boundary: CycleBoundary): boolean {
+  return (
+    transaction.date < boundary.date ||
+    (transaction.date === boundary.date && boundary.at !== null && transaction.createdAt < boundary.at)
+  );
+}
 
 export const FREQUENCY_LABELS: Record<IncomeFrequency, string> = {
   monthly: 'Every month',

@@ -19,6 +19,8 @@ function midMonthInput(overrides: Partial<FinancialInput> = {}): FinancialInput 
     savingsReserve: tnd(100),
     minimumBalance: tnd(100),
     dailySpending: {},
+    recentBalanceCorrections: 0,
+    incomeSinceCorrections: 0,
     trackingStartDate: '2026-09-14',
     routineByWeekday: [0, 0, 0, 0, 0, 0, 0],
     ...overrides,

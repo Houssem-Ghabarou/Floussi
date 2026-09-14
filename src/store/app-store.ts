@@ -49,7 +49,8 @@ interface AppState {
   updateSettings(patch: Partial<Settings>): void;
   updateCycle(patch: Partial<Cycle>): void;
   reconcileBalance(actualBalance: Minor): Transaction | null;
-  startNextCycle(plan: CyclePlan): void;
+  /** `start` is when the income that ends the current cycle was recorded. */
+  startNextCycle(plan: CyclePlan, start: { date: LocalDate; at: number }): void;
   resetAll(): void;
 }
 
@@ -111,6 +112,7 @@ export const useApp = create<AppState>()((set, get) => {
       const cycle: Cycle = {
         id: newId(),
         startDate: today,
+        startedAt: null,
         nextIncomeDate: plan.nextIncomeDate,
         expectedIncome: plan.expectedIncome,
         incomeLabel: plan.incomeLabel,
@@ -253,10 +255,10 @@ export const useApp = create<AppState>()((set, get) => {
       return get().addTransaction({ kind: 'adjustment', amount: difference, date: today });
     },
 
-    startNextCycle(plan) {
+    startNextCycle(plan, start) {
       const current = currentCycle(get().cycles);
       const closed = current ? { ...current, closedAt: Date.now() } : null;
-      const next: Cycle = { ...plan, id: newId(), startDate: get().today, closedAt: null };
+      const next: Cycle = { ...plan, id: newId(), startDate: start.date, startedAt: start.at, closedAt: null };
       repository.transaction(() => {
         if (closed) repository.upsertCycle(closed);
         repository.upsertCycle(next);

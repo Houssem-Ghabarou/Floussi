@@ -1,7 +1,8 @@
 /** Derives engine input from stored records. */
 import { billOccurrences, type BillOccurrence } from './bills';
-import { maxDate, type LocalDate } from './dates';
-import type { FinancialInput } from './engine';
+import { cycleStart, isBeforeBoundary } from './cycle';
+import { addDays, maxDate, type LocalDate } from './dates';
+import { PACE_WINDOW_DAYS, type FinancialInput } from './engine';
 import type { Minor } from './money';
 import { routineByWeekday } from './routines';
 import type { AppData, Cycle, Settings, Transaction } from './types';
@@ -19,8 +20,9 @@ export function computeBalance(settings: Settings, transactions: Transaction[]):
 }
 
 export function savingsMovedInCycle(cycle: Cycle, transactions: Transaction[]): Minor {
+  const start = cycleStart(cycle);
   return transactions
-    .filter((t) => t.kind === 'savings_transfer' && t.date >= cycle.startDate)
+    .filter((t) => t.kind === 'savings_transfer' && !isBeforeBoundary(t, start))
     .reduce((total, t) => total - t.amount, 0);
 }
 
@@ -51,6 +53,17 @@ export function buildFinancialInput(data: AppData, today: LocalDate): FinancialI
     dailySpending[t.date] = (dailySpending[t.date] ?? 0) - t.amount;
   }
 
+  // Balance corrections from the last week, netted so a correction that undoes another cancels it out.
+  const correctionsFrom = maxDate(addDays(today, -(PACE_WINDOW_DAYS - 1)), trackingStartDate);
+  const recentCorrections = transactions.filter(
+    (t) => t.kind === 'adjustment' && t.countsToBalance && t.date >= correctionsFrom && t.date <= today,
+  );
+  // Income recorded after the first untracked loss (Infinity when there is none, so nothing matches).
+  const firstLossAt = Math.min(...recentCorrections.filter((t) => t.amount < 0).map((t) => t.createdAt));
+  const incomeSinceCorrections = transactions
+    .filter((t) => t.kind === 'income' && t.countsToBalance && t.createdAt > firstLossAt)
+    .reduce((total, t) => total + t.amount, 0);
+
   return {
     today,
     balance: computeBalance(settings, transactions),
@@ -65,6 +78,8 @@ export function buildFinancialInput(data: AppData, today: LocalDate): FinancialI
     savingsReserve: savingsReserve(cycle, transactions),
     minimumBalance: settings.minimumBalance,
     dailySpending,
+    recentBalanceCorrections: recentCorrections.reduce((total, t) => total + t.amount, 0),
+    incomeSinceCorrections,
     trackingStartDate,
     routineByWeekday: routineByWeekday(data.routines),
   };

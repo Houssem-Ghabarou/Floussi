@@ -138,6 +138,8 @@ export default function OnboardingScreen() {
     savingsReserve: savings,
     minimumBalance: minimum,
     dailySpending: {},
+    recentBalanceCorrections: 0,
+    incomeSinceCorrections: 0,
     trackingStartDate: today,
     routineByWeekday: [0, 0, 0, 0, 0, 0, 0],
   });

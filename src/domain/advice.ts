@@ -43,6 +43,12 @@ export function buildAdvice(s: FinancialStatus, currency: CurrencyInfo): Advice 
         detail: `Today's spending went ${m(-s.flexibleNow)} into the money set aside for bills, savings and your minimum balance.`,
         suggestion: 'Holding off on extra spending until your next income keeps your bills covered.',
       };
+    case 'untracked_spending':
+      return {
+        title: 'Your balance was lower than tracked',
+        detail: `About ${m(s.recentUntrackedSpending)} went untracked, so your safe pace dropped from ${m(s.paceWithoutUntracked)} to ${m(s.dailyAllowance)}/day.`,
+        suggestion: `Try keeping the next few days around ${m(s.upcomingDailyPace)}. Logging expenses as they happen keeps your plan accurate.`,
+      };
     case 'pace_unsustainable':
       return {
         title: 'You may run short',
