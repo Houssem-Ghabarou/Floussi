@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { formatRelativeDay, type LocalDate } from '@/domain/dates';
 import { formatMoney } from '@/domain/money';
 import type { Transaction } from '@/domain/types';
 import { useFinancial } from '@/store/use-financial';
-import { AppText, Card, Screen, Segmented } from '@/ui/components';
+import { AppText, Card, Divider, Segmented, SheetScreen } from '@/ui/components';
 import { Space } from '@/ui/theme';
 import { TransactionRow } from '@/ui/transaction-row';
 
@@ -34,8 +34,7 @@ export default function ActivityScreen() {
   }
 
   return (
-    <Screen>
-      <AppText variant="title">Activity</AppText>
+    <SheetScreen title="All activity" closeLabel="Close">
       <Segmented
         options={[
           { value: 'all', label: 'All' },
@@ -48,7 +47,7 @@ export default function ActivityScreen() {
 
       {groups.length === 0 ? (
         <Card>
-          <AppText tone="secondary">
+          <AppText variant="small" tone="secondary">
             Nothing here yet. Your expenses, income and bill payments will show up here.
           </AppText>
         </Card>
@@ -65,24 +64,23 @@ export default function ActivityScreen() {
                 </AppText>
               ) : null}
             </View>
-            <Card>
-              {group.items.map((transaction) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                  bills={data.bills}
-                  currency={currency}
-                />
+            <Card style={styles.listCard}>
+              {group.items.map((transaction, index) => (
+                <Fragment key={transaction.id}>
+                  {index > 0 ? <Divider /> : null}
+                  <TransactionRow transaction={transaction} bills={data.bills} currency={currency} />
+                </Fragment>
               ))}
             </Card>
           </View>
         ))
       )}
-    </Screen>
+    </SheetScreen>
   );
 }
 
 const styles = StyleSheet.create({
   group: { gap: Space.sm },
   groupHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  listCard: { gap: Space.sm, paddingVertical: Space.md },
 });

@@ -11,6 +11,7 @@ const settings: Settings = {
   openingBalance: tnd(900),
   openingDate: '2026-09-14',
   minimumBalance: tnd(100),
+  dailyNeed: null,
   unexpectedIncomeSavePercent: 50,
   onboarded: true,
 };

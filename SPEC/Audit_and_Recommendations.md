@@ -1,4 +1,4 @@
-# Floussi — Spec Audit, Enrichment & Recommendations
+# Flousey — Spec Audit, Enrichment & Recommendations
 
 > Companion to `Project_Spec.md`. Where the two disagree, this document records the decision taken
 > for the build and why. Section numbers like §26 refer to `Project_Spec.md`.
@@ -153,15 +153,29 @@ promise). It can be *displayed*: "+300 expected Sep 20 — your pace rises to ~5
 
 ### 2.9 Status thresholds were undefined
 
-The spec names four statuses but gives no thresholds, and a single noisy day would flip the status. The engine's
-definitions (all constants live in `src/domain/engine.ts`):
+The spec names four statuses but gives no thresholds. Comparing spending pace with the safe pace alone isn't
+enough: a pace of 3 TND/day would be "on track" as long as you spend less than 3. The color therefore also compares
+the safe pace with **what a normal day costs**: your routines' average when you have routines, otherwise your own
+figure (Plan → Protections), defaulting to 15 TND.
 
-| Status | Condition (evaluated in this order) |
-|---|---|
-| 🔴 at risk | protected > balance · no flexible money · today dipped into protected money · recent pace > **1.25×** safe pace |
-| 🟡 watch | recent pace > **1.05×** safe · spent more than today's allowance · (no pace yet) yesterday over pace · normal routine > 1.05× safe |
-| 🟢 comfortable | recent pace < **0.7×** safe · (no pace yet) normal routine < 0.7× safe |
-| 🟢 on track | otherwise |
+Rules are checked in this order; the first match wins (all constants live in `src/domain/engine.ts`):
+
+| Color | Label | Rule |
+|---|---|---|
+| 🔴 | Plan needs adjusting | protected money > balance |
+| 🔴 | Nothing left to spend | no flexible money today or for the coming days |
+| 🔴 | Using protected money | today's spending went into protected money |
+| 🔴 | Balance lower than tracked | untracked spending removed more than **35%** of the daily pace |
+| 🔴 | May run short | recent pace > **125%** of the safe pace |
+| 🔴 | Very tight | safe pace < **half a normal day** |
+| 🟡 | Balance lower than tracked | untracked spending removed **10–35%** of the daily pace |
+| 🟡 | Spending faster | recent pace > **105%** of the safe pace |
+| 🟡 | Over today | spent more than today's amount |
+| 🟡 | Almost used today | less than **20%** of today's amount left *and* less than a normal day |
+| 🟡 | Over yesterday | (no pace yet) yesterday went over the pace |
+| 🟡 | Tight | safe pace < a normal day |
+| 🟢 | On track | safe pace ≥ a normal day |
+| 🟢 | Breathing room | safe pace ≥ **1.5×** a normal day |
 
 **Recent pace** = the average of discretionary spending over the last **7 full tracked days**, only once at least
 **3** days exist. A mid-month user has no history, so the app doesn't pretend to know their pace.

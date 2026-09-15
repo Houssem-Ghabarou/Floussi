@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { newId } from '@/data/repository';
 import { EXPENSE_CATEGORIES } from '@/domain/categories';
@@ -20,6 +20,7 @@ import {
   SheetScreen,
   TextField,
 } from '@/ui/components';
+import { confirmDestructive, useUnsavedChanges } from '@/ui/dialog-store';
 import { Space } from '@/ui/theme';
 import { showToast } from '@/ui/toast';
 
@@ -67,6 +68,8 @@ export default function RoutineScreen() {
       : [],
   );
 
+  const hasChanges = useUnsavedChanges({ name, emoji, weekdays, items });
+
   if (!financial) return null;
   const { currency, data } = financial;
 
@@ -104,21 +107,19 @@ export default function RoutineScreen() {
 
   const remove = () => {
     if (!existing) return;
-    Alert.alert(`Delete ${existing.name}?`, "Your recorded expenses aren't affected.", [
-      { text: 'Keep', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteRoutine(existing.id);
-          router.back();
-        },
+    confirmDestructive({
+      title: `Delete ${existing.name}?`,
+      message: "Its days go back to no routine. Your recorded expenses aren't affected.",
+      onConfirm: () => {
+        deleteRoutine(existing.id);
+        router.back();
       },
-    ]);
+    });
   };
 
   return (
     <SheetScreen
+      confirmClose={hasChanges}
       title={existing ? 'Edit routine' : 'New routine'}
       footer={<Button label="Save routine" onPress={save} disabled={!valid} />}>
       <AppText tone="secondary">

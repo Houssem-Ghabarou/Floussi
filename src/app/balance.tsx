@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { STATUS_LABELS } from '@/domain/advice';
 import { calculateFinancialStatus } from '@/domain/engine';
 import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
 import { useApp } from '@/store/app-store';
@@ -59,7 +60,7 @@ export default function BalanceScreen() {
       <AmountField value={amountText} onChangeText={setAmountText} currency={currency} autoFocus />
 
       <Card>
-        <MoneyLine label="Floussi thought you had" value={formatMoney(status.balance, currency)} />
+        <MoneyLine label="Flousey thought you had" value={formatMoney(status.balance, currency)} />
         {difference < 0 ? (
           <AppText tone="secondary">
             {formatMoney(-difference, currency)} will be recorded as untracked spending.
@@ -74,7 +75,7 @@ export default function BalanceScreen() {
         {preview ? (
           <>
             <MoneyLine label="Safe pace" value={`${pace(status.dailyAllowance)} → ${pace(preview.dailyAllowance)}`} strong />
-            <StatusPill level={preview.riskLevel} />
+            <StatusPill level={preview.riskLevel} label={STATUS_LABELS[preview.reason]} />
           </>
         ) : null}
       </Card>

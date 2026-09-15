@@ -75,4 +75,12 @@ describe('money', () => {
     expect(amountToInput(-12_500, TND)).toBe('12.5');
     expect(amountToInput(1_240_000, TND)).toBe('1240');
   });
+
+  it('supports the British pound', () => {
+    const GBP = getCurrency('GBP');
+    expect(GBP.code).toBe('GBP');
+    expect(parseAmount('12.50', GBP)).toBe(1_250);
+    expect(formatMoney(1_250, GBP)).toBe('12.5 GBP');
+    expect(sanitizeAmountInput('3.456', GBP)).toBe('3.45');
+  });
 });

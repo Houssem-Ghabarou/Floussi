@@ -115,6 +115,19 @@ export function formatLongDate(date: LocalDate): string {
   return `${WEEKDAY_NAMES[weekday(date)]}, ${MONTH_NAMES[month - 1]} ${day}`;
 }
 
+/** 'September 2026' */
+export function formatMonthYear(date: LocalDate): string {
+  const [year, month] = splitDate(date);
+  return `${MONTH_NAMES[month - 1]} ${year}`;
+}
+
+/** '1:15 PM' in local time. */
+export function formatTime(timestamp: number): string {
+  const d = new Date(timestamp);
+  const hours = d.getHours();
+  return `${hours % 12 || 12}:${pad(d.getMinutes())} ${hours < 12 ? 'AM' : 'PM'}`;
+}
+
 /** 'Today', 'Yesterday', 'Tomorrow' or 'Mon, Sep 14' */
 export function formatRelativeDay(date: LocalDate, today: LocalDate): string {
   const diff = daysBetween(today, date);

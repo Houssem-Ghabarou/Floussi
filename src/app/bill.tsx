@@ -1,6 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert } from 'react-native';
 
 import { newId } from '@/data/repository';
 import { billOccurrences, nextDueAfter } from '@/domain/bills';
@@ -25,6 +24,7 @@ import {
   TextField,
 } from '@/ui/components';
 import { DateChoice } from '@/ui/date-picker';
+import { confirmDestructive, useUnsavedChanges } from '@/ui/dialog-store';
 import { usePalette } from '@/ui/theme';
 import { showToast } from '@/ui/toast';
 
@@ -51,6 +51,8 @@ export default function BillScreen() {
   const [dueDayText, setDueDayText] = useState(existing?.dueDay ? String(existing.dueDay) : '');
   const [dueDate, setDueDate] = useState<LocalDate | null>(existing?.dueDate ?? null);
   const [paidAnswer, setPaidAnswer] = useState<{ dueDate: LocalDate; paid: boolean } | null>(null);
+
+  const hasChanges = useUnsavedChanges({ name, emoji, amountText, kind, dueDayText, dueDate, paidAnswer });
 
   if (!financial) return null;
   const { currency, data } = financial;
@@ -129,21 +131,20 @@ export default function BillScreen() {
 
   const remove = () => {
     if (!existing) return;
-    Alert.alert(`Remove ${existing.name}?`, 'Past payments stay in your history.', [
-      { text: 'Keep', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => {
-          deleteBill(existing.id);
-          router.back();
-        },
+    confirmDestructive({
+      title: `Remove ${existing.name}?`,
+      message: 'It stops being protected. Payments you already recorded stay in your history.',
+      confirmLabel: 'Remove',
+      onConfirm: () => {
+        deleteBill(existing.id);
+        router.back();
       },
-    ]);
+    });
   };
 
   return (
     <SheetScreen
+      confirmClose={hasChanges}
       title={existing ? 'Edit bill' : 'Add bill'}
       footer={<Button label={existing ? 'Save changes' : 'Add bill'} onPress={save} disabled={!valid} />}>
       {unpaid ? (

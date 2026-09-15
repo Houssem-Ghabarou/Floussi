@@ -1,7 +1,8 @@
+import { STATUS_LABELS } from '@/domain/advice';
 import { formatShortDate } from '@/domain/dates';
 import { formatMoney, type Minor } from '@/domain/money';
 import { useFinancial } from '@/store/use-financial';
-import { AppText, Card, Divider, MoneyLine, SectionTitle, SheetScreen } from '@/ui/components';
+import { AppText, Card, Divider, MoneyLine, SectionTitle, SheetScreen, StatusPill } from '@/ui/components';
 
 export default function BreakdownScreen() {
   const financial = useFinancial();
@@ -42,6 +43,37 @@ export default function BreakdownScreen() {
         />
         <Divider />
         <MoneyLine label="Safe to spend today" value={mWhole(status.dailyAllowance)} strong />
+      </Card>
+
+      <SectionTitle title="Why this color" />
+      <Card>
+        <StatusPill level={status.riskLevel} label={STATUS_LABELS[status.reason]} />
+        <MoneyLine label="Your safe pace" value={`${mWhole(status.dailyAllowance)}/day`} />
+        <MoneyLine
+          label={
+            status.normalDaySource === 'routines'
+              ? 'Normal day (from your routines)'
+              : status.normalDaySource === 'default'
+                ? 'Normal day (default, change it in Protections)'
+                : 'Normal day'
+          }
+          value={`${mWhole(status.normalDay)}/day`}
+        />
+        <Divider />
+        <AppText variant="small" tone="secondary">
+          🟢 Breathing room: your safe pace is at least 1.5× a normal day.
+        </AppText>
+        <AppText variant="small" tone="secondary">
+          🟢 On track: your safe pace covers a normal day.
+        </AppText>
+        <AppText variant="small" tone="secondary">
+          🟡 Tight: your safe pace is under a normal day, today's amount is almost used or passed, or you're spending a bit
+          faster than your pace.
+        </AppText>
+        <AppText variant="small" tone="secondary">
+          🔴 Very tight: your safe pace is under half a normal day, nothing flexible is left, or you're spending much
+          faster than your pace.
+        </AppText>
       </Card>
 
       {status.currentPace !== null ? (

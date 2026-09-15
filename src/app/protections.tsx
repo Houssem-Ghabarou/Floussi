@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { STATUS_LABELS } from '@/domain/advice';
 import { savingsMovedInCycle } from '@/domain/derive';
 import { calculateFinancialStatus } from '@/domain/engine';
-import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
+import { amountToInput, defaultDailyNeed, formatMoney, parseAmount, type Minor } from '@/domain/money';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -17,6 +18,7 @@ import {
   haptics,
   MoneyLine,
   SheetScreen,
+  StatusPill,
 } from '@/ui/components';
 import { showToast } from '@/ui/toast';
 
@@ -40,6 +42,11 @@ export default function ProtectionsScreen() {
   const [minimumText, setMinimumText] = useState(() =>
     financial ? amountToInput(financial.data.settings.minimumBalance, financial.currency) : '',
   );
+  const [dailyNeedText, setDailyNeedText] = useState(() =>
+    financial
+      ? amountToInput(financial.data.settings.dailyNeed ?? defaultDailyNeed(financial.currency), financial.currency)
+      : '',
+  );
   const [savePercent, setSavePercent] = useState(financial?.data.settings.unexpectedIncomeSavePercent ?? 0);
   const [moveText, setMoveText] = useState('');
 
@@ -51,15 +58,23 @@ export default function ProtectionsScreen() {
   const minimumBalance = parseAmount(minimumText, currency) ?? 0;
   const moveAmount = parseAmount(moveText, currency);
 
+  // Keep following the currency default unless the user picks their own figure; clearing the field resets it.
+  const typedDailyNeed = parseAmount(dailyNeedText, currency);
+  const followsDefault =
+    data.settings.dailyNeed == null && (typedDailyNeed === null || typedDailyNeed === defaultDailyNeed(currency));
+  const dailyNeed = followsDefault ? null : typedDailyNeed;
+
   const preview = calculateFinancialStatus({
     ...input,
     savingsReserve: Math.max(0, savingsTarget - moved),
     minimumBalance,
+    dailyNeed: dailyNeed ?? defaultDailyNeed(currency),
+    dailyNeedIsDefault: dailyNeed === null,
   });
 
   const save = () => {
     updateCycle({ savingsTarget });
-    updateSettings({ minimumBalance, unexpectedIncomeSavePercent: savePercent });
+    updateSettings({ minimumBalance, dailyNeed, unexpectedIncomeSavePercent: savePercent });
     haptics.success();
     router.back();
     showToast(`Saved. Your safe pace is ${formatMoney(preview.dailyAllowance, currency, { whole: true })}/day.`);
@@ -98,6 +113,21 @@ export default function ProtectionsScreen() {
         <AmountField value={minimumText} onChangeText={setMinimumText} currency={currency} size="medium" />
       </Field>
 
+      {status.normalDaySource === 'routines' ? (
+        <Field label="☀️ Normal day">
+          <AppText variant="small" tone="secondary">
+            Based on your routines: about {formatMoney(status.normalDay, currency, { whole: true })} a day. Your status
+            color compares your safe pace with it.
+          </AppText>
+        </Field>
+      ) : (
+        <Field
+          label="☀️ A normal day costs me about"
+          hint="Your status color compares your safe pace with it: 🟢 it covers a normal day, 🟡 it's under a normal day, 🔴 it's under half.">
+          <AmountField value={dailyNeedText} onChangeText={setDailyNeedText} currency={currency} size="medium" />
+        </Field>
+      )}
+
       <Field label="🎁 Unexpected income" hint="Suggested choice when you add money that isn't your main income.">
         <ChipGroup>
           {SAVE_OPTIONS.map((option) => (
@@ -124,6 +154,7 @@ export default function ProtectionsScreen() {
           value={`${formatMoney(status.dailyAllowance, currency, { whole: true })} → ${formatMoney(preview.dailyAllowance, currency, { whole: true })}/day`}
           strong
         />
+        <StatusPill level={preview.riskLevel} label={STATUS_LABELS[preview.reason]} />
       </Card>
     </SheetScreen>
   );

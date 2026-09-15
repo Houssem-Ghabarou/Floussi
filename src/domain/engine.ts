@@ -30,23 +30,35 @@ export interface FinancialInput {
   trackingStartDate: LocalDate;
   /** Expected routine spending per weekday, index 0 = Sunday. */
   routineByWeekday: Minor[];
+  /** What a normal day costs when routines don't say (the user's setting or the currency default). */
+  dailyNeed: Minor;
+  dailyNeedIsDefault: boolean;
 }
 
+/** 🟢 comfortable / 🟢 on_track / 🟡 watch / 🔴 at_risk */
 export type RiskLevel = 'comfortable' | 'on_track' | 'watch' | 'at_risk';
 
+/** Why the status has its color. Listed from most to least severe, in the order they are checked. */
 export type StatusReason =
+  // 🔴
   | 'protected_exceeds_balance'
   | 'no_flexible_money'
   | 'dipping_into_protected'
   | 'untracked_spending'
   | 'pace_unsustainable'
+  | 'very_tight'
+  // 🟡
   | 'pace_above_safe'
   | 'over_today'
+  | 'almost_used_today'
   | 'over_yesterday'
-  | 'routine_above_safe'
-  | 'below_pace'
-  | 'routine_below_safe'
-  | 'steady';
+  | 'tight'
+  // 🟢
+  | 'on_track'
+  | 'comfortable';
+
+/** Where the normal-day reference comes from. */
+export type NormalDaySource = 'routines' | 'custom' | 'default';
 
 export interface FinancialStatus {
   balance: Minor;
@@ -72,6 +84,9 @@ export interface FinancialStatus {
   expectedToday: Minor;
   expectedUntilIncome: Minor;
   expectedDailyAverage: Minor;
+  /** What a normal day costs: the reference that decides tight / on track / comfortable. */
+  normalDay: Minor;
+  normalDaySource: NormalDaySource;
   /** Recent average daily spending, null until enough tracked days exist. */
   currentPace: Minor | null;
   paceDays: number;
@@ -87,13 +102,18 @@ export interface FinancialStatus {
 
 export const PACE_WINDOW_DAYS = 7;
 export const MIN_PACE_DAYS = 3;
+
 export const THRESHOLDS = {
-  comfortableBelow: 0.7,
-  watchAbove: 1.05,
-  atRiskAbove: 1.25,
-  /** Untracked spending that removes more than 10% of the daily pace is worth a warning… */
+  /** Safe pace vs a normal day: 🔴 below half, 🟡 below one, 🟢 comfortable from one and a half. */
+  veryTightBelow: 0.5,
+  comfortableFrom: 1.5,
+  /** Recent spending pace vs safe pace: 🟡 above 105%, 🔴 above 125%. */
+  paceWatchAbove: 1.05,
+  paceAtRiskAbove: 1.25,
+  /** 🟡 when less than this share of today's amount is left (and less than a normal day). */
+  almostUsedBelow: 0.2,
+  /** Share of the daily pace kept after untracked spending: 🟡 below 90%, 🔴 below 65%. */
   untrackedWatchBelow: 0.9,
-  /** …and more than 35% puts the plan at risk. */
   untrackedAtRiskBelow: 0.65,
 } as const;
 
@@ -127,6 +147,11 @@ export function calculateFinancialStatus(input: FinancialInput): FinancialStatus
   const expectedUntilIncome = sum(remainingDates.map((date) => input.routineByWeekday[weekday(date)] ?? 0));
   const expectedDailyAverage = Math.round(expectedUntilIncome / remainingDates.length);
 
+  // A normal day: what the routines expect over the coming days, otherwise the user's own figure.
+  const routinesDecide = hasRoutines && expectedDailyAverage > 0;
+  const normalDay = routinesDecide ? expectedDailyAverage : input.dailyNeed;
+  const normalDaySource: NormalDaySource = routinesDecide ? 'routines' : input.dailyNeedIsDefault ? 'default' : 'custom';
+
   // Recent pace over the last full tracked days (today excluded, it isn't over yet).
   const paceStart = maxDate(addDays(today, -PACE_WINDOW_DAYS), input.trackingStartDate);
   const paceDays = Math.max(0, daysBetween(paceStart, today));
@@ -154,12 +179,13 @@ export function calculateFinancialStatus(input: FinancialInput): FinancialStatus
     flexibleNow,
     flexibleStartOfDay,
     dailyAllowance,
+    remainingToday,
     upcomingDailyPace,
     daysRemaining,
     spentToday,
     spentYesterday,
     currentPace,
-    expectedDailyAverage: hasRoutines ? expectedDailyAverage : null,
+    normalDay,
     recentUntrackedSpending,
     paceWithoutUntracked,
   });
@@ -183,6 +209,8 @@ export function calculateFinancialStatus(input: FinancialInput): FinancialStatus
     expectedToday,
     expectedUntilIncome,
     expectedDailyAverage,
+    normalDay,
+    normalDaySource,
     currentPace,
     paceDays,
     projectedEndFlexible,
@@ -197,55 +225,63 @@ interface RiskFactors {
   flexibleNow: Minor;
   flexibleStartOfDay: Minor;
   dailyAllowance: Minor;
+  remainingToday: Minor;
   upcomingDailyPace: Minor;
   daysRemaining: number;
   spentToday: Minor;
   spentYesterday: Minor | null;
   currentPace: Minor | null;
-  expectedDailyAverage: Minor | null;
+  normalDay: Minor;
   recentUntrackedSpending: Minor;
   paceWithoutUntracked: Minor;
 }
 
+/**
+ * The status color. Rules are checked from most to least severe; the first one that matches wins.
+ *
+ * 🔴 money is short now, the pace covers less than half a normal day, or spending is far too fast
+ * 🟡 the pace doesn't cover a normal day, today's amount is (almost) used, or spending is a bit fast
+ * 🟢 the pace covers a normal day — with breathing room from one and a half normal days
+ */
 function assessRisk(f: RiskFactors): { riskLevel: RiskLevel; reason: StatusReason } {
-  // Hard limits first: they don't depend on any spending history.
-  if (f.flexibleStartOfDay < 0) return { riskLevel: 'at_risk', reason: 'protected_exceeds_balance' };
-  if (f.dailyAllowance === 0) return { riskLevel: 'at_risk', reason: 'no_flexible_money' };
-  if (f.flexibleNow < 0) return { riskLevel: 'at_risk', reason: 'dipping_into_protected' };
-  if (f.daysRemaining > 1 && f.upcomingDailyPace === 0) return { riskLevel: 'at_risk', reason: 'no_flexible_money' };
-
+  const red = (reason: StatusReason) => ({ riskLevel: 'at_risk' as const, reason });
+  const yellow = (reason: StatusReason) => ({ riskLevel: 'watch' as const, reason });
   const allowance = f.dailyAllowance;
+  const untrackedPaceKept =
+    f.recentUntrackedSpending > 0 && f.paceWithoutUntracked > 0 ? allowance / f.paceWithoutUntracked : 1;
 
-  if (f.recentUntrackedSpending > 0 && f.paceWithoutUntracked > 0) {
-    const paceKept = allowance / f.paceWithoutUntracked;
-    if (paceKept < THRESHOLDS.untrackedAtRiskBelow) return { riskLevel: 'at_risk', reason: 'untracked_spending' };
-    if (paceKept < THRESHOLDS.untrackedWatchBelow) return { riskLevel: 'watch', reason: 'untracked_spending' };
-  }
+  // 🔴 Money is short right now.
+  if (f.flexibleStartOfDay < 0) return red('protected_exceeds_balance');
+  if (allowance === 0) return red('no_flexible_money');
+  if (f.flexibleNow < 0) return red('dipping_into_protected');
+  if (f.daysRemaining > 1 && f.upcomingDailyPace === 0) return red('no_flexible_money');
 
-  if (f.currentPace !== null) {
-    if (f.currentPace > allowance * THRESHOLDS.atRiskAbove) {
-      return { riskLevel: 'at_risk', reason: 'pace_unsustainable' };
-    }
-    if (f.currentPace > allowance * THRESHOLDS.watchAbove) {
-      return { riskLevel: 'watch', reason: 'pace_above_safe' };
-    }
+  // 🔴 The coming days won't be covered.
+  if (untrackedPaceKept < THRESHOLDS.untrackedAtRiskBelow) return red('untracked_spending');
+  if (f.currentPace !== null && f.currentPace > allowance * THRESHOLDS.paceAtRiskAbove) {
+    return red('pace_unsustainable');
   }
-  if (f.spentToday > allowance) return { riskLevel: 'watch', reason: 'over_today' };
-  if (f.currentPace === null && f.spentYesterday !== null && f.spentYesterday > allowance * THRESHOLDS.watchAbove) {
-    return { riskLevel: 'watch', reason: 'over_yesterday' };
+  if (allowance < f.normalDay * THRESHOLDS.veryTightBelow) return red('very_tight');
+
+  // 🟡 Worth slowing down.
+  if (untrackedPaceKept < THRESHOLDS.untrackedWatchBelow) return yellow('untracked_spending');
+  if (f.currentPace !== null && f.currentPace > allowance * THRESHOLDS.paceWatchAbove) {
+    return yellow('pace_above_safe');
   }
-  if (f.expectedDailyAverage !== null && f.expectedDailyAverage > allowance * THRESHOLDS.watchAbove) {
-    return { riskLevel: 'watch', reason: 'routine_above_safe' };
-  }
-  if (f.currentPace !== null && f.currentPace < allowance * THRESHOLDS.comfortableBelow) {
-    return { riskLevel: 'comfortable', reason: 'below_pace' };
-  }
+  if (f.spentToday > allowance) return yellow('over_today');
   if (
-    f.currentPace === null &&
-    f.expectedDailyAverage !== null &&
-    f.expectedDailyAverage < allowance * THRESHOLDS.comfortableBelow
+    f.spentToday > 0 &&
+    f.remainingToday < allowance * THRESHOLDS.almostUsedBelow &&
+    f.remainingToday < f.normalDay
   ) {
-    return { riskLevel: 'comfortable', reason: 'routine_below_safe' };
+    return yellow('almost_used_today');
   }
-  return { riskLevel: 'on_track', reason: 'steady' };
+  if (f.currentPace === null && f.spentYesterday !== null && f.spentYesterday > allowance * THRESHOLDS.paceWatchAbove) {
+    return yellow('over_yesterday');
+  }
+  if (allowance < f.normalDay) return yellow('tight');
+
+  // 🟢 The pace covers a normal day.
+  if (allowance >= f.normalDay * THRESHOLDS.comfortableFrom) return { riskLevel: 'comfortable', reason: 'comfortable' };
+  return { riskLevel: 'on_track', reason: 'on_track' };
 }

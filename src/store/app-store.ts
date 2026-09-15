@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { newId, repository } from '@/data/repository';
+import { createBackup, type Backup } from '@/domain/backup';
 import { toLocalDate, type LocalDate } from '@/domain/dates';
 import { computeBalance, countsToBalance } from '@/domain/derive';
 import type { Minor } from '@/domain/money';
@@ -21,6 +22,7 @@ export interface OnboardingPlan extends CyclePlan {
   currency: string;
   balance: Minor;
   minimumBalance: Minor;
+  dailyNeed: Minor | null;
   /** `alreadyPaidOn` answers "this bill's due date already passed — did you pay it?". */
   bills: (Omit<Bill, 'id' | 'archived' | 'createdOn'> & { alreadyPaidOn: LocalDate | null })[];
 }
@@ -52,6 +54,10 @@ interface AppState {
   /** `start` is when the income that ends the current cycle was recorded. */
   startNextCycle(plan: CyclePlan, start: { date: LocalDate; at: number }): void;
   resetAll(): void;
+  /** Everything the user entered, ready to save as a file. Null before onboarding. */
+  exportBackup(): Backup | null;
+  /** Replaces all data on this device with a validated backup. */
+  importBackup(backup: Backup): void;
 }
 
 export function currentCycle(cycles: Cycle[]): Cycle | null {
@@ -106,6 +112,7 @@ export const useApp = create<AppState>()((set, get) => {
         openingBalance: plan.balance,
         openingDate: today,
         minimumBalance: plan.minimumBalance,
+        dailyNeed: plan.dailyNeed,
         unexpectedIncomeSavePercent: 0,
         onboarded: true,
       };
@@ -271,6 +278,16 @@ export const useApp = create<AppState>()((set, get) => {
     resetAll() {
       repository.resetAll();
       set({ settings: null, cycles: [], transactions: [], bills: [], routines: [] });
+    },
+
+    exportBackup() {
+      const { settings, cycles, transactions, bills, routines } = get();
+      return settings ? createBackup({ settings, cycles, transactions, bills, routines }) : null;
+    },
+
+    importBackup(backup) {
+      repository.replaceAll(backup.data);
+      set({ ...repository.loadAll(), today: toLocalDate() });
     },
   };
 });

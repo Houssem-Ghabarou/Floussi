@@ -1,6 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert } from 'react-native';
 
 import { EXPENSE_CATEGORIES, expenseCategory } from '@/domain/categories';
 import { addDays, type LocalDate } from '@/domain/dates';
@@ -20,6 +19,7 @@ import {
   TextField,
 } from '@/ui/components';
 import { DateChoice } from '@/ui/date-picker';
+import { confirmDestructive, useUnsavedChanges } from '@/ui/dialog-store';
 import { showToast } from '@/ui/toast';
 
 export default function ExpenseScreen() {
@@ -43,6 +43,8 @@ export default function ExpenseScreen() {
   const [date, setDate] = useState<LocalDate>(
     () => existing?.date ?? (params.past && openingDate ? addDays(openingDate, -1) : today),
   );
+
+  const hasChanges = useUnsavedChanges({ amountText, category, note, date });
 
   if (!financial) return null;
   const { currency, status, data } = financial;
@@ -69,18 +71,15 @@ export default function ExpenseScreen() {
 
   const remove = () => {
     if (!existing) return;
-    Alert.alert('Delete this expense?', undefined, [
-      { text: 'Keep', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          router.back();
-          const removed = deleteTransaction(existing.id);
-          if (removed) showToast('Expense deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
-        },
+    confirmDestructive({
+      title: 'Delete this expense?',
+      message: `${formatMoney(existing.amount, currency, { signed: true })} will be removed from your balance and history. You can undo right after.`,
+      onConfirm: () => {
+        router.back();
+        const removed = deleteTransaction(existing.id);
+        if (removed) showToast('Expense deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
       },
-    ]);
+    });
   };
 
   let preview: string | null = null;
@@ -96,6 +95,7 @@ export default function ExpenseScreen() {
 
   return (
     <SheetScreen
+      confirmClose={hasChanges}
       title={existing ? 'Edit expense' : params.past ? 'Earlier expense' : 'Add expense'}
       footer={<Button label={existing ? 'Save changes' : 'Save expense'} onPress={save} disabled={!amount || !category} />}>
       <AmountField value={amountText} onChangeText={setAmountText} currency={currency} autoFocus={!existing} prefix="−" />

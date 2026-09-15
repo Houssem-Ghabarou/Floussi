@@ -8,18 +8,25 @@ export interface CurrencyInfo {
   code: string;
   label: string;
   decimals: number;
+  /** Default cost of a normal day (major units), until the user sets their own or adds routines. */
+  typicalDailyNeed: number;
 }
 
 export const CURRENCIES: CurrencyInfo[] = [
-  { code: 'TND', label: 'TND', decimals: 3 },
-  { code: 'EUR', label: 'EUR', decimals: 2 },
-  { code: 'USD', label: 'USD', decimals: 2 },
-  { code: 'MAD', label: 'MAD', decimals: 2 },
-  { code: 'DZD', label: 'DZD', decimals: 2 },
+  { code: 'TND', label: 'TND', decimals: 3, typicalDailyNeed: 15 },
+  { code: 'EUR', label: 'EUR', decimals: 2, typicalDailyNeed: 20 },
+  { code: 'USD', label: 'USD', decimals: 2, typicalDailyNeed: 20 },
+  { code: 'GBP', label: 'GBP', decimals: 2, typicalDailyNeed: 15 },
+  { code: 'MAD', label: 'MAD', decimals: 2, typicalDailyNeed: 60 },
+  { code: 'DZD', label: 'DZD', decimals: 2, typicalDailyNeed: 1000 },
 ];
 
 export function getCurrency(code: string): CurrencyInfo {
   return CURRENCIES.find((currency) => currency.code === code) ?? CURRENCIES[0];
+}
+
+export function defaultDailyNeed(currency: CurrencyInfo): Minor {
+  return fromMajor(currency.typicalDailyNeed, currency);
 }
 
 export function minorFactor(currency: CurrencyInfo): number {

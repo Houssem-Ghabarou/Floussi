@@ -3,7 +3,7 @@ import { billOccurrences, type BillOccurrence } from './bills';
 import { cycleStart, isBeforeBoundary } from './cycle';
 import { addDays, maxDate, type LocalDate } from './dates';
 import { PACE_WINDOW_DAYS, type FinancialInput } from './engine';
-import type { Minor } from './money';
+import { defaultDailyNeed, getCurrency, type Minor } from './money';
 import { routineByWeekday } from './routines';
 import type { AppData, Cycle, Settings, Transaction } from './types';
 
@@ -82,5 +82,7 @@ export function buildFinancialInput(data: AppData, today: LocalDate): FinancialI
     incomeSinceCorrections,
     trackingStartDate,
     routineByWeekday: routineByWeekday(data.routines),
+    dailyNeed: settings.dailyNeed ?? defaultDailyNeed(getCurrency(settings.currency)),
+    dailyNeedIsDefault: settings.dailyNeed == null,
   };
 }

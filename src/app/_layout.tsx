@@ -1,11 +1,19 @@
+import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
+import { PlusJakartaSans_500Medium } from '@expo-google-fonts/plus-jakarta-sans/500Medium';
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
+import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, StyleSheet, useColorScheme, View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { useApp } from '@/store/app-store';
 import { AppText, Button } from '@/ui/components';
+import { DialogHost } from '@/ui/dialog';
 import { Space, usePalette } from '@/ui/theme';
 import { ToastHost } from '@/ui/toast';
 
@@ -20,14 +28,23 @@ export default function RootLayout() {
   const refreshToday = useApp((state) => state.refreshToday);
   const scheme = useColorScheme();
   const palette = usePalette();
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
+  // A font that fails to load falls back to the system font rather than blocking the app.
+  const fontsReady = fontsLoaded || fontError !== null;
 
   useEffect(() => {
     load();
   }, [load]);
 
   useEffect(() => {
-    if (status !== 'loading') SplashScreen.hideAsync();
-  }, [status]);
+    if (status !== 'loading' && fontsReady) SplashScreen.hideAsync();
+  }, [status, fontsReady]);
 
   // The safe amount is per calendar day: refresh "today" whenever the app comes back.
   useEffect(() => {
@@ -37,7 +54,7 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, [refreshToday]);
 
-  if (status === 'loading') return null;
+  if (status === 'loading' || !fontsReady) return null;
 
   if (status === 'error') {
     return (
@@ -62,29 +79,33 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.background } }}>
-        <Stack.Protected guard={onboarded}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="expense" options={modal} />
-          <Stack.Screen name="income" options={modal} />
-          <Stack.Screen name="what-if" options={modal} />
-          <Stack.Screen name="balance" options={modal} />
-          <Stack.Screen name="breakdown" options={modal} />
-          <Stack.Screen name="pay-bill" options={modal} />
-          <Stack.Screen name="bill" options={modal} />
-          <Stack.Screen name="routine" options={modal} />
-          <Stack.Screen name="protections" options={modal} />
-          <Stack.Screen name="payday" options={modal} />
-          <Stack.Screen name="cycle-end" options={modal} />
-        </Stack.Protected>
-        <Stack.Protected guard={!onboarded}>
-          <Stack.Screen name="onboarding" />
-        </Stack.Protected>
-      </Stack>
-      <ToastHost />
-    </ThemeProvider>
+    <KeyboardProvider>
+      <ThemeProvider value={navigationTheme}>
+        <StatusBar style="auto" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.background } }}>
+          <Stack.Protected guard={onboarded}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="activity" options={modal} />
+            <Stack.Screen name="expense" options={modal} />
+            <Stack.Screen name="income" options={modal} />
+            <Stack.Screen name="what-if" options={modal} />
+            <Stack.Screen name="balance" options={modal} />
+            <Stack.Screen name="breakdown" options={modal} />
+            <Stack.Screen name="pay-bill" options={modal} />
+            <Stack.Screen name="bill" options={modal} />
+            <Stack.Screen name="routine" options={modal} />
+            <Stack.Screen name="protections" options={modal} />
+            <Stack.Screen name="payday" options={modal} />
+            <Stack.Screen name="cycle-end" options={modal} />
+          </Stack.Protected>
+          <Stack.Protected guard={!onboarded}>
+            <Stack.Screen name="onboarding" />
+          </Stack.Protected>
+        </Stack>
+        <ToastHost />
+        <DialogHost />
+      </ThemeProvider>
+    </KeyboardProvider>
   );
 }
 

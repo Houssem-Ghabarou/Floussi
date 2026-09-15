@@ -23,6 +23,8 @@ function midMonthInput(overrides: Partial<FinancialInput> = {}): FinancialInput 
     incomeSinceCorrections: 0,
     trackingStartDate: '2026-09-14',
     routineByWeekday: [0, 0, 0, 0, 0, 0, 0],
+    dailyNeed: tnd(15),
+    dailyNeedIsDefault: true,
     ...overrides,
   };
 }
@@ -45,7 +47,8 @@ describe('spec §48 — complete mid-month user', () => {
     expect(status.flexibleNow).toBe(tnd(550));
     expect(status.daysRemaining).toBe(16);
     expect(status.dailyAllowance).toBe(34_375);
-    expect(status.riskLevel).toBe('on_track');
+    // 34/day is more than twice a normal day of 15.
+    expect(status.riskLevel).toBe('comfortable');
   });
 
   it("keeps today's allowance fixed while spending lowers what's left", () => {
@@ -55,7 +58,7 @@ describe('spec §48 — complete mid-month user', () => {
     expect(status.dailyAllowance).toBe(34_375);
     expect(status.remainingToday).toBe(10_375);
     expect(status.upcomingDailyPace).toBe(Math.floor(tnd(526) / 15));
-    expect(status.riskLevel).toBe('on_track');
+    expect(status.riskLevel).toBe('comfortable');
   });
 
   it('flags a 55 TND day without shaming', () => {
@@ -92,7 +95,7 @@ describe('spec §48 — complete mid-month user', () => {
       }),
     );
     expect(status.dailyAllowance).toBe(Math.floor(tnd(771) / 14));
-    expect(status.riskLevel).toBe('on_track');
+    expect(status.riskLevel).toBe('comfortable');
 
     const whatIf = evaluateWhatIf(status, tnd(120), TND);
     expect(whatIf.level).toBe('comfortable');
@@ -157,7 +160,7 @@ describe('validation scenarios (§59)', () => {
       }),
     );
     expect(status.riskLevel).toBe('comfortable');
-    expect(status.reason).toBe('below_pace');
+    expect(status.reason).toBe('comfortable');
   });
 
   it('needs at least 3 tracked days before trusting a pace', () => {
@@ -191,17 +194,18 @@ describe('routines', () => {
     const status = calculateFinancialStatus(midMonthInput({ routineByWeekday: weekly(tnd(24), tnd(35)) }));
     expect(status.expectedToday).toBe(tnd(24));
     expect(status.expectedUntilIncome).toBe(tnd(12 * 24 + 4 * 35));
-    expect(status.reason).toBe('steady');
+    expect(status.normalDaySource).toBe('routines');
+    expect(status.reason).toBe('on_track');
   });
 
   it('warns when the normal routine costs more than the safe pace', () => {
     const status = calculateFinancialStatus(midMonthInput({ routineByWeekday: weekly(tnd(40), tnd(50)) }));
-    expect(status.reason).toBe('routine_above_safe');
+    expect(status.reason).toBe('tight');
   });
 
   it('reports breathing room when the routine is well below the pace', () => {
     const status = calculateFinancialStatus(midMonthInput({ routineByWeekday: weekly(tnd(15), tnd(20)) }));
-    expect(status.reason).toBe('routine_below_safe');
+    expect(status.reason).toBe('comfortable');
   });
 });
 

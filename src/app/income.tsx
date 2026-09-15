@@ -1,6 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert } from 'react-native';
 
 import { INCOME_SOURCES, incomeSource } from '@/domain/categories';
 import { addDays, type LocalDate } from '@/domain/dates';
@@ -21,6 +20,7 @@ import {
   TextField,
 } from '@/ui/components';
 import { DateChoice } from '@/ui/date-picker';
+import { confirmDestructive, useUnsavedChanges } from '@/ui/dialog-store';
 import { showToast } from '@/ui/toast';
 
 const SAVE_OPTIONS = [
@@ -50,6 +50,8 @@ export default function IncomeScreen() {
   const [date, setDate] = useState<LocalDate>(existing?.date ?? financial?.today ?? '');
   const [savePercent, setSavePercent] = useState(financial?.data.settings.unexpectedIncomeSavePercent ?? 0);
   const [startNewCycle, setStartNewCycle] = useState(isCycleIncome);
+
+  const hasChanges = useUnsavedChanges({ amountText, source, note, date, savePercent, startNewCycle });
 
   if (!financial) return null;
   const { currency, status, data, today } = financial;
@@ -103,22 +105,20 @@ export default function IncomeScreen() {
 
   const remove = () => {
     if (!existing) return;
-    Alert.alert('Delete this income?', undefined, [
-      { text: 'Keep', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          router.back();
-          const removed = deleteTransaction(existing.id);
-          if (removed) showToast('Income deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
-        },
+    confirmDestructive({
+      title: 'Delete this income?',
+      message: `${formatMoney(existing.amount, currency, { signed: true })} will be removed from your balance and history. You can undo right after.`,
+      onConfirm: () => {
+        router.back();
+        const removed = deleteTransaction(existing.id);
+        if (removed) showToast('Income deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
       },
-    ]);
+    });
   };
 
   return (
     <SheetScreen
+      confirmClose={hasChanges}
       title={existing ? 'Edit income' : isCycleIncome ? `Your ${data.cycle.incomeLabel.toLowerCase()} arrived` : 'Add money'}
       footer={
         <Button

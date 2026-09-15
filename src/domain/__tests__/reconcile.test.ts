@@ -5,6 +5,7 @@ import { getCurrency } from '../money';
 import type { AppData, Settings, Transaction } from '../types';
 
 const tnd = (value: number) => Math.round(value * 1000);
+const GREEN = ['on_track', 'comfortable'];
 
 /**
  * Opening balance 900 on Sep 14, salary on Sep 30, then "Update balance" on Sep 16.
@@ -34,6 +35,7 @@ function afterBalanceUpdate({
     openingBalance: tnd(900),
     openingDate: '2026-09-14',
     minimumBalance: tnd(minimumBalance),
+    dailyNeed: null,
     unexpectedIncomeSavePercent: 0,
     onboarded: true,
   };
@@ -95,8 +97,8 @@ describe('status after updating the balance', () => {
   });
 
   it('a small correction or found money keeps you on track', () => {
-    expect(afterBalanceUpdate({ adjustTo: 880 }).riskLevel).toBe('on_track');
-    expect(afterBalanceUpdate({ adjustTo: 1000 }).riskLevel).toBe('on_track');
+    expect(GREEN).toContain(afterBalanceUpdate({ adjustTo: 880 }).riskLevel);
+    expect(GREEN).toContain(afterBalanceUpdate({ adjustTo: 1000 }).riskLevel);
   });
 
   it('zero money is at risk, even after spending earlier today', () => {
@@ -116,7 +118,7 @@ describe('status after updating the balance', () => {
     const status = afterBalanceUpdate({ adjustTo: 50, incomeAfter: 2000 });
     expect(status.paceWithoutUntracked).toBe(Math.floor(tnd(900) / 14));
     expect(status.dailyAllowance).toBe(Math.floor(tnd(2050) / 14));
-    expect(status.riskLevel).toBe('on_track');
+    expect(GREEN).toContain(status.riskLevel);
   });
 
   it('a little money after the drop does not hide it', () => {
@@ -131,6 +133,6 @@ describe('status after updating the balance', () => {
     const status = afterBalanceUpdate({ adjustTo: 50, correctionAfter: 850 });
     expect(status.balance).toBe(tnd(900));
     expect(status.recentUntrackedSpending).toBe(0);
-    expect(status.riskLevel).toBe('on_track');
+    expect(GREEN).toContain(status.riskLevel);
   });
 });

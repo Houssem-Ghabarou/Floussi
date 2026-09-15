@@ -76,6 +76,8 @@ export interface Settings {
   openingBalance: Minor;
   openingDate: LocalDate;
   minimumBalance: Minor;
+  /** What a normal day costs: decides if the safe pace is comfortable, tight or very tight. Null: currency default. */
+  dailyNeed: Minor | null;
   /** Default share of unexpected income to protect as savings (0-100). */
   unexpectedIncomeSavePercent: number;
   onboarded: boolean;

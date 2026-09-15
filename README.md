@@ -1,6 +1,6 @@
-# Floussi — your money coach
+# Flousey — your money coach
 
-Floussi answers one question: **"Given the money I have right now, my bills, my savings and the days until my
+Flousey answers one question: **"Given the money I have right now, my bills, my savings and the days until my
 next income, how much can I safely spend today?"**
 
 - Product spec: [`SPEC/Project_Spec.md`](SPEC/Project_Spec.md)

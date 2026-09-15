@@ -1,5 +1,5 @@
 /** "Can I afford this?" — evaluates a purchase without recording it. */
-import type { FinancialStatus, RiskLevel } from './engine';
+import { THRESHOLDS, type FinancialStatus, type RiskLevel } from './engine';
 import { formatMoney, type CurrencyInfo, type Minor } from './money';
 
 export type WhatIfLevel =
@@ -64,10 +64,13 @@ export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency:
   }
 
   const ratio = paceBefore > 0 ? paceAfter / paceBefore : 0;
-  const belowRoutine = status.hasRoutines && paceAfter < status.expectedDailyAverage;
-  const routineLine = belowRoutine ? ` That's below your normal day of ${m(status.expectedDailyAverage)}.` : '';
+  // Same references as the status color: a pace under a normal day is never "comfortable",
+  // and under half a normal day it's a significant impact.
+  const belowNormalDay = paceAfter < status.normalDay;
+  const veryTight = paceAfter < status.normalDay * THRESHOLDS.veryTightBelow;
+  const routineLine = belowNormalDay ? ` That's below a normal day of about ${m(status.normalDay)}.` : '';
 
-  if (ratio >= WHAT_IF_THRESHOLDS.comfortableRatio && !belowRoutine) {
+  if (ratio >= WHAT_IF_THRESHOLDS.comfortableRatio && !belowNormalDay) {
     return {
       ...base,
       level: 'comfortable',
@@ -76,7 +79,7 @@ export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency:
       detail: `Your safe pace would stay around ${m(paceAfter)}/day. ${PROTECTED_LINE}`,
     };
   }
-  if (ratio >= WHAT_IF_THRESHOLDS.tighterRatio) {
+  if (ratio >= WHAT_IF_THRESHOLDS.tighterRatio && !veryTight) {
     return {
       ...base,
       level: 'tighter',

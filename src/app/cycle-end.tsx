@@ -131,7 +131,7 @@ export default function CycleEndScreen() {
           <AppText variant="bodyStrong">Still unpaid from this cycle</AppText>
           <AppText tone="secondary">
             {unpaid.map((occurrence) => `${occurrence.bill.name} (${formatShortDate(occurrence.dueDate)})`).join(', ')}.
-            They stay protected as overdue in your next cycle until you mark them paid in Plan.
+            They stay protected as overdue in your next cycle until you mark them paid in Rules.
           </AppText>
         </Card>
       ) : null}
