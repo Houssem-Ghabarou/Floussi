@@ -1,5 +1,5 @@
 /**
- * The Android home-screen widget: safe amount, status, and quick actions on the wider size.
+ * The Android home-screen widget: safe amount, status and quick actions, at every size.
  * The widget library calls these components as plain functions, so the React Compiler must leave them alone.
  */
 'use no memo';
@@ -59,37 +59,61 @@ const DARK: Colors = {
 };
 
 const OPEN_TODAY = { uri: 'flousey://' };
-/** Below this width (dp) the widget is the small one, without quick actions. */
+/** From this width (dp) the buttons move to their own column next to the amount. */
 const WIDE_FROM_DP = 230;
+/** From this height (dp) the small widget also has room for the status text. */
+const TALL_FROM_DP = 140;
 
-function QuickAction({ label, uri, colors, primary }: { label: string; uri: string; colors: Colors; primary?: boolean }) {
+interface Size {
+  wide: boolean;
+  tall: boolean;
+}
+
+function QuickAction({
+  label,
+  uri,
+  colors,
+  primary,
+  compact,
+}: {
+  label: string;
+  uri: string;
+  colors: Colors;
+  primary?: boolean;
+  compact?: boolean;
+}) {
   return (
     <FlexWidget
       clickAction="OPEN_URI"
       clickActionData={{ uri }}
       style={{
-        width: 'match_parent',
+        ...(compact ? { flex: 1 } : { width: 'match_parent' }),
         alignItems: 'center',
         backgroundColor: primary ? colors.button : colors.secondaryButton,
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        borderRadius: compact ? 10 : 12,
+        paddingHorizontal: compact ? 2 : 12,
+        paddingVertical: compact ? 6 : 8,
       }}>
       <TextWidget
         text={label}
-        style={{ fontSize: 12, fontFamily: FONT.bold, color: primary ? colors.buttonText : colors.text }}
+        maxLines={1}
+        style={{
+          fontSize: compact ? 10 : 12,
+          fontFamily: FONT.bold,
+          color: primary ? colors.buttonText : colors.text,
+          adjustsFontSizeToFit: compact,
+        }}
       />
     </FlexWidget>
   );
 }
 
-function Layout({ props, colors, wide }: { props: WidgetProps; colors: Colors; wide: boolean }) {
+function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; size: Size }) {
   const container = {
     width: 'match_parent',
     height: 'match_parent',
     backgroundColor: colors.background,
     borderRadius: 22,
-    padding: 14,
   } as const;
 
   if (!props.ready) {
@@ -97,7 +121,7 @@ function Layout({ props, colors, wide }: { props: WidgetProps; colors: Colors; w
       <FlexWidget
         clickAction="OPEN_URI"
         clickActionData={OPEN_TODAY}
-        style={{ ...container, flexDirection: 'column', justifyContent: 'center', flexGap: 4 }}>
+        style={{ ...container, padding: 14, flexDirection: 'column', justifyContent: 'center', flexGap: 4 }}>
         <TextWidget text="Flousey" style={{ fontSize: 16, fontFamily: FONT.bold, color: colors.text }} />
         <TextWidget text={props.caption} style={{ fontSize: 12, fontFamily: FONT.medium, color: colors.secondary }} />
       </FlexWidget>
@@ -105,52 +129,43 @@ function Layout({ props, colors, wide }: { props: WidgetProps; colors: Colors; w
   }
 
   const tone = colors.tone[props.tone];
-  const summary = (
-    <FlexWidget style={{ flex: 1, height: 'match_parent', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <FlexWidget style={{ flexDirection: 'column' }}>
-        <TextWidget
-          text="SAFE TO SPEND"
-          style={{ fontSize: 10, fontFamily: FONT.bold, color: colors.muted, letterSpacing: 0.06 }}
-        />
-        <FlexWidget style={{ flexDirection: 'row', alignItems: 'flex-end', flexGap: 4 }}>
-          <TextWidget text={props.amount} style={{ fontSize: 30, fontFamily: FONT.bold, color: colors.text }} />
-          <TextWidget
-            text={props.currency}
-            style={{ fontSize: 13, fontFamily: FONT.semibold, color: colors.secondary, marginBottom: 5 }}
-          />
-        </FlexWidget>
-        <TextWidget
-          text={wide ? `${props.caption} · ${props.payday}` : props.caption}
-          style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.secondary }}
-          maxLines={1}
-          truncate="END"
-        />
-      </FlexWidget>
-      <FlexWidget
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          flexGap: 5,
-          backgroundColor: tone.bg,
-          borderRadius: 999,
-          paddingHorizontal: 8,
-          paddingVertical: 3,
-        }}>
-        <FlexWidget style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tone.fg }} />
-        <TextWidget
-          text={props.status}
-          style={{ fontSize: 11, fontFamily: FONT.bold, color: tone.fg }}
-          maxLines={1}
-          truncate="END"
-        />
-      </FlexWidget>
-    </FlexWidget>
-  );
 
-  if (!wide) {
+  if (!size.wide) {
+    // Small: the status colour moves to a dot next to the label, so both buttons still fit.
     return (
-      <FlexWidget clickAction="OPEN_URI" clickActionData={OPEN_TODAY} style={{ ...container, flexDirection: 'column' }}>
-        {summary}
+      <FlexWidget
+        clickAction="OPEN_URI"
+        clickActionData={OPEN_TODAY}
+        style={{ ...container, padding: 12, flexDirection: 'column', justifyContent: 'space-between' }}>
+        <FlexWidget style={{ flexDirection: 'column', width: 'match_parent' }}>
+          <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', flexGap: 5 }}>
+            <FlexWidget style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: tone.fg }} />
+            <TextWidget
+              text={props.caption.toUpperCase()}
+              maxLines={1}
+              style={{ fontSize: 10, fontFamily: FONT.bold, color: colors.muted, letterSpacing: 0.06 }}
+            />
+          </FlexWidget>
+          <FlexWidget style={{ flexDirection: 'row', alignItems: 'flex-end', flexGap: 3 }}>
+            <TextWidget text={props.amount} maxLines={1} style={{ fontSize: 26, fontFamily: FONT.bold, color: colors.text }} />
+            <TextWidget
+              text={props.currency}
+              style={{ fontSize: 11, fontFamily: FONT.semibold, color: colors.secondary, marginBottom: 4 }}
+            />
+          </FlexWidget>
+          {size.tall ? (
+            <TextWidget
+              text={props.status}
+              maxLines={1}
+              truncate="END"
+              style={{ fontSize: 11, fontFamily: FONT.bold, color: tone.fg }}
+            />
+          ) : null}
+        </FlexWidget>
+        <FlexWidget style={{ flexDirection: 'row', flexGap: 6, width: 'match_parent' }}>
+          <QuickAction label="+ Expense" uri="flousey://expense" colors={colors} primary compact />
+          <QuickAction label="+ Money" uri="flousey://income" colors={colors} compact />
+        </FlexWidget>
       </FlexWidget>
     );
   }
@@ -159,14 +174,52 @@ function Layout({ props, colors, wide }: { props: WidgetProps; colors: Colors; w
     <FlexWidget
       clickAction="OPEN_URI"
       clickActionData={OPEN_TODAY}
-      style={{ ...container, flexDirection: 'row', flexGap: 12 }}>
-      {summary}
+      style={{ ...container, padding: 14, flexDirection: 'row', flexGap: 12 }}>
+      <FlexWidget style={{ flex: 1, height: 'match_parent', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <FlexWidget style={{ flexDirection: 'column' }}>
+          <TextWidget
+            text="SAFE TO SPEND"
+            style={{ fontSize: 10, fontFamily: FONT.bold, color: colors.muted, letterSpacing: 0.06 }}
+          />
+          <FlexWidget style={{ flexDirection: 'row', alignItems: 'flex-end', flexGap: 4 }}>
+            <TextWidget text={props.amount} maxLines={1} style={{ fontSize: 30, fontFamily: FONT.bold, color: colors.text }} />
+            <TextWidget
+              text={props.currency}
+              style={{ fontSize: 13, fontFamily: FONT.semibold, color: colors.secondary, marginBottom: 5 }}
+            />
+          </FlexWidget>
+          <TextWidget
+            text={`${props.caption} · ${props.payday}`}
+            maxLines={1}
+            truncate="END"
+            style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.secondary }}
+          />
+        </FlexWidget>
+        <FlexWidget
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexGap: 5,
+            backgroundColor: tone.bg,
+            borderRadius: 999,
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+          }}>
+          <FlexWidget style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tone.fg }} />
+          <TextWidget
+            text={props.status}
+            maxLines={1}
+            truncate="END"
+            style={{ fontSize: 11, fontFamily: FONT.bold, color: tone.fg }}
+          />
+        </FlexWidget>
+      </FlexWidget>
       <FlexWidget style={{ width: 108, height: 'match_parent', flexDirection: 'column', justifyContent: 'center', flexGap: 8 }}>
         <TextWidget
           text={props.balance}
-          style={{ fontSize: 10, fontFamily: FONT.medium, color: colors.muted, textAlign: 'right' }}
           maxLines={1}
           truncate="END"
+          style={{ fontSize: 10, fontFamily: FONT.medium, color: colors.muted, textAlign: 'right' }}
         />
         <QuickAction label="+ Expense" uri="flousey://expense" colors={colors} primary />
         <QuickAction label="+ Money" uri="flousey://income" colors={colors} />
@@ -175,10 +228,10 @@ function Layout({ props, colors, wide }: { props: WidgetProps; colors: Colors; w
   );
 }
 
-export function renderSafeToSpend(props: WidgetProps, info: Pick<WidgetInfo, 'width'>): WidgetRepresentation {
-  const wide = info.width >= WIDE_FROM_DP;
+export function renderSafeToSpend(props: WidgetProps, info: Pick<WidgetInfo, 'width' | 'height'>): WidgetRepresentation {
+  const size: Size = { wide: info.width >= WIDE_FROM_DP, tall: info.height >= TALL_FROM_DP };
   return {
-    light: <Layout props={props} colors={LIGHT} wide={wide} />,
-    dark: <Layout props={props} colors={DARK} wide={wide} />,
+    light: <Layout props={props} colors={LIGHT} size={size} />,
+    dark: <Layout props={props} colors={DARK} size={size} />,
   };
 }
