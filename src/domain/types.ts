@@ -71,6 +71,20 @@ export interface Routine {
   enabled: boolean;
 }
 
+/** Which local reminders the user wants. */
+export interface ReminderPreferences {
+  /** The day before a bill is due, at 9:00. */
+  bills: boolean;
+  /** The morning of the expected income date. */
+  payday: boolean;
+  /** Every day at `checkInMinutes`. */
+  checkIn: boolean;
+  /** Minutes after midnight (20:00 = 1200). */
+  checkInMinutes: number;
+  /** When the app hasn't been opened for a few days. */
+  inactivity: boolean;
+}
+
 export interface Settings {
   currency: string;
   openingBalance: Minor;
@@ -81,6 +95,12 @@ export interface Settings {
   /** Default share of unexpected income to protect as savings (0-100). */
   unexpectedIncomeSavePercent: number;
   onboarded: boolean;
+  /** Missing on data saved before reminders existed: the defaults apply (see `reminderPreferences`). */
+  reminders?: ReminderPreferences;
+  /** Show "•••" instead of amounts on home-screen widgets. */
+  widgetHideAmounts?: boolean;
+  /** The "turn on reminders" card has been answered, so it isn't shown again. */
+  remindersAsked?: boolean;
 }
 
 export interface AppData {

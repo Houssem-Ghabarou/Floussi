@@ -5,7 +5,7 @@ import { createBackup, type Backup } from '@/domain/backup';
 import { toLocalDate, type LocalDate } from '@/domain/dates';
 import { computeBalance, countsToBalance } from '@/domain/derive';
 import type { Minor } from '@/domain/money';
-import type { Bill, Cycle, IncomeFrequency, Routine, Settings, Transaction } from '@/domain/types';
+import type { AppData, Bill, Cycle, IncomeFrequency, Routine, Settings, Transaction } from '@/domain/types';
 
 export type NewTransaction = Pick<Transaction, 'kind' | 'amount' | 'date'> &
   Partial<Pick<Transaction, 'category' | 'note' | 'billId' | 'billDueDate'>>;
@@ -66,6 +66,19 @@ export function currentCycle(cycles: Cycle[]): Cycle | null {
       .filter((cycle) => cycle.closedAt === null)
       .sort((a, b) => b.startDate.localeCompare(a.startDate))[0] ?? null
   );
+}
+
+/** Everything the engine needs, once a plan exists. Also used outside React (widgets, reminders). */
+export function appDataOf(stored: Pick<AppState, 'settings' | 'cycles' | 'transactions' | 'bills' | 'routines'>): AppData | null {
+  const cycle = currentCycle(stored.cycles);
+  if (!stored.settings?.onboarded || !cycle) return null;
+  return {
+    settings: stored.settings,
+    cycle,
+    transactions: stored.transactions,
+    bills: stored.bills,
+    routines: stored.routines,
+  };
 }
 
 function replaceById<T extends { id: string }>(items: T[], item: T): T[] {

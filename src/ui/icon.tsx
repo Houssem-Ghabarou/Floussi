@@ -45,6 +45,7 @@ const ICONS = {
   home: { android: 'home', ios: 'house' },
   delete: { android: 'delete', ios: 'trash' },
   warning: { android: 'warning', ios: 'exclamationmark.triangle' },
+  bell: { android: 'notifications', ios: 'bell' },
 } satisfies Record<string, { android: AndroidSymbol; ios: SFSymbol }>;
 
 export type IconName = keyof typeof ICONS;

@@ -1,13 +1,15 @@
 import { useRouter } from 'expo-router';
 import { Fragment } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import { nextDueAfter } from '@/domain/bills';
 import { FREQUENCY_LABELS } from '@/domain/cycle';
 import { formatDaysFromNow, formatShortDate } from '@/domain/dates';
 import { cycleBillOccurrences, savingsMovedInCycle } from '@/domain/derive';
 import { formatMoney, type Minor } from '@/domain/money';
-import type { Bill } from '@/domain/types';
+import { formatMinutes, reminderPreferences } from '@/domain/reminders';
+import type { Bill, ReminderPreferences } from '@/domain/types';
+import { useNotificationAccess } from '@/platform/use-notification-access';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import { TabScreen } from '@/ui/app-header';
@@ -15,6 +17,8 @@ import {
   AppText,
   Button,
   Card,
+  Chip,
+  ChipGroup,
   Divider,
   IconCircle,
   ListRow,
@@ -22,9 +26,12 @@ import {
   PageIntro,
   SectionTitle,
 } from '@/ui/components';
+import type { IconName } from '@/ui/icon';
 import { confirmDestructive } from '@/ui/dialog-store';
 import { Space, usePalette } from '@/ui/theme';
 import { useBackupActions } from '@/ui/use-backup';
+
+const CHECK_IN_TIMES = [19 * 60, 20 * 60, 21 * 60, 22 * 60];
 
 const NORMAL_DAY_SOURCE = {
   routines: 'From your routines',
@@ -38,6 +45,8 @@ export default function RulesScreen() {
   const palette = usePalette();
   const resetAll = useApp((state) => state.resetAll);
   const { share, restore } = useBackupActions();
+  const updateSettings = useApp((state) => state.updateSettings);
+  const { access, request } = useNotificationAccess();
 
   if (!financial) return null;
   const { data, today, status, currency } = financial;
@@ -54,6 +63,10 @@ export default function RulesScreen() {
     const next = nextDueAfter(bill, cycle.nextIncomeDate);
     return next ? `Next due ${formatShortDate(next)}, after your income · not protected yet` : 'No upcoming due date';
   };
+
+  const reminders = reminderPreferences(settings);
+  const setReminder = (patch: Partial<ReminderPreferences>) =>
+    updateSettings({ reminders: { ...reminders, ...patch }, remindersAsked: true });
 
   const confirmReset = () =>
     confirmDestructive({
@@ -209,6 +222,87 @@ export default function RulesScreen() {
         <ListRow icon="restart" title="Unspent money" subtitle="Spreads over the coming days" />
       </Card>
 
+      <SectionTitle title="Reminders" subtitle="Local notifications, scheduled on this phone" />
+      <Card style={styles.listCard}>
+        {access && !access.granted ? (
+          <View style={[styles.notice, { backgroundColor: palette.watchSoft }]}>
+            <AppText variant="small" style={styles.flex}>
+              {access.canAskAgain
+                ? 'Notifications are off for Flousey, so these reminders stay silent.'
+                : 'Notifications are blocked for Flousey in your phone settings.'}
+            </AppText>
+            <Button
+              label={access.canAskAgain ? 'Turn on' : 'Open settings'}
+              compact
+              onPress={() => {
+                void request();
+              }}
+            />
+          </View>
+        ) : null}
+        <ToggleRow
+          icon="receipt"
+          title="Bill due tomorrow"
+          subtitle="9:00 the day before a bill is due"
+          value={reminders.bills}
+          onChange={(bills) => setReminder({ bills })}
+        />
+        <Divider />
+        <ToggleRow
+          icon="event"
+          title="Payday"
+          subtitle="9:00 on the day your income is expected"
+          value={reminders.payday}
+          onChange={(payday) => setReminder({ payday })}
+        />
+        <Divider />
+        <ToggleRow
+          icon="bedtime"
+          title="Evening check-in"
+          subtitle={
+            reminders.checkIn
+              ? `Every day at ${formatMinutes(reminders.checkInMinutes)}`
+              : 'A calm daily nudge to look at your day'
+          }
+          value={reminders.checkIn}
+          onChange={(checkIn) => setReminder({ checkIn })}
+        />
+        {reminders.checkIn ? (
+          <ChipGroup>
+            {CHECK_IN_TIMES.map((minutes) => (
+              <Chip
+                key={minutes}
+                label={formatMinutes(minutes)}
+                selected={reminders.checkInMinutes === minutes}
+                onPress={() => setReminder({ checkInMinutes: minutes })}
+              />
+            ))}
+          </ChipGroup>
+        ) : null}
+        <Divider />
+        <ToggleRow
+          icon="schedule"
+          title="When you haven't opened Flousey"
+          subtitle={reminders.checkIn ? 'Not needed while the daily check-in is on' : 'After 3 days, at 19:00'}
+          value={reminders.inactivity}
+          onChange={(inactivity) => setReminder({ inactivity })}
+        />
+      </Card>
+
+      <SectionTitle title="Home screen widget" />
+      <Card style={styles.listCard}>
+        <ToggleRow
+          icon="lock"
+          title="Hide amounts"
+          subtitle="Show ••• instead of your money on the widget"
+          value={settings.widgetHideAmounts === true}
+          onChange={(widgetHideAmounts) => updateSettings({ widgetHideAmounts })}
+        />
+        <AppText variant="caption" tone="muted">
+          To add it, touch and hold an empty spot on your home screen, then choose Widgets → Flousey.
+        </AppText>
+      </Card>
+
       <SectionTitle title="Backup" />
       <Card>
         <View style={styles.inline}>
@@ -235,8 +329,48 @@ export default function RulesScreen() {
   );
 }
 
+function ToggleRow({
+  icon,
+  title,
+  subtitle,
+  value,
+  onChange,
+}: {
+  icon: IconName;
+  title: string;
+  subtitle: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  const palette = usePalette();
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      onPress={() => onChange(!value)}
+      style={styles.toggleRow}>
+      <IconCircle icon={icon} size={40} />
+      <View style={styles.flex}>
+        <AppText variant="bodyStrong">{title}</AppText>
+        <AppText variant="small" tone="secondary">
+          {subtitle}
+        </AppText>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: palette.surfaceHighest, true: palette.brand }}
+        thumbColor="#FFFFFF"
+        ios_backgroundColor={palette.surfaceHighest}
+      />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: Space.md, paddingVertical: 6 },
+  notice: { flexDirection: 'row', alignItems: 'center', gap: Space.md, borderRadius: 10, padding: Space.md },
   inline: { flexDirection: 'row', alignItems: 'center', gap: Space.md },
   buttonRow: { flexDirection: 'row', gap: Space.sm },
   listCard: { gap: Space.sm, paddingVertical: Space.md },

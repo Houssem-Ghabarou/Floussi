@@ -9,6 +9,7 @@ import { cycleBillOccurrences } from '@/domain/derive';
 import { formatAmount, formatMoney, type CurrencyInfo, type Minor } from '@/domain/money';
 import { routineForWeekday } from '@/domain/routines';
 import type { RoutineItem } from '@/domain/types';
+import { useNotificationAccess } from '@/platform/use-notification-access';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import { TabScreen } from '@/ui/app-header';
@@ -44,6 +45,8 @@ export default function TodayScreen() {
   const addTransaction = useApp((state) => state.addTransaction);
   const deleteTransaction = useApp((state) => state.deleteTransaction);
   const updateCycle = useApp((state) => state.updateCycle);
+  const updateSettings = useApp((state) => state.updateSettings);
+  const { access, request } = useNotificationAccess();
 
   if (!financial) return null;
   const { data, today, status, advice, currency } = financial;
@@ -62,6 +65,8 @@ export default function TodayScreen() {
   const overToday = status.remainingToday < 0;
   const heroValue = hasSpentToday ? Math.max(0, status.remainingToday) : status.dailyAllowance;
   const flexible = Math.max(0, status.flexibleNow);
+  // Asked once, after onboarding, and never while the system can no longer show its prompt.
+  const askReminders = !data.settings.remindersAsked && access !== null && !access.granted && access.canAskAgain;
   const showPastSpendingPrompt =
     daysBetween(data.settings.openingDate, today) <= 7 &&
     !data.transactions.some((t) => !t.countsToBalance);
@@ -199,6 +204,40 @@ export default function TodayScreen() {
           {advice.suggestion ? ` ${advice.suggestion}` : ''}
         </AppText>
       </Callout>
+
+      {askReminders ? (
+        <Card tint={palette.surfaceLow}>
+          <View style={styles.inline}>
+            <IconCircle icon="bell" size={36} color={palette.brand} background={palette.surface} />
+            <AppText variant="bodyStrong" style={styles.flex}>
+              Want a heads-up before bills are due?
+            </AppText>
+          </View>
+          <AppText variant="small" tone="secondary">
+            Flousey can remind you the day before a bill, on payday, and when you haven't checked in for a few days.
+            You can change this anytime in Rules.
+          </AppText>
+          <View style={styles.buttonRow}>
+            <Button
+              label="Turn on reminders"
+              compact
+              style={styles.flex}
+              onPress={async () => {
+                updateSettings({ remindersAsked: true });
+                const granted = await request();
+                showToast(granted ? 'Reminders are on' : 'You can turn reminders on anytime in Rules');
+              }}
+            />
+            <Button
+              label="Not now"
+              variant="secondary"
+              compact
+              style={styles.flex}
+              onPress={() => updateSettings({ remindersAsked: true })}
+            />
+          </View>
+        </Card>
+      ) : null}
 
       <Card onPress={() => router.push('/breakdown')} accessibilityLabel="See how your money is split">
         <View style={styles.spaceBetween}>

@@ -3,7 +3,17 @@
  * Parsing is defensive: a damaged or foreign file is rejected before it can replace any data.
  */
 import { formatShortDate, toLocalDate, type LocalDate } from './dates';
-import type { Bill, Cycle, IncomeFrequency, Routine, Settings, Transaction, TransactionKind } from './types';
+import { DEFAULT_REMINDERS } from './reminders';
+import type {
+  Bill,
+  Cycle,
+  IncomeFrequency,
+  ReminderPreferences,
+  Routine,
+  Settings,
+  Transaction,
+  TransactionKind,
+} from './types';
 
 export const BACKUP_FORMAT = 1;
 
@@ -137,6 +147,22 @@ function parseSettings(value: unknown): Settings | null {
     dailyNeed: intOrNull(value.dailyNeed),
     unexpectedIncomeSavePercent: isInt(value.unexpectedIncomeSavePercent) ? value.unexpectedIncomeSavePercent : 0,
     onboarded: true,
+    ...(isObject(value.reminders) ? { reminders: parseReminders(value.reminders) } : {}),
+    ...(typeof value.widgetHideAmounts === 'boolean' ? { widgetHideAmounts: value.widgetHideAmounts } : {}),
+    ...(typeof value.remindersAsked === 'boolean' ? { remindersAsked: value.remindersAsked } : {}),
+  };
+}
+
+function parseReminders(value: Json): ReminderPreferences {
+  const flag = (key: keyof ReminderPreferences) =>
+    typeof value[key] === 'boolean' ? (value[key] as boolean) : (DEFAULT_REMINDERS[key] as boolean);
+  const minutes = value.checkInMinutes;
+  return {
+    bills: flag('bills'),
+    payday: flag('payday'),
+    checkIn: flag('checkIn'),
+    inactivity: flag('inactivity'),
+    checkInMinutes: isInt(minutes) && minutes >= 0 && minutes < 24 * 60 ? minutes : DEFAULT_REMINDERS.checkInMinutes,
   };
 }
 

@@ -3,14 +3,18 @@
     "name": "Flousey",
     "slug": "flousey",
     "description": "Flousey: know what you can safely spend every day until your next income.",
-    "version": "1.0.0",
+    "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "flousey",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.houssemgh.Flousey"
+      "bundleIdentifier": "com.houssemgh.Flousey",
+      "buildNumber": "16",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +24,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.houssemgh.Flousey"
+      "package": "com.houssemgh.Flousey",
+      "versionCode": 16
     },
     "web": {
       "output": "static",
@@ -42,14 +47,66 @@
         }
       ],
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#185B43",
+          "defaultChannel": "reminders"
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.houssemgh.Flousey.widgets",
+          "groupIdentifier": "group.com.houssemgh.Flousey",
+          "widgets": [
+            {
+              "name": "SafeToSpend",
+              "displayName": "Safe to spend",
+              "description": "What you can safely spend today, with quick actions.",
+              "supportedFamilies": ["systemSmall", "systemMedium", "accessoryRectangular", "accessoryInline"],
+              "contentMarginsDisabled": false
+            }
+          ]
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./node_modules/@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf",
+            "./node_modules/@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf",
+            "./node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "SafeToSpend",
+              "label": "Flousey · Safe to spend",
+              "description": "What you can safely spend today, with quick actions.",
+              "minWidth": "150dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "420dp",
+              "maxResizeHeight": "220dp",
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "e16f1534-3400-4a2e-820e-0ab5e789eb8b"
+      }
     }
   }
 }

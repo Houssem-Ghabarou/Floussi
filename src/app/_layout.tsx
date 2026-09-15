@@ -11,6 +11,8 @@ import { useEffect } from 'react';
 import { AppState, StyleSheet, useColorScheme, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
+import { useNotificationRedirect } from '@/platform/notifications';
+import { startBackgroundSync } from '@/platform/sync';
 import { useApp } from '@/store/app-store';
 import { AppText, Button } from '@/ui/components';
 import { DialogHost } from '@/ui/dialog';
@@ -20,6 +22,9 @@ import { ToastHost } from '@/ui/toast';
 SplashScreen.preventAutoHideAsync();
 
 const modal = { presentation: 'modal' } as const;
+
+// Links from widgets and reminders (flousey://expense…) open over the tabs, so closing lands on Today.
+export const unstable_settings = { anchor: '(tabs)' };
 
 export default function RootLayout() {
   const status = useApp((state) => state.status);
@@ -53,6 +58,10 @@ export default function RootLayout() {
     });
     return () => subscription.remove();
   }, [refreshToday]);
+
+  // Reminders and home-screen widgets follow the data on this phone.
+  useEffect(() => startBackgroundSync(), []);
+  useNotificationRedirect(status === 'ready' && onboarded);
 
   if (status === 'loading' || !fontsReady) return null;
 

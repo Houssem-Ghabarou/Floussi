@@ -1,7 +1,7 @@
 {
   "name": "flousey",
-  "main": "expo-router/entry",
-  "version": "1.0.0",
+  "main": "index.ts",
+  "version": "1.6.0",
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo/ui": "~57.0.18",
@@ -15,6 +15,7 @@
     "expo-haptics": "~57.0.3",
     "expo-image": "~57.0.5",
     "expo-linking": "~57.0.10",
+    "expo-notifications": "~57.0.18",
     "expo-router": "~57.0.21",
     "expo-sharing": "~57.0.19",
     "expo-splash-screen": "~57.0.9",
@@ -23,9 +24,11 @@
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
     "expo-web-browser": "~57.0.3",
+    "expo-widgets": "~57.0.19",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-android-widget": "^0.22.1",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-reanimated": "4.5.1",
@@ -61,6 +64,15 @@
       "/android/",
       "/ios/"
     ]
+  },
+  "expo": {
+    "autolinking": {
+      "android": {
+        "exclude": [
+          "expo-widgets"
+        ]
+      }
+    }
   },
   "private": true
 }
