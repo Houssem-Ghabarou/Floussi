@@ -660,7 +660,7 @@ export function AmountField({
   autoFocus,
   size = 'large',
   prefix,
-  accessibilityLabel = 'Amount',
+  accessibilityLabel = t('common.amount'),
 }: {
   value: string;
   onChangeText: (text: string) => void;

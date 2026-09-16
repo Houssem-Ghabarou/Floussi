@@ -1,4 +1,6 @@
-/** "Can I afford this?" — evaluates a purchase without recording it. */
+/** "Can I afford this?" — evaluates a purchase without recording it, in the chosen language. */
+import { t } from '@/i18n';
+
 import { THRESHOLDS, type FinancialStatus, type RiskLevel } from './engine';
 import { formatMoney, type CurrencyInfo, type Minor } from './money';
 
@@ -26,22 +28,21 @@ export const WHAT_IF_THRESHOLDS = {
   tighterRatio: 0.65,
 } as const;
 
-const PROTECTED_LINE = 'Your bills, savings and minimum balance stay protected.';
-
 export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency: CurrencyInfo): WhatIfResult {
   const m = (value: Minor) => formatMoney(value, currency, { whole: true });
   const paceBefore = status.dailyAllowance;
   const paceAfter = Math.max(0, Math.floor((status.flexibleStartOfDay - amount) / status.daysRemaining));
   const flexibleAfter = status.flexibleNow - amount;
   const base = { paceBefore, paceAfter };
+  const protectedLine = t('whatIf.protectedLine');
 
   if (amount > status.balance) {
     return {
       ...base,
       level: 'exceeds_balance',
       riskLevel: 'at_risk',
-      title: "That's more than you have right now",
-      detail: `You have ${m(status.balance)} available.`,
+      title: t('whatIf.exceedsBalance.title'),
+      detail: t('whatIf.exceedsBalance.detail', { amount: m(status.balance) }),
     };
   }
   if (status.balance - amount < status.billsProtected) {
@@ -49,8 +50,11 @@ export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency:
       ...base,
       level: 'touches_bills',
       riskLevel: 'at_risk',
-      title: 'This would put your bills at risk',
-      detail: `You'd have ${m(status.balance - amount)} left, but ${m(status.billsProtected)} in bills are due before your next income.`,
+      title: t('whatIf.touchesBills.title'),
+      detail: t('whatIf.touchesBills.detail', {
+        left: m(status.balance - amount),
+        bills: m(status.billsProtected),
+      }),
     };
   }
   if (flexibleAfter < 0) {
@@ -58,8 +62,8 @@ export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency:
       ...base,
       level: 'touches_protected',
       riskLevel: 'at_risk',
-      title: 'This would dip into your protected money',
-      detail: `It would use ${m(Math.min(amount, -flexibleAfter))} of the money set aside for savings and your minimum balance.`,
+      title: t('whatIf.touchesProtected.title'),
+      detail: t('whatIf.touchesProtected.detail', { amount: m(Math.min(amount, -flexibleAfter)) }),
     };
   }
 
@@ -68,15 +72,15 @@ export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency:
   // and under half a normal day it's a significant impact.
   const belowNormalDay = paceAfter < status.normalDay;
   const veryTight = paceAfter < status.normalDay * THRESHOLDS.veryTightBelow;
-  const routineLine = belowNormalDay ? ` That's below a normal day of about ${m(status.normalDay)}.` : '';
+  const routineLine = belowNormalDay ? t('whatIf.belowNormalDay', { amount: m(status.normalDay) }) : '';
 
   if (ratio >= WHAT_IF_THRESHOLDS.comfortableRatio && !belowNormalDay) {
     return {
       ...base,
       level: 'comfortable',
       riskLevel: 'comfortable',
-      title: 'Looks comfortable',
-      detail: `Your safe pace would stay around ${m(paceAfter)}/day. ${PROTECTED_LINE}`,
+      title: t('whatIf.comfortable.title'),
+      detail: t('whatIf.comfortable.detail', { pace: m(paceAfter), protected: protectedLine }),
     };
   }
   if (ratio >= WHAT_IF_THRESHOLDS.tighterRatio && !veryTight) {
@@ -84,15 +88,15 @@ export function evaluateWhatIf(status: FinancialStatus, amount: Minor, currency:
       ...base,
       level: 'tighter',
       riskLevel: 'watch',
-      title: 'Possible, but the rest of the cycle gets tighter',
-      detail: `${PROTECTED_LINE}${routineLine}`,
+      title: t('whatIf.tighter.title'),
+      detail: `${protectedLine}${routineLine}`,
     };
   }
   return {
     ...base,
     level: 'significant',
     riskLevel: 'at_risk',
-    title: 'This would significantly reduce your daily flexibility',
-    detail: `${PROTECTED_LINE}${routineLine}`,
+    title: t('whatIf.significant.title'),
+    detail: `${protectedLine}${routineLine}`,
   };
 }

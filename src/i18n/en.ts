@@ -657,6 +657,7 @@ const en = {
   'common.turnOn': 'Turn on',
   'common.openSettings': 'Open settings',
   'common.saveChanges': 'Save changes',
+  'common.amount': 'Amount',
   'common.name': 'Name',
   'common.date': 'Date',
   'common.todayLabel': 'Today',
@@ -892,6 +893,20 @@ const en = {
   'whatIf.guardTouched': 'Touched',
   'whatIf.guardAtRisk': 'At risk',
   'whatIf.verdict': '{detail} Your pace would go from {before} to {after} a day.',
+  'whatIf.protectedLine': 'Your bills, savings and minimum balance stay protected.',
+  'whatIf.belowNormalDay': ' That’s below a normal day of about {amount}.',
+  'whatIf.exceedsBalance.title': 'That’s more than you have right now',
+  'whatIf.exceedsBalance.detail': 'You have {amount} available.',
+  'whatIf.touchesBills.title': 'This would put your bills at risk',
+  'whatIf.touchesBills.detail':
+    'You’d have {left} left, but {bills} in bills are due before your next income.',
+  'whatIf.touchesProtected.title': 'This would dip into your protected money',
+  'whatIf.touchesProtected.detail':
+    'It would use {amount} of the money set aside for savings and your minimum balance.',
+  'whatIf.comfortable.title': 'Looks comfortable',
+  'whatIf.comfortable.detail': 'Your safe pace would stay around {pace}/day. {protected}',
+  'whatIf.tighter.title': 'Possible, but the rest of the cycle gets tighter',
+  'whatIf.significant.title': 'This would significantly reduce your daily flexibility',
   'whatIf.tryTitle': 'Try an amount',
   'whatIf.tryBody':
     'You have {amount} {currency} of flexible money until your next income. Nothing is recorded unless you choose to.',

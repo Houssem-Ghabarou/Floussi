@@ -7,12 +7,12 @@ import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { AppState, StyleSheet, useColorScheme, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
-import { t } from '@/i18n';
-import { applyLanguage, resolveLanguage } from '@/platform/language';
+import { currentLanguage, t } from '@/i18n';
+import { applyLanguage, lockLeftToRight, resolveLanguage } from '@/platform/language';
 import { useNotificationRedirect } from '@/platform/notifications';
 import { startBackgroundSync } from '@/platform/sync';
 import { useApp } from '@/store/app-store';
@@ -22,6 +22,8 @@ import { Space, usePalette } from '@/ui/theme';
 import { ToastHost } from '@/ui/toast';
 
 SplashScreen.preventAutoHideAsync();
+// Flousey reads left to right in every language; this also undoes the mirroring older builds set.
+lockLeftToRight();
 
 const modal = { presentation: 'modal' } as const;
 
@@ -36,8 +38,10 @@ export default function RootLayout() {
   const scheme = useColorScheme();
   const palette = usePalette();
   const chosenLanguage = useApp((state) => state.language);
-  // Applied while rendering, so the first screen already shows the right language.
-  useMemo(() => applyLanguage(resolveLanguage(chosenLanguage)), [chosenLanguage]);
+  const language = resolveLanguage(chosenLanguage);
+  // Applied while rendering, so the first screen already shows the right language. Deliberately not a
+  // useMemo: its result would be unused, and the React Compiler is free to drop such a memo entirely.
+  if (currentLanguage() !== language) applyLanguage(language);
   const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
@@ -96,7 +100,10 @@ export default function RootLayout() {
     <KeyboardProvider>
       <ThemeProvider value={navigationTheme}>
         <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.background } }}>
+        {/* Keyed on the language: picking a new one redraws every screen, so nothing stays behind. */}
+        <Stack
+          key={language}
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.background } }}>
           <Stack.Protected guard={onboarded}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="activity" options={modal} />

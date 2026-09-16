@@ -25,7 +25,7 @@ import {
 } from '@/domain/money';
 import type { Bill, IncomeFrequency, Language, Transaction } from '@/domain/types';
 import { LANGUAGE_NAMES, LANGUAGES, t, tn, type TranslationKey } from '@/i18n';
-import { applyLanguage, resolveLanguage } from '@/platform/language';
+import { resolveLanguage } from '@/platform/language';
 import { useApp } from '@/store/app-store';
 import {
   AmountField,
@@ -45,7 +45,6 @@ import {
   TextField,
 } from '@/ui/components';
 import { DateChoice } from '@/ui/date-picker';
-import { showDialog } from '@/ui/dialog-store';
 import { Icon, type IconName } from '@/ui/icon';
 import { CardShadow, Fonts, heroColors, MaxContentWidth, Radius, Space, usePalette } from '@/ui/theme';
 import { useBackupActions } from '@/ui/use-backup';
@@ -129,16 +128,6 @@ export default function OnboardingScreen() {
   const changeLanguage = (next: Language) => {
     if (next === language) return;
     chooseLanguage(next);
-    // Arabic mirrors the whole layout, which React Native only does after a restart.
-    if (applyLanguage(next)) {
-      showDialog({
-        icon: 'restart',
-        title: t('language.restartTitle'),
-        message: t('language.restartMessage'),
-        confirmLabel: t('common.ok'),
-        cancelLabel: null,
-      });
-    }
   };
 
   const currency = getCurrency(currencyCode);
@@ -285,7 +274,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View style={[styles.quote, { backgroundColor: palette.surfaceLow }, CardShadow]}>
-            <IconCircle icon="eco" size={32} color={palette.onBrandSoft} background={palette.brandSoft} />
+            <IconCircle icon="quote" size={32} color={palette.onBrandSoft} background={palette.brandSoft} />
             <AppText variant="small" tone="secondary" style={[styles.flex, styles.italic]}>
               {t('onb.quote')}
             </AppText>
@@ -306,7 +295,7 @@ export default function OnboardingScreen() {
             body={t('onb.feature2Body')}
           />
           <FeatureCard
-            icon="routine"
+            icon="repeat"
             tile={palette.accentSoft}
             color={palette.accentText}
             title={t('onb.feature3Title')}
@@ -373,7 +362,7 @@ export default function OnboardingScreen() {
     case 'now':
       content = (
         <>
-          <Badge icon="spa" label={t('onb.nowBadge')} color={palette.brand} background={`${palette.brand}1A`} />
+          <Badge icon="flag" label={t('onb.nowBadge')} color={palette.brand} background={`${palette.brand}1A`} />
           <StepIntro title={t('onb.nowTitle')} subtitle={t('onb.nowSubtitle')} />
 
           <Card style={CardShadow}>
@@ -809,7 +798,7 @@ export default function OnboardingScreen() {
           </Card>
 
           <Card style={[styles.coach, CardShadow]}>
-            <IconCircle icon="eco" size={32} color={palette.brandText} background={palette.brand} />
+            <IconCircle icon="lightbulb" size={32} color={palette.brandText} background={palette.brand} />
             <View style={styles.coachText}>
               <AppText variant="small" style={styles.strong}>
                 {t('onb.coach')}
@@ -1156,7 +1145,7 @@ const styles = StyleSheet.create({
   },
   headerRow: { height: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerBrand: { flexDirection: 'row', alignItems: 'center', gap: Space.sm },
-  headerBack: { width: 36, height: 44, alignItems: 'flex-start', justifyContent: 'center', marginLeft: -4 },
+  headerBack: { width: 36, height: 44, alignItems: 'flex-start', justifyContent: 'center', marginStart: -4 },
   headerCheck: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   brandName: { letterSpacing: -0.45 },
 

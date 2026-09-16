@@ -1,9 +1,15 @@
-/** Picks the language to use and applies it, including right-to-left mirroring for Arabic. */
+/**
+ * Picks the language to use and applies it to every text.
+ *
+ * The layout always stays left to right, in every language: only the words are translated. A build
+ * that previously mirrored the layout for Arabic needs one relaunch for that to be undone, because
+ * React Native stores the direction natively.
+ */
 import { getLocales } from 'expo-localization';
 import { I18nManager } from 'react-native';
 
 import type { Language } from '@/domain/types';
-import { isRightToLeft, LANGUAGES, setLanguage } from '@/i18n';
+import { LANGUAGES, setLanguage } from '@/i18n';
 
 /** The first language of the phone that Flousey speaks, English otherwise. */
 export function deviceLanguage(): Language {
@@ -20,17 +26,15 @@ export function resolveLanguage(chosen: string | null | undefined): Language {
   return deviceLanguage();
 }
 
-/**
- * Applies a language to every text. Mirroring the layout needs a restart, so this returns true when
- * the app has to be reopened for the change to look right.
- */
-export function applyLanguage(language: Language): boolean {
+/** Keeps the layout left to right, and undoes the mirroring older builds turned on. */
+export function lockLeftToRight() {
+  I18nManager.allowRTL(false);
+  if (I18nManager.isRTL) I18nManager.forceRTL(false);
+}
+
+/** Applies a language to every text. Nothing about the layout changes, so no restart is needed. */
+export function applyLanguage(language: Language) {
   setLanguage(language);
-  const rightToLeft = isRightToLeft(language);
-  if (rightToLeft === I18nManager.isRTL) return false;
-  I18nManager.allowRTL(rightToLeft);
-  I18nManager.forceRTL(rightToLeft);
-  return true;
 }
 
 /** Texts only: used by background code (widgets), which never lays out screens. */

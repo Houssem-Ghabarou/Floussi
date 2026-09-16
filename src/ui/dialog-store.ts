@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { create } from 'zustand';
 
+import { t } from '@/i18n';
+
 import type { IconName } from './icon';
 
 export interface DialogOptions {
@@ -33,7 +35,13 @@ export function showDialog(options: DialogOptions) {
 
 /** Asks before deleting or erasing something. */
 export function confirmDestructive(options: Omit<DialogOptions, 'tone'> & { onConfirm: () => void }) {
-  showDialog({ tone: 'danger', icon: 'delete', cancelLabel: 'Keep', confirmLabel: 'Delete', ...options });
+  showDialog({
+    tone: 'danger',
+    icon: 'delete',
+    cancelLabel: t('common.keep'),
+    confirmLabel: t('common.delete'),
+    ...options,
+  });
 }
 
 /** True once any of the values differs from what the screen started with. */

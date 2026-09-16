@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 
 import { backupFileName, parseBackup, type Backup, type ParsedBackup } from '@/domain/backup';
 import type { LocalDate } from '@/domain/dates';
+import { t } from '@/i18n';
 
 /** Writes the backup to a file and opens the share sheet (Drive, email, Files…). */
 export async function shareBackup(backup: Backup, today: LocalDate): Promise<void> {
@@ -14,7 +15,7 @@ export async function shareBackup(backup: Backup, today: LocalDate): Promise<voi
   file.write(JSON.stringify(backup));
   await Sharing.shareAsync(file.uri, {
     mimeType: 'application/json',
-    dialogTitle: 'Save your Flousey backup',
+    dialogTitle: t('backup.shareTitle'),
     UTI: 'public.json',
   });
 }

@@ -1,5 +1,6 @@
 import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
-import type { StyleProp, ViewStyle } from 'react-native';
+import lightWeight from 'expo-symbols/androidWeights/light';
+import { I18nManager, type StyleProp, type ViewStyle } from 'react-native';
 
 import { usePalette } from './theme';
 
@@ -22,14 +23,16 @@ const ICONS = {
   help: { android: 'help', ios: 'questionmark.circle' },
   info: { android: 'info', ios: 'info.circle' },
   eco: { android: 'eco', ios: 'leaf' },
-  spa: { android: 'spa', ios: 'leaf' },
+  quote: { android: 'format_quote', ios: 'quote.opening' },
+  flag: { android: 'flag', ios: 'flag' },
+  repeat: { android: 'repeat', ios: 'repeat' },
   lightbulb: { android: 'lightbulb', ios: 'lightbulb' },
   insights: { android: 'insights', ios: 'chart.line.uptrend.xyaxis' },
   donut: { android: 'donut_large', ios: 'chart.pie' },
   wallet: { android: 'account_balance_wallet', ios: 'wallet.bifold' },
   payments: { android: 'payments', ios: 'banknote' },
   receipt: { android: 'receipt_long', ios: 'doc.text' },
-  savings: { android: 'savings', ios: 'banknote' },
+  savings: { android: 'savings', ios: 'target' },
   shield: { android: 'shield', ios: 'shield' },
   verified: { android: 'verified_user', ios: 'checkmark.shield' },
   lock: { android: 'lock', ios: 'lock' },
@@ -50,6 +53,12 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
+/** Icons that point somewhere: they have to face the other way when the layout is mirrored. */
+const MIRROR_IN_RTL = new Set<IconName>(['chevronLeft', 'chevronRight', 'arrowForward']);
+
+/** Light keeps the icons linear. Android needs the weight object; iOS takes the name. */
+const WEIGHT = { ios: 'light', android: lightWeight } as const;
+
 export function Icon({
   name,
   size = 20,
@@ -63,12 +72,14 @@ export function Icon({
 }) {
   const palette = usePalette();
   const symbol = ICONS[name];
+  const mirrored = I18nManager.isRTL && MIRROR_IN_RTL.has(name);
   return (
     <SymbolView
       name={{ ios: symbol.ios, android: symbol.android, web: symbol.android }}
       size={size}
+      weight={WEIGHT}
       tintColor={color ?? palette.textSecondary}
-      style={style}
+      style={[style, mirrored ? { transform: [{ scaleX: -1 }] } : null]}
     />
   );
 }

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, View } from 'react-native';
 
 import { newId } from '@/data/repository';
 import { expenseCategories } from '@/domain/categories';
@@ -254,7 +254,8 @@ const styles = StyleSheet.create({
   itemCard: { gap: Space.sm, padding: Space.md },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: Space.sm },
   itemName: { flex: 1 },
-  itemAmount: { width: 96, textAlign: 'right' },
+  // React Native has no logical 'end' for text, so the side follows the writing direction.
+  itemAmount: { width: 96, textAlign: I18nManager.isRTL ? 'left' : 'right' },
   emojiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
   emojiButton: { paddingHorizontal: 6, paddingVertical: 4, borderRadius: 8, opacity: 0.45 },
   emojiSelected: { opacity: 1, transform: [{ scale: 1.15 }] },

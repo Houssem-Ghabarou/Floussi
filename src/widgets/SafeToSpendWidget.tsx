@@ -63,7 +63,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
       <VStack alignment="leading" spacing={1} modifiers={[containerBackground('clear', 'widget'), widgetURL('flousey://')]}>
         <Text modifiers={[font({ size: 11, weight: 'semibold' })]}>{props.ready ? props.label : 'FLOUSEY'}</Text>
         <Text modifiers={[font({ size: 20, weight: 'bold' }), lineLimit(1), minimumScaleFactor(0.6)]}>
-          {props.ready ? `${props.amount} ${props.currency}` : 'Set up your plan'}
+          {props.ready ? `${props.amount} ${props.currency}` : props.caption}
         </Text>
         {props.ready ? <Text modifiers={[font({ size: 11, weight: 'medium' }), lineLimit(1)]}>{props.status}</Text> : null}
       </VStack>

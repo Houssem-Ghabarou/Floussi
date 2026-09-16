@@ -659,6 +659,7 @@ const fr: Catalog = {
   'common.viewAll': 'Tout voir',
   'common.notNow': 'Plus tard',
   'common.saveChanges': 'Enregistrer',
+  'common.amount': 'Montant',
   'common.name': 'Nom',
   'common.date': 'Date',
   'common.todayLabel': 'Aujourd’hui',
@@ -901,6 +902,20 @@ const fr: Catalog = {
   'whatIf.guardTouched': 'Entamé',
   'whatIf.guardAtRisk': 'En risque',
   'whatIf.verdict': '{detail} Ton rythme passerait de {before} à {after} par jour.',
+  'whatIf.protectedLine': 'Tes factures, ton épargne et ton solde minimum restent protégés.',
+  'whatIf.belowNormalDay': ' C’est en dessous d’une journée normale, environ {amount}.',
+  'whatIf.exceedsBalance.title': 'C’est plus que ce que tu as maintenant',
+  'whatIf.exceedsBalance.detail': 'Tu as {amount} de disponible.',
+  'whatIf.touchesBills.title': 'Cela mettrait tes factures en danger',
+  'whatIf.touchesBills.detail':
+    'Il te resterait {left}, mais {bills} de factures arrivent avant ta prochaine rentrée.',
+  'whatIf.touchesProtected.title': 'Cela entamerait ton argent protégé',
+  'whatIf.touchesProtected.detail':
+    'Cela utiliserait {amount} de l’argent mis de côté pour l’épargne et ton solde minimum.',
+  'whatIf.comfortable.title': 'Ça a l’air confortable',
+  'whatIf.comfortable.detail': 'Ton rythme sûr resterait autour de {pace}/jour. {protected}',
+  'whatIf.tighter.title': 'Possible, mais la fin du cycle devient plus serrée',
+  'whatIf.significant.title': 'Cela réduirait beaucoup ta marge quotidienne',
   'whatIf.tryTitle': 'Essaie un montant',
   'whatIf.tryBody':
     'Tu as {amount} {currency} d’argent flexible jusqu’à ta prochaine rentrée. Rien n’est enregistré sans ton accord.',

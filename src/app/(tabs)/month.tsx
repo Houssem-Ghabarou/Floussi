@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, View } from 'react-native';
 
 import { statusLabel } from '@/domain/advice';
 import { billsCategory, expenseCategory } from '@/domain/categories';
@@ -416,7 +416,14 @@ function ComparisonCard({ insight, currency }: { insight: CategoryInsight; curre
           ]}
         />
         {over ? (
-          <View style={[styles.marker, { left: `${(expected / scale) * 100}%`, backgroundColor: palette.inverse }]} />
+          <View
+            style={[
+              styles.marker,
+              // The bar fills from the start, so the marker has to follow the writing direction.
+              { [I18nManager.isRTL ? 'right' : 'left']: `${(expected / scale) * 100}%` },
+              { backgroundColor: palette.inverse },
+            ]}
+          />
         ) : null}
       </View>
       <View style={styles.spaceBetween}>

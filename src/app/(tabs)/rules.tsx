@@ -10,7 +10,7 @@ import { formatMoney, type Minor } from '@/domain/money';
 import { formatMinutes, reminderPreferences } from '@/domain/reminders';
 import type { Bill, ReminderPreferences } from '@/domain/types';
 import { LANGUAGE_NAMES, LANGUAGES, t, type TranslationKey } from '@/i18n';
-import { applyLanguage, resolveLanguage } from '@/platform/language';
+import { resolveLanguage } from '@/platform/language';
 import { useNotificationAccess } from '@/platform/use-notification-access';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
@@ -29,7 +29,7 @@ import {
   SectionTitle,
 } from '@/ui/components';
 import type { IconName } from '@/ui/icon';
-import { confirmDestructive, showDialog } from '@/ui/dialog-store';
+import { confirmDestructive } from '@/ui/dialog-store';
 import { Space, usePalette } from '@/ui/theme';
 import { useBackupActions } from '@/ui/use-backup';
 
@@ -69,19 +69,8 @@ export default function RulesScreen() {
   };
 
   const language = resolveLanguage(storedLanguage);
-  const changeLanguage = (next: (typeof LANGUAGES)[number]) => {
-    chooseLanguage(next);
-    // Arabic mirrors the whole layout, which React Native only does after a restart.
-    if (applyLanguage(next)) {
-      showDialog({
-        icon: 'restart',
-        title: t('language.restartTitle'),
-        message: t('language.restartMessage'),
-        confirmLabel: t('common.ok'),
-        cancelLabel: null,
-      });
-    }
-  };
+  // Only the words change, so the new language shows up straight away.
+  const changeLanguage = (next: (typeof LANGUAGES)[number]) => chooseLanguage(next);
 
   const reminders = reminderPreferences(settings);
   const setReminder = (patch: Partial<ReminderPreferences>) =>
