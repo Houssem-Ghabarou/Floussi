@@ -3,6 +3,8 @@
  * notifications. Texts only state facts that stay true until they fire (no amounts to spend, no status),
  * because a scheduled notification can't be updated once the day comes.
  */
+import { t } from '@/i18n';
+
 import { billOccurrences } from './bills';
 import { addDays, type LocalDate } from './dates';
 import { formatMoney, getCurrency } from './money';
@@ -61,8 +63,8 @@ export function planReminders(data: AppData, today: LocalDate, nowMinutes: numbe
       once.push({
         id: `bill:${bill.id}:${dueDate}`,
         kind: 'bill',
-        title: `${bill.emoji} ${bill.name} is due tomorrow`,
-        body: `${formatMoney(bill.amount, currency)}. Tap to mark it paid once it's done.`,
+        title: t('reminder.bill.title', { emoji: bill.emoji, name: bill.name }),
+        body: t('reminder.bill.body', { amount: formatMoney(bill.amount, currency) }),
         url: `/pay-bill?billId=${encodeURIComponent(bill.id)}&dueDate=${dueDate}`,
         schedule: { type: 'once', date, minutes: MORNING_MINUTES },
       });
@@ -75,11 +77,9 @@ export function planReminders(data: AppData, today: LocalDate, nowMinutes: numbe
       id: `payday:${cycle.id}:${cycle.nextIncomeDate}`,
       kind: 'payday',
       title: irregular
-        ? '📅 Your plan reaches its end date today'
-        : `💼 Your ${cycle.incomeLabel.toLowerCase()} is expected today`,
-      body: irregular
-        ? 'Add the money you received, or move the date.'
-        : 'Did it arrive? Add it to start your next cycle.',
+        ? t('reminder.payday.irregularTitle')
+        : t('reminder.payday.title', { income: cycle.incomeLabel.toLowerCase() }),
+      body: irregular ? t('reminder.payday.irregularBody') : t('reminder.payday.body'),
       url: '/income?cycleIncome=1',
       schedule: { type: 'once', date: cycle.nextIncomeDate, minutes: MORNING_MINUTES },
     });
@@ -91,8 +91,8 @@ export function planReminders(data: AppData, today: LocalDate, nowMinutes: numbe
     once.push({
       id: 'inactivity',
       kind: 'inactivity',
-      title: 'Quick money check?',
-      body: 'See how much you can safely spend today.',
+      title: t('reminder.inactivity.title'),
+      body: t('reminder.inactivity.body'),
       url: '/',
       schedule: { type: 'once', date: addDays(today, INACTIVITY_DAYS), minutes: EVENING_MINUTES },
     });
@@ -103,8 +103,8 @@ export function planReminders(data: AppData, today: LocalDate, nowMinutes: numbe
         {
           id: 'check-in',
           kind: 'check_in',
-          title: '🌙 Your money check-in is ready',
-          body: 'See where you stand today.',
+          title: t('reminder.checkIn.title'),
+          body: t('reminder.checkIn.body'),
           url: '/',
           schedule: { type: 'daily', minutes: preferences.checkInMinutes },
         },

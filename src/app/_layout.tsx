@@ -7,10 +7,12 @@ import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AppState, StyleSheet, useColorScheme, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
+import { t } from '@/i18n';
+import { applyLanguage, resolveLanguage } from '@/platform/language';
 import { useNotificationRedirect } from '@/platform/notifications';
 import { startBackgroundSync } from '@/platform/sync';
 import { useApp } from '@/store/app-store';
@@ -33,6 +35,9 @@ export default function RootLayout() {
   const refreshToday = useApp((state) => state.refreshToday);
   const scheme = useColorScheme();
   const palette = usePalette();
+  const chosenLanguage = useApp((state) => state.settings?.language);
+  // Applied while rendering, so the first screen already shows the right language.
+  useMemo(() => applyLanguage(resolveLanguage(chosenLanguage)), [chosenLanguage]);
   const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
@@ -68,8 +73,8 @@ export default function RootLayout() {
   if (status === 'error') {
     return (
       <View style={[styles.error, { backgroundColor: palette.background }]}>
-        <AppText variant="heading">We couldn't open your data on this device.</AppText>
-        <Button label="Try again" onPress={load} />
+        <AppText variant="heading">{t('common.loadError')}</AppText>
+        <Button label={t('common.tryAgain')} onPress={load} />
       </View>
     );
   }

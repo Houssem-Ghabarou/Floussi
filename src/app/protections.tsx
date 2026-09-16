@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { STATUS_LABELS } from '@/domain/advice';
+import { statusLabel } from '@/domain/advice';
 import { savingsMovedInCycle } from '@/domain/derive';
 import { calculateFinancialStatus } from '@/domain/engine';
 import { amountToInput, defaultDailyNeed, formatMoney, parseAmount, type Minor } from '@/domain/money';
+import { t, type TranslationKey } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -22,10 +23,10 @@ import {
 } from '@/ui/components';
 import { showToast } from '@/ui/toast';
 
-const SAVE_OPTIONS = [
-  { percent: 0, label: 'Use it' },
-  { percent: 50, label: 'Save half' },
-  { percent: 100, label: 'Save it all' },
+const SAVE_OPTIONS: { percent: number; label: TranslationKey }[] = [
+  { percent: 0, label: 'protections.useIt' },
+  { percent: 50, label: 'protections.saveHalf' },
+  { percent: 100, label: 'protections.saveAll' },
 ];
 
 export default function ProtectionsScreen() {
@@ -43,9 +44,7 @@ export default function ProtectionsScreen() {
     financial ? amountToInput(financial.data.settings.minimumBalance, financial.currency) : '',
   );
   const [dailyNeedText, setDailyNeedText] = useState(() =>
-    financial
-      ? amountToInput(financial.data.settings.dailyNeed ?? defaultDailyNeed(financial.currency), financial.currency)
-      : '',
+    financial?.data.settings.dailyNeed ? amountToInput(financial.data.settings.dailyNeed, financial.currency) : '',
   );
   const [savePercent, setSavePercent] = useState(financial?.data.settings.unexpectedIncomeSavePercent ?? 0);
   const [moveText, setMoveText] = useState('');
@@ -58,11 +57,9 @@ export default function ProtectionsScreen() {
   const minimumBalance = parseAmount(minimumText, currency) ?? 0;
   const moveAmount = parseAmount(moveText, currency);
 
-  // Keep following the currency default unless the user picks their own figure; clearing the field resets it.
-  const typedDailyNeed = parseAmount(dailyNeedText, currency);
-  const followsDefault =
-    data.settings.dailyNeed == null && (typedDailyNeed === null || typedDailyNeed === defaultDailyNeed(currency));
-  const dailyNeed = followsDefault ? null : typedDailyNeed;
+  // An empty field means "no figure of my own": the routines decide, or the currency default.
+  const dailyNeed = parseAmount(dailyNeedText, currency);
+  const routineAverage = status.hasRoutines && status.expectedDailyAverage > 0 ? status.expectedDailyAverage : null;
 
   const preview = calculateFinancialStatus({
     ...input,
@@ -77,7 +74,11 @@ export default function ProtectionsScreen() {
     updateSettings({ minimumBalance, dailyNeed, unexpectedIncomeSavePercent: savePercent });
     haptics.success();
     router.back();
-    showToast(`Saved. Your safe pace is ${formatMoney(preview.dailyAllowance, currency, { whole: true })}/day.`);
+    showToast(
+      t('protections.saved', {
+        pace: t('common.perDay', { amount: formatMoney(preview.dailyAllowance, currency, { whole: true }) }),
+      }),
+    );
   };
 
   const recordTransfer = () => {
@@ -85,55 +86,77 @@ export default function ProtectionsScreen() {
     const transfer = addTransaction({ kind: 'savings_transfer', amount: -moveAmount, date: today });
     haptics.success();
     setMoveText('');
-    showToast(`${m(moveAmount)} moved to savings`, { label: 'Undo', onPress: () => deleteTransaction(transfer.id) });
+    showToast(t('protections.moved', { amount: m(moveAmount) }), {
+      label: t('common.undo'),
+      onPress: () => deleteTransaction(transfer.id),
+    });
   };
 
   return (
-    <SheetScreen title="Protections" footer={<Button label="Save" onPress={save} />}>
-      <AppText tone="secondary">
-        Protected money is kept out of your safe pace. You're always in control of these numbers.
-      </AppText>
+    <SheetScreen title={t('protections.title')} footer={<Button label={t('common.save')} onPress={save} />}>
+      <AppText tone="secondary">{t('protections.intro')}</AppText>
 
       <Field
-        label="🐷 Savings this cycle"
-        hint={moved > 0 ? `${m(moved)} already moved to savings this cycle.` : 'Kept aside inside your balance until you move it.'}>
+        label={t('protections.savings')}
+        hint={moved > 0 ? t('protections.movedHint', { amount: m(moved) }) : t('protections.keptHint')}>
         <AmountField value={savingsText} onChangeText={setSavingsText} currency={currency} size="medium" />
       </Field>
 
       <Card>
-        <AppText variant="bodyStrong">Moved money to your savings account?</AppText>
+        <AppText variant="bodyStrong">{t('protections.movedQuestion')}</AppText>
         <AppText variant="small" tone="secondary">
-          Record it here. Your balance goes down, but your safe pace stays the same.
+          {t('protections.movedBody')}
         </AppText>
         <AmountField value={moveText} onChangeText={setMoveText} currency={currency} size="medium" />
-        <Button label="Record transfer" variant="secondary" compact disabled={!moveAmount} onPress={recordTransfer} />
+        <Button
+          label={t('protections.recordTransfer')}
+          variant="secondary"
+          compact
+          disabled={!moveAmount}
+          onPress={recordTransfer}
+        />
       </Card>
 
-      <Field label="🛟 Minimum balance" hint="A cushion you never want to go below. It's never part of your safe pace.">
+      <Field label={t('protections.minimum')} hint={t('protections.minimumHint')}>
         <AmountField value={minimumText} onChangeText={setMinimumText} currency={currency} size="medium" />
       </Field>
 
-      {status.normalDaySource === 'routines' ? (
-        <Field label="☀️ Normal day">
-          <AppText variant="small" tone="secondary">
-            Based on your routines: about {formatMoney(status.normalDay, currency, { whole: true })} a day. Your status
-            color compares your safe pace with it.
-          </AppText>
-        </Field>
-      ) : (
-        <Field
-          label="☀️ A normal day costs me about"
-          hint="Your status color compares your safe pace with it: 🟢 it covers a normal day, 🟡 it's under a normal day, 🔴 it's under half.">
-          <AmountField value={dailyNeedText} onChangeText={setDailyNeedText} currency={currency} size="medium" />
-        </Field>
-      )}
+      <Field
+        label={t('protections.normalDay')}
+        hint={
+          routineAverage
+            ? t('protections.normalDayRoutineHint', {
+                amount: formatMoney(routineAverage, currency, { whole: true }),
+              })
+            : t('protections.normalDayHint')
+        }>
+        <AmountField value={dailyNeedText} onChangeText={setDailyNeedText} currency={currency} size="medium" />
+        {routineAverage ? (
+          <ChipGroup>
+            <Chip
+              label={t('protections.followRoutines', {
+                amount: formatMoney(routineAverage, currency, { whole: true }),
+              })}
+              selected={dailyNeed === null}
+              onPress={() => setDailyNeedText('')}
+            />
+            <Chip
+              label={t('protections.useDefault', {
+                amount: formatMoney(defaultDailyNeed(currency), currency, { whole: true }),
+              })}
+              selected={dailyNeed === defaultDailyNeed(currency)}
+              onPress={() => setDailyNeedText(amountToInput(defaultDailyNeed(currency), currency))}
+            />
+          </ChipGroup>
+        ) : null}
+      </Field>
 
-      <Field label="🎁 Unexpected income" hint="Suggested choice when you add money that isn't your main income.">
+      <Field label={t('protections.unexpected')} hint={t('protections.unexpectedHint')}>
         <ChipGroup>
           {SAVE_OPTIONS.map((option) => (
             <Chip
               key={option.percent}
-              label={option.label}
+              label={t(option.label)}
               selected={savePercent === option.percent}
               onPress={() => setSavePercent(option.percent)}
             />
@@ -141,20 +164,22 @@ export default function ProtectionsScreen() {
         </ChipGroup>
       </Field>
 
-      <Field label="🔄 Unspent money">
+      <Field label={t('protections.unspent')}>
         <AppText variant="small" tone="secondary">
-          What you don't spend spreads evenly over the remaining days, so tomorrow gets a little more without tempting
-          you to spend it all at once.
+          {t('protections.unspentBody')}
         </AppText>
       </Field>
 
       <Card>
         <MoneyLine
-          label="Safe pace with these settings"
-          value={`${formatMoney(status.dailyAllowance, currency, { whole: true })} → ${formatMoney(preview.dailyAllowance, currency, { whole: true })}/day`}
+          label={t('protections.pacePreview')}
+          value={t('common.paceShift', {
+            before: formatMoney(status.dailyAllowance, currency, { whole: true }),
+            after: formatMoney(preview.dailyAllowance, currency, { whole: true }),
+          })}
           strong
         />
-        <StatusPill level={preview.riskLevel} label={STATUS_LABELS[preview.reason]} />
+        <StatusPill level={preview.riskLevel} label={statusLabel(preview.reason)} />
       </Card>
     </SheetScreen>
   );

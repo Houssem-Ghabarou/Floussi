@@ -147,10 +147,12 @@ export function calculateFinancialStatus(input: FinancialInput): FinancialStatus
   const expectedUntilIncome = sum(remainingDates.map((date) => input.routineByWeekday[weekday(date)] ?? 0));
   const expectedDailyAverage = Math.round(expectedUntilIncome / remainingDates.length);
 
-  // A normal day: what the routines expect over the coming days, otherwise the user's own figure.
-  const routinesDecide = hasRoutines && expectedDailyAverage > 0;
-  const normalDay = routinesDecide ? expectedDailyAverage : input.dailyNeed;
-  const normalDaySource: NormalDaySource = routinesDecide ? 'routines' : input.dailyNeedIsDefault ? 'default' : 'custom';
+  // A normal day: the figure the user set always wins. Routines only fill in when there is none, and
+  // the currency default when there are no routines either.
+  const routinesAverage = hasRoutines && expectedDailyAverage > 0 ? expectedDailyAverage : null;
+  const usesRoutines = input.dailyNeedIsDefault && routinesAverage !== null;
+  const normalDay = usesRoutines ? routinesAverage : input.dailyNeed;
+  const normalDaySource: NormalDaySource = usesRoutines ? 'routines' : input.dailyNeedIsDefault ? 'default' : 'custom';
 
   // Recent pace over the last full tracked days (today excluded, it isn't over yet).
   const paceStart = maxDate(addDays(today, -PACE_WINDOW_DAYS), input.trackingStartDate);

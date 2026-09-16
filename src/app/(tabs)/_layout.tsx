@@ -3,6 +3,7 @@ import { TabList, TabSlot, TabTrigger, Tabs, type TabTriggerSlotProps } from 'ex
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { t } from '@/i18n';
 import { AppText, haptics } from '@/ui/components';
 import { Icon, type IconName } from '@/ui/icon';
 import { usePalette } from '@/ui/theme';
@@ -19,15 +20,15 @@ export default function TabsLayout() {
       <View style={[styles.bar, { paddingBottom: insets.bottom, backgroundColor: palette.background }]}>
         <View style={styles.barInner}>
           <TabTrigger name="index" asChild>
-            <TabButton icon="today" label="Today" />
+            <TabButton icon="today" label={t('nav.today')} />
           </TabTrigger>
           <TabTrigger name="month" asChild>
-            <TabButton icon="month" label="Month" />
+            <TabButton icon="month" label={t('nav.month')} />
           </TabTrigger>
           <View style={styles.fabSlot}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Add an expense"
+              accessibilityLabel={t('nav.addExpense')}
               onPress={() => {
                 haptics.tap();
                 router.push('/expense');
@@ -37,10 +38,10 @@ export default function TabsLayout() {
             </Pressable>
           </View>
           <TabTrigger name="routines" asChild>
-            <TabButton icon="routine" label="Routine" />
+            <TabButton icon="routine" label={t('nav.routine')} />
           </TabTrigger>
           <TabTrigger name="rules" asChild>
-            <TabButton icon="rules" label="Rules" />
+            <TabButton icon="rules" label={t('nav.rules')} />
           </TabTrigger>
         </View>
       </View>

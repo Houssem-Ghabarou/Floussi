@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { RiskLevel } from '@/domain/engine';
 import { sanitizeAmountInput, type CurrencyInfo } from '@/domain/money';
+import { t } from '@/i18n';
 
 import { showDialog } from './dialog-store';
 import { Icon, type IconName } from './icon';
@@ -126,7 +127,7 @@ export function SheetScreen({
   title,
   children,
   footer,
-  closeLabel = 'Cancel',
+  closeLabel,
   confirmClose = false,
 }: {
   title: string;
@@ -148,10 +149,10 @@ export function SheetScreen({
     showDialog({
       icon: 'edit',
       tone: 'danger',
-      title: 'Discard your changes?',
-      message: "What you entered on this screen won't be saved.",
-      confirmLabel: 'Discard',
-      cancelLabel: 'Keep editing',
+      title: t('sheet.discardTitle'),
+      message: t('sheet.discardMessage'),
+      confirmLabel: t('sheet.discard'),
+      cancelLabel: t('sheet.keepEditing'),
       onConfirm: leave,
     });
   };
@@ -180,7 +181,7 @@ export function SheetScreen({
         ]}>
         <Pressable onPress={close} hitSlop={12} style={styles.sheetHeaderSide} accessibilityRole="button">
           <AppText variant="bodyStrong" tone="brand">
-            {closeLabel}
+            {closeLabel ?? t('common.cancel')}
           </AppText>
         </Pressable>
         <AppText variant="heading" style={styles.sheetTitle} numberOfLines={1}>

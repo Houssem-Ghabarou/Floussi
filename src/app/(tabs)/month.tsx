@@ -2,12 +2,13 @@ import { useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { STATUS_LABELS } from '@/domain/advice';
-import { BILLS_CATEGORY, expenseCategory } from '@/domain/categories';
+import { statusLabel } from '@/domain/advice';
+import { billsCategory, expenseCategory } from '@/domain/categories';
 import { cycleStart, isBeforeBoundary, type CycleBoundary } from '@/domain/cycle';
 import { addDays, daysBetween, formatMonthYear, formatShortDate } from '@/domain/dates';
 import { summarizeCycle, type CategoryInsight } from '@/domain/insights';
 import { formatAmount, formatMoney, type CurrencyInfo, type Minor } from '@/domain/money';
+import { t, tn } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import { TabScreen } from '@/ui/app-header';
@@ -67,14 +68,14 @@ export default function MonthScreen() {
 
   const segments = isCurrent
     ? [
-        { label: 'Protected', value: status.protectedTotal, color: palette.inverse },
-        { label: 'Spent', value: spent, color: palette.brand },
-        { label: 'Flexible', value: Math.max(0, status.flexibleNow), color: palette.accent },
+        { label: t('month.segment.protected'), value: status.protectedTotal, color: palette.inverse },
+        { label: t('month.segment.spent'), value: spent, color: palette.brand },
+        { label: t('month.segment.flexible'), value: Math.max(0, status.flexibleNow), color: palette.accent },
       ]
     : [
-        { label: 'Spent', value: spent, color: palette.brand },
-        { label: 'Saved', value: summary.savedMoved, color: palette.inverse },
-        { label: 'Left', value: Math.max(0, summary.endingBalance), color: palette.accent },
+        { label: t('month.segment.spent'), value: spent, color: palette.brand },
+        { label: t('month.segment.saved'), value: summary.savedMoved, color: palette.inverse },
+        { label: t('month.segment.left'), value: Math.max(0, summary.endingBalance), color: palette.accent },
       ];
   const segmentTotal = segments.reduce((sum, segment) => sum + Math.max(0, segment.value), 0);
   const share = (value: Minor) => (segmentTotal > 0 ? Math.round((Math.max(0, value) / segmentTotal) * 100) : 0);
@@ -83,30 +84,44 @@ export default function MonthScreen() {
   for (const t of transactions) {
     if (t.kind !== 'expense' && t.kind !== 'bill_payment') continue;
     if (!isBeforeBoundary(t, end) || (t.countsToBalance && isBeforeBoundary(t, start))) continue;
-    const id = t.kind === 'expense' ? expenseCategory(t.category).id : BILLS_CATEGORY.id;
+    const id = t.kind === 'expense' ? expenseCategory(t.category).id : billsCategory().id;
     entryCounts.set(id, (entryCounts.get(id) ?? 0) + 1);
   }
 
   let outlook: string;
   if (!isCurrent) {
-    outlook = `You spent ${m(spent)} over ${summary.trackedDays} days, about ${m(summary.dailyAverage)} a day, and finished with ${m(summary.endingBalance)}.`;
+    outlook = t('month.recap', {
+      spent: m(spent),
+      days: tn('count.days', summary.trackedDays),
+      average: m(summary.dailyAverage),
+      ending: m(summary.endingBalance),
+    });
   } else if (status.projectedEndFlexible === null) {
-    outlook = `${status.riskLevel === 'watch' || status.riskLevel === 'at_risk' ? 'Keep an eye on your pace.' : "So far, you're within your plan."} After a few more days of logging, we'll forecast where you'll land.`;
+    outlook = t('month.outlookSoon', {
+      lead: t(
+        status.riskLevel === 'watch' || status.riskLevel === 'at_risk'
+          ? 'month.outlookSoonWatch'
+          : 'month.outlookSoonFine',
+      ),
+    });
   } else if (status.projectedEndFlexible >= 0) {
-    outlook = `At your current pace, you'll reach your next income with about ${m(status.projectedEndFlexible)} of flexible money to spare.`;
+    outlook = t('month.outlookSpare', { amount: m(status.projectedEndFlexible) });
   } else {
-    outlook = `At your current pace, you may use about ${m(-status.projectedEndFlexible)} more than your flexible money before your next income. Keeping days around ${m(status.upcomingDailyPace)} closes the gap.`;
+    outlook = t('month.outlookShort', {
+      amount: m(-status.projectedEndFlexible),
+      pace: m(status.upcomingDailyPace),
+    });
   }
 
   const comparisons = summary.categories.filter((insight) => insight.expected > 0);
   const active = summary.categories.filter((insight) => insight.actual > 0);
 
   return (
-    <TabScreen section="Month">
+    <TabScreen section={t('nav.month')}>
       <View style={styles.selector}>
         <RoundButton
           icon="chevronLeft"
-          label="Previous cycle"
+          label={t('month.previousCycle')}
           disabled={index === 0}
           onPress={() => setOffset(offset + 1)}
         />
@@ -115,24 +130,29 @@ export default function MonthScreen() {
             {formatMonthYear(cycle.startDate)}
           </AppText>
           <AppText variant="caption" tone="secondary" style={styles.center}>
-            Cycle: {formatShortDate(cycle.startDate)} – {formatShortDate(finalDay)}
+            {t('month.cycleRange', { from: formatShortDate(cycle.startDate), to: formatShortDate(finalDay) })}
           </AppText>
         </View>
-        <RoundButton icon="chevronRight" label="Next cycle" disabled={offset === 0} onPress={() => setOffset(offset - 1)} />
+        <RoundButton
+          icon="chevronRight"
+          label={t('month.nextCycle')}
+          disabled={offset === 0}
+          onPress={() => setOffset(offset - 1)}
+        />
       </View>
 
       <View style={[styles.pace, { backgroundColor: palette.surfaceLow }]}>
         <View style={styles.inline}>
           <View style={[styles.dot, { backgroundColor: isCurrent ? palette.brand : palette.textMuted }]} />
           <AppText variant="caption" style={styles.strong}>
-            {isCurrent ? `Day ${dayOfCycle} of ${cycleLength}` : `Closed cycle · ${cycleLength} days`}
+            {isCurrent
+              ? t('month.dayOf', { day: dayOfCycle, length: cycleLength })
+              : t('month.closedCycle', { days: tn('count.days', cycleLength) })}
           </AppText>
         </View>
         {isCurrent ? (
           <AppText variant="caption" tone="secondary">
-            {status.incomeDue
-              ? 'Income due'
-              : `${status.daysUntilIncome} ${status.daysUntilIncome === 1 ? 'day' : 'days'} left`}
+            {status.incomeDue ? t('today.incomeDue') : tn('month.daysLeft', status.daysUntilIncome)}
           </AppText>
         ) : null}
       </View>
@@ -140,13 +160,17 @@ export default function MonthScreen() {
       <Card>
         <View style={styles.spaceBetween}>
           <AppText variant="label" tone="secondary">
-            Cycle cash flow
+            {t('month.cashFlow')}
           </AppText>
-          {isCurrent ? <StatusPill level={status.riskLevel} label={STATUS_LABELS[status.reason]} /> : <Badge label="Closed" />}
+          {isCurrent ? (
+            <StatusPill level={status.riskLevel} label={statusLabel(status.reason)} />
+          ) : (
+            <Badge label={t('month.closed')} />
+          )}
         </View>
         <View>
           <AppText variant="small" tone="secondary">
-            {isCurrent ? 'Remaining flexible money' : 'Finished with'}
+            {t(isCurrent ? 'month.remainingFlexible' : 'month.finishedWith')}
           </AppText>
           <View style={styles.baseline}>
             <AppText variant="display" color={isCurrent && status.flexibleNow < 0 ? palette.danger : undefined}>
@@ -160,27 +184,43 @@ export default function MonthScreen() {
         <SegmentBar segments={segments} />
         <View style={styles.legendRow}>
           {segments.map((segment) => (
-            <LegendDot key={segment.label} color={segment.color} label={`${segment.label} (${share(segment.value)}%)`} />
+            <LegendDot
+              key={segment.label}
+              color={segment.color}
+              label={t('month.legend', { label: segment.label, percent: share(segment.value) })}
+            />
           ))}
         </View>
         <View style={styles.metrics}>
-          <Metric label="Income" value={signed(summary.income)} caption={currency.label} color={palette.income} />
+          <Metric
+            label={t('month.metric.income')}
+            value={signed(summary.income)}
+            caption={currency.label}
+            color={palette.income}
+          />
           {isCurrent ? (
-            <Metric label="Protected" value={signed(-status.protectedTotal)} caption="Bills & savings" />
+            <Metric
+              label={t('month.metric.protected')}
+              value={signed(-status.protectedTotal)}
+              caption={t('month.metric.billsSavings')}
+            />
           ) : (
-            <Metric label="Saved" value={signed(-summary.savedMoved)} caption={currency.label} />
+            <Metric label={t('month.metric.saved')} value={signed(-summary.savedMoved)} caption={currency.label} />
           )}
           <Metric
-            label="Spent"
+            label={t('month.metric.spent')}
             value={signed(-spent)}
-            caption={isCurrent ? 'So far' : currency.label}
+            caption={isCurrent ? t('month.metric.soFar') : currency.label}
             color={palette.accentText}
           />
         </View>
         {isCurrent ? (
           <AppText variant="caption" tone="muted">
-            Protected: bills {m(status.billsProtected)} · savings {m(status.savingsReserve)} · buffer{' '}
-            {m(status.minimumBalance)}
+            {t('month.protectedDetail', {
+              bills: m(status.billsProtected),
+              savings: m(status.savingsReserve),
+              buffer: m(status.minimumBalance),
+            })}
           </AppText>
         ) : null}
       </Card>
@@ -189,37 +229,46 @@ export default function MonthScreen() {
         icon="insights"
         iconColor={palette.onBrandSoft}
         iconBackground={palette.brandSoft}
-        title={isCurrent ? 'Pace insight' : 'Cycle recap'}>
+        title={t(isCurrent ? 'month.paceInsight' : 'month.cycleRecap')}>
         <AppText variant="small" tone="secondary">
           {outlook}
         </AppText>
         {summary.mostOverRoutine ? (
           <AppText variant="small" tone="secondary">
-            You spent {m(summary.mostOverRoutine.trackedActual - summary.mostOverRoutine.expected)} more on{' '}
-            {summary.mostOverRoutine.category.label.toLowerCase()} than your routine predicted.
+            {t('month.mostOver', {
+              amount: m(summary.mostOverRoutine.trackedActual - summary.mostOverRoutine.expected),
+              category: summary.mostOverRoutine.category.label.toLocaleLowerCase(),
+            })}
           </AppText>
         ) : null}
       </Callout>
 
-      <SectionTitle title="Money flow" subtitle="Every line adds up to your balance" />
-      <CycleMoneyCard summary={summary} currency={currency} endLabel={isCurrent ? 'Now' : 'Finished with'} />
+      <SectionTitle title={t('month.moneyFlow')} subtitle={t('month.moneyFlowSubtitle')} />
+      <CycleMoneyCard
+        summary={summary}
+        currency={currency}
+        endLabel={t(isCurrent ? 'month.now' : 'month.finishedWith')}
+      />
 
       <SectionTitle
-        title="Routine vs actual"
+        title={t('month.routineVsActual')}
         subtitle={
           summary.expectedDailyAverage !== null
-            ? `Your average ${m(summary.dailyAverage)}/day · routine ${m(summary.expectedDailyAverage)}/day`
-            : 'Calibrated against your weekly routines'
+            ? t('month.routineVsActualSubtitle', {
+                actual: m(summary.dailyAverage),
+                expected: m(summary.expectedDailyAverage),
+              })
+            : t('month.routineVsActualEmpty')
         }
       />
       {comparisons.length === 0 ? (
         <Callout
           icon="routine"
-          title="Add a routine to compare"
+          title={t('month.addRoutineTitle')}
           background={palette.surface}
           onPress={() => router.push('/routine')}>
           <AppText variant="small" tone="secondary">
-            See how real life compares with your normal day, category by category.
+            {t('month.addRoutineBody')}
           </AppText>
         </Callout>
       ) : (
@@ -227,13 +276,13 @@ export default function MonthScreen() {
       )}
 
       <SectionTitle
-        title="Where your money went"
-        subtitle={`${active.length} ${active.length === 1 ? 'category' : 'categories'} active`}
+        title={t('month.whereMoneyWent')}
+        subtitle={t('month.categoriesActive', { categories: tn('count.categories', active.length) })}
       />
       <Card style={styles.listCard}>
         {active.length === 0 ? (
           <AppText variant="small" tone="secondary">
-            Log a few expenses and you'll see where your money goes.
+            {t('month.noSpending')}
           </AppText>
         ) : (
           active.map((insight, position) => {
@@ -245,9 +294,11 @@ export default function MonthScreen() {
                   emoji={insight.category.emoji}
                   tileColor={palette.surfaceLow}
                   title={insight.category.label}
-                  subtitle={count > 0 ? `${count} ${count === 1 ? 'entry' : 'entries'}` : 'History'}
+                  subtitle={count > 0 ? tn('count.entries', count) : t('month.history')}
                   value={m(insight.actual)}
-                  valueCaption={`${totalOut > 0 ? ((insight.actual / totalOut) * 100).toFixed(1) : '0'}% of spent`}
+                  valueCaption={t('month.shareOfSpent', {
+                    percent: totalOut > 0 ? ((insight.actual / totalOut) * 100).toFixed(1) : '0',
+                  })}
                 />
               </Fragment>
             );
@@ -258,16 +309,21 @@ export default function MonthScreen() {
       {isCurrent ? (
         <Card style={styles.projection}>
           <View style={styles.flex}>
-            <AppText variant="bodyStrong">End-of-cycle projection</AppText>
+            <AppText variant="bodyStrong">{t('month.projection')}</AppText>
             <AppText variant="small" tone="secondary">
               {status.projectedEndFlexible === null
-                ? 'Ready after a few days of logging'
+                ? t('month.projectionSoon')
                 : status.projectedEndFlexible >= 0
-                  ? `Projected surplus: ${signed(status.projectedEndFlexible)}`
-                  : `Projected shortfall: ${m(-status.projectedEndFlexible)}`}
+                  ? t('month.projectedSurplus', { amount: signed(status.projectedEndFlexible) })
+                  : t('month.projectedShortfall', { amount: m(-status.projectedEndFlexible) })}
             </AppText>
           </View>
-          <Button label="Adjust routine" variant="secondary" compact onPress={() => router.push('/routines')} />
+          <Button
+            label={t('month.adjustRoutine')}
+            variant="secondary"
+            compact
+            onPress={() => router.push('/routines')}
+          />
         </Card>
       ) : null}
     </TabScreen>
@@ -337,13 +393,13 @@ function ComparisonCard({ insight, currency }: { insight: CategoryInsight; curre
         <View style={styles.flex}>
           <AppText variant="bodyStrong">{insight.category.label}</AppText>
           <AppText variant="caption" tone="muted">
-            Routine baseline: {m(expected)}
+            {t('month.baseline', { amount: m(expected) })}
           </AppText>
         </View>
         <View style={styles.alignEnd}>
           <AppText variant="number">{m(actual)}</AppText>
           <AppText variant="caption" tone="muted">
-            Spent
+            {t('month.spentLabel')}
           </AppText>
         </View>
       </View>
@@ -363,16 +419,16 @@ function ComparisonCard({ insight, currency }: { insight: CategoryInsight; curre
           icon={over ? 'trendingUp' : 'trendingDown'}
           label={
             difference === 0
-              ? 'Right on routine'
+              ? t('month.onRoutine')
               : over
-                ? `+${m(difference)} higher than routine`
-                : `${m(-difference)} under routine`
+                ? t('month.higherThanRoutine', { amount: m(difference) })
+                : t('month.underRoutine', { amount: m(-difference) })
           }
           color={over ? palette.accentText : palette.onBrandSoft}
           background={over ? palette.accentSoft : palette.comfortableSoft}
         />
         <AppText variant="caption" tone="muted">
-          {percent}% of expected
+          {t('month.percentOfExpected', { percent })}
         </AppText>
       </View>
     </Card>

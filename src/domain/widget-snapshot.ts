@@ -1,8 +1,11 @@
 /**
  * What the home-screen widgets show. Pure: the Android widget renders these props directly, and the iOS
- * widget receives them on a timeline (today now, tomorrow from midnight).
+ * widget receives them on a timeline (today now, tomorrow from midnight). Texts are already translated,
+ * because widget code cannot look anything up while it draws.
  */
-import { STATUS_LABELS } from './advice';
+import { t, tn } from '@/i18n';
+
+import { statusLabel } from './advice';
 import { addDays, type LocalDate } from './dates';
 import { buildFinancialInput } from './derive';
 import { calculateFinancialStatus, type RiskLevel } from './engine';
@@ -23,19 +26,11 @@ export interface WidgetProps {
   tone: WidgetTone;
   balance: string;
   payday: string;
+  /** 'SAFE TO SPEND' and the two quick actions, translated for the widget. */
+  label: string;
+  addExpense: string;
+  addMoney: string;
 }
-
-export const EMPTY_WIDGET: WidgetProps = {
-  ready: false,
-  hidden: false,
-  amount: '',
-  currency: '',
-  caption: 'Open Flousey to set up your plan',
-  status: '',
-  tone: 'good',
-  balance: '',
-  payday: '',
-};
 
 export const HIDDEN_AMOUNT = '•••';
 
@@ -46,6 +41,24 @@ const TONES: Record<RiskLevel, WidgetTone> = {
   at_risk: 'risk',
 };
 
+/** Shown before a plan exists, or when the widget can't read the data. */
+export function emptyWidget(): WidgetProps {
+  return {
+    ready: false,
+    hidden: false,
+    amount: '',
+    currency: '',
+    caption: t('widget.setUp'),
+    status: '',
+    tone: 'good',
+    balance: '',
+    payday: '',
+    label: t('widget.safeToSpend'),
+    addExpense: t('widget.addExpense'),
+    addMoney: t('widget.addMoney'),
+  };
+}
+
 /** The widget content for `day`, from the same engine as the Today screen. */
 export function widgetPropsFor(data: AppData, day: LocalDate): WidgetProps {
   const status = calculateFinancialStatus(buildFinancialInput(data, day));
@@ -53,18 +66,21 @@ export function widgetPropsFor(data: AppData, day: LocalDate): WidgetProps {
   const hidden = data.settings.widgetHideAmounts === true;
   const spent = status.spentToday > 0;
   const amount = spent ? Math.max(0, status.remainingToday) : status.dailyAllowance;
-  const days = status.daysUntilIncome;
+  const balance = hidden ? HIDDEN_AMOUNT : formatMoney(status.balance, currency, { whole: true });
 
   return {
     ready: true,
     hidden,
     amount: hidden ? HIDDEN_AMOUNT : formatAmount(amount, currency, { whole: true }),
     currency: currency.label,
-    caption: spent ? 'left today' : 'safe today',
-    status: STATUS_LABELS[status.reason],
+    caption: t(spent ? 'widget.leftToday' : 'widget.safeToday'),
+    status: statusLabel(status.reason),
     tone: TONES[status.riskLevel],
-    balance: hidden ? `${HIDDEN_AMOUNT} available` : `${formatMoney(status.balance, currency, { whole: true })} available`,
-    payday: status.incomeDue ? 'Income expected' : `${days} ${days === 1 ? 'day' : 'days'} to payday`,
+    balance: t('widget.available', { amount: balance }),
+    payday: status.incomeDue ? t('widget.incomeExpected') : tn('widget.daysToPayday', status.daysUntilIncome),
+    label: t('widget.safeToSpend'),
+    addExpense: t('widget.addExpense'),
+    addMoney: t('widget.addMoney'),
   };
 }
 
@@ -75,7 +91,7 @@ export interface WidgetEntry {
 
 /** Today's content, then tomorrow's from midnight, so the widget moves on even if the app isn't opened. */
 export function widgetTimeline(data: AppData | null, today: LocalDate): WidgetEntry[] {
-  if (!data) return [{ date: today, props: EMPTY_WIDGET }];
+  if (!data) return [{ date: today, props: emptyWidget() }];
   const tomorrow = addDays(today, 1);
   return [
     { date: today, props: widgetPropsFor(data, today) },

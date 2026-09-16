@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatShortDate } from '@/domain/dates';
+import { t } from '@/i18n';
 import { useFinancial } from '@/store/use-financial';
 
 import { AppText, Screen } from './components';
@@ -28,7 +29,7 @@ function AppHeader({ section }: { section: string }) {
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>
-        <Image source={LOGO} style={styles.logo} accessibilityLabel="Flousey logo" />
+        <Image source={LOGO} style={styles.logo} accessibilityLabel={t('header.logo')} />
         <View style={styles.titles}>
           <AppText variant="heading" style={styles.brand}>
             Flousey
@@ -40,7 +41,7 @@ function AppHeader({ section }: { section: string }) {
             <View style={[styles.crumbDot, { backgroundColor: palette.outline }]} />
             <View style={[styles.crumbPill, { backgroundColor: palette.surfaceMuted }]}>
               <AppText variant="caption" tone="secondary">
-                {financial ? `Today, ${formatShortDate(financial.today)}` : 'Today'}
+                {financial ? t('header.today', { date: formatShortDate(financial.today) }) : t('nav.today')}
               </AppText>
             </View>
           </View>
@@ -49,7 +50,7 @@ function AppHeader({ section }: { section: string }) {
       <Pressable
         onPress={() => router.push('/breakdown')}
         accessibilityRole="button"
-        accessibilityLabel="How your safe amount is calculated"
+        accessibilityLabel={t('header.statusHint')}
         hitSlop={6}
         style={({ pressed }) => [styles.statusButton, pressed && styles.pressed]}>
         <View style={[styles.statusRing, { borderColor: colors.bg, backgroundColor: colors.fg }]}>

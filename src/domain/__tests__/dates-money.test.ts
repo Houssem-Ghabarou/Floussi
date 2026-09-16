@@ -8,6 +8,8 @@ import {
   formatRelativeDay,
   weekday,
 } from '../dates';
+import { setLanguage } from '@/i18n';
+
 import { amountToInput, formatAmount, formatMoney, getCurrency, parseAmount, sanitizeAmountInput } from '../money';
 
 const TND = getCurrency('TND');
@@ -74,6 +76,15 @@ describe('money', () => {
     expect(formatAmount(300_000, TND, { signed: true })).toBe('+300');
     expect(amountToInput(-12_500, TND)).toBe('12.5');
     expect(amountToInput(1_240_000, TND)).toBe('1240');
+  });
+
+  it('writes the currency in the chosen language', () => {
+    setLanguage('ar');
+    expect(formatMoney(42_000, TND)).toBe('42 د.ت');
+    setLanguage('fr');
+    expect(formatMoney(999, getCurrency('EUR'))).toBe('9.99 €');
+    setLanguage('en');
+    expect(formatMoney(42_000, TND)).toBe('42 TND');
   });
 
   it('supports the British pound', () => {

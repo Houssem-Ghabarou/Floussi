@@ -3,6 +3,8 @@ import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, View } from 're
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { FullWindowOverlay } from 'react-native-screens';
 
+import { t } from '@/i18n';
+
 import { AppText, Button, haptics, IconCircle } from './components';
 import { useDialogStore } from './dialog-store';
 import { Radius, Space, usePalette } from './theme';
@@ -43,7 +45,7 @@ export function DialogHost() {
   const content = (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <Animated.View entering={FadeIn.duration(160)} style={[StyleSheet.absoluteFill, styles.backdrop]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={cancel} accessibilityLabel="Close" />
+        <Pressable style={StyleSheet.absoluteFill} onPress={cancel} accessibilityLabel={t('common.close')} />
       </Animated.View>
       <View style={styles.center} pointerEvents="box-none">
         <Animated.View
@@ -72,10 +74,15 @@ export function DialogHost() {
           </View>
           <View style={styles.actions}>
             {dialog.cancelLabel !== null ? (
-              <Button label={dialog.cancelLabel ?? 'Cancel'} variant="secondary" onPress={cancel} style={styles.flex} />
+              <Button
+                label={dialog.cancelLabel ?? t('common.cancel')}
+                variant="secondary"
+                onPress={cancel}
+                style={styles.flex}
+              />
             ) : null}
             <Button
-              label={dialog.confirmLabel ?? 'OK'}
+              label={dialog.confirmLabel ?? t('common.ok')}
               variant={danger && dialog.cancelLabel !== null ? 'destructive' : 'primary'}
               onPress={confirm}
               style={styles.flex}

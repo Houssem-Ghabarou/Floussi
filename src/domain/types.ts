@@ -71,6 +71,9 @@ export interface Routine {
   enabled: boolean;
 }
 
+/** The languages Flousey speaks. Kept here so domain code never depends on the translation layer. */
+export type Language = 'en' | 'fr' | 'ar';
+
 /** Which local reminders the user wants. */
 export interface ReminderPreferences {
   /** The day before a bill is due, at 9:00. */
@@ -95,6 +98,8 @@ export interface Settings {
   /** Default share of unexpected income to protect as savings (0-100). */
   unexpectedIncomeSavePercent: number;
   onboarded: boolean;
+  /** Missing until the user picks one: the phone's language decides, falling back to English. */
+  language?: Language;
   /** Missing on data saved before reminders existed: the defaults apply (see `reminderPreferences`). */
   reminders?: ReminderPreferences;
   /** Show "•••" instead of amounts on home-screen widgets. */

@@ -7,6 +7,7 @@ import { Linking, Platform } from 'react-native';
 import { splitDate, type LocalDate } from '@/domain/dates';
 import { planReminders, type PlannedReminder } from '@/domain/reminders';
 import type { AppData } from '@/domain/types';
+import { t } from '@/i18n';
 
 export const REMINDER_CHANNEL = 'reminders';
 
@@ -24,8 +25,8 @@ Notifications.setNotificationHandler({
 export async function prepareNotifications() {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL, {
-    name: 'Reminders',
-    description: 'Bills due, payday and check-ins',
+    name: t('notifications.channelName'),
+    description: t('notifications.channelDescription'),
     importance: Notifications.AndroidImportance.DEFAULT,
   });
 }

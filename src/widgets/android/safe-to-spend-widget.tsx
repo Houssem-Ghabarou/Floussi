@@ -141,7 +141,7 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
           <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', flexGap: 5 }}>
             <FlexWidget style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: tone.fg }} />
             <TextWidget
-              text={props.caption.toUpperCase()}
+              text={props.caption.toLocaleUpperCase()}
               maxLines={1}
               style={{ fontSize: 10, fontFamily: FONT.bold, color: colors.muted, letterSpacing: 0.06 }}
             />
@@ -163,8 +163,8 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
           ) : null}
         </FlexWidget>
         <FlexWidget style={{ flexDirection: 'row', flexGap: 6, width: 'match_parent' }}>
-          <QuickAction label="+ Expense" uri="flousey://expense" colors={colors} primary compact />
-          <QuickAction label="+ Money" uri="flousey://income" colors={colors} compact />
+          <QuickAction label={props.addExpense} uri="flousey://expense" colors={colors} primary compact />
+          <QuickAction label={props.addMoney} uri="flousey://income" colors={colors} compact />
         </FlexWidget>
       </FlexWidget>
     );
@@ -178,7 +178,7 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
       <FlexWidget style={{ flex: 1, height: 'match_parent', flexDirection: 'column', justifyContent: 'space-between' }}>
         <FlexWidget style={{ flexDirection: 'column' }}>
           <TextWidget
-            text="SAFE TO SPEND"
+            text={props.label}
             style={{ fontSize: 10, fontFamily: FONT.bold, color: colors.muted, letterSpacing: 0.06 }}
           />
           <FlexWidget style={{ flexDirection: 'row', alignItems: 'flex-end', flexGap: 4 }}>
@@ -221,8 +221,8 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
           truncate="END"
           style={{ fontSize: 10, fontFamily: FONT.medium, color: colors.muted, textAlign: 'right' }}
         />
-        <QuickAction label="+ Expense" uri="flousey://expense" colors={colors} primary />
-        <QuickAction label="+ Money" uri="flousey://income" colors={colors} />
+        <QuickAction label={props.addExpense} uri="flousey://expense" colors={colors} primary />
+        <QuickAction label={props.addMoney} uri="flousey://income" colors={colors} />
       </FlexWidget>
     </FlexWidget>
   );

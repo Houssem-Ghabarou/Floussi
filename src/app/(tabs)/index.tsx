@@ -2,13 +2,14 @@ import { useRouter } from 'expo-router';
 import { Fragment } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { STATUS_LABELS } from '@/domain/advice';
+import { statusLabel } from '@/domain/advice';
 import { expenseCategory } from '@/domain/categories';
 import { addDays, daysBetween, formatDaysFromNow, formatLongDate, formatShortDate, weekday } from '@/domain/dates';
 import { cycleBillOccurrences } from '@/domain/derive';
 import { formatAmount, formatMoney, type CurrencyInfo, type Minor } from '@/domain/money';
 import { routineForWeekday } from '@/domain/routines';
 import type { RoutineItem } from '@/domain/types';
+import { t, tn, type TranslationKey } from '@/i18n';
 import { useNotificationAccess } from '@/platform/use-notification-access';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
@@ -36,7 +37,11 @@ import { CardShadow, Radius, riskColors, Space, usePalette } from '@/ui/theme';
 import { showToast } from '@/ui/toast';
 import { TransactionRow } from '@/ui/transaction-row';
 
-const NORMAL_DAY_CAPTION = { routines: 'From routines', custom: 'Your estimate', default: 'Default' } as const;
+const NORMAL_DAY_CAPTION: Record<string, TranslationKey> = {
+  routines: 'today.normalDay.routines',
+  custom: 'today.normalDay.custom',
+  default: 'today.normalDay.default',
+};
 
 export default function TodayScreen() {
   const financial = useFinancial();
@@ -54,9 +59,9 @@ export default function TodayScreen() {
   const colors = riskColors(palette, status.riskLevel);
 
   const todays = data.transactions
-    .filter((t) => t.date === today)
+    .filter((transaction) => transaction.date === today)
     .sort((a, b) => b.createdAt - a.createdAt);
-  const expenseCount = todays.filter((t) => t.kind === 'expense').length;
+  const expenseCount = todays.filter((transaction) => transaction.kind === 'expense').length;
   const routine = routineForWeekday(data.routines, weekday(today));
   const billsSoon = cycleBillOccurrences(data, today).filter(
     (occurrence) => !occurrence.paid && daysBetween(today, occurrence.dueDate) <= 7,
@@ -69,7 +74,7 @@ export default function TodayScreen() {
   const askReminders = !data.settings.remindersAsked && access !== null && !access.granted && access.canAskAgain;
   const showPastSpendingPrompt =
     daysBetween(data.settings.openingDate, today) <= 7 &&
-    !data.transactions.some((t) => !t.countsToBalance);
+    !data.transactions.some((transaction) => !transaction.countsToBalance);
 
   const quickAdd = (item: RoutineItem) => {
     const transaction = addTransaction({
@@ -80,29 +85,25 @@ export default function TodayScreen() {
       date: today,
     });
     haptics.success();
-    showToast(`${item.name} · ${formatMoney(item.amount, currency)} added`, {
-      label: 'Undo',
+    showToast(t('today.added', { name: item.name, amount: formatMoney(item.amount, currency) }), {
+      label: t('common.undo'),
       onPress: () => deleteTransaction(transaction.id),
     });
   };
 
   return (
-    <TabScreen section="Today">
+    <TabScreen section={t('nav.today')}>
       <View style={styles.greeting}>
         <View style={styles.flex}>
           <AppText variant="label" tone="secondary">
             {formatLongDate(today)}
           </AppText>
-          <AppText variant="title">{m(status.balance)} available</AppText>
+          <AppText variant="title">{t('today.available', { amount: m(status.balance) })}</AppText>
         </View>
         <Pressable onPress={() => router.push('/payday')} accessibilityRole="button" hitSlop={8}>
           <Badge
             icon="event"
-            label={
-              status.incomeDue
-                ? 'Income due'
-                : `${status.daysUntilIncome} ${status.daysUntilIncome === 1 ? 'day' : 'days'} to payday`
-            }
+            label={status.incomeDue ? t('today.incomeDue') : tn('today.daysToPayday', status.daysUntilIncome)}
           />
         </Pressable>
       </View>
@@ -112,48 +113,44 @@ export default function TodayScreen() {
           <View style={styles.inline}>
             <IconCircle icon="payments" size={36} color={palette.brand} background={palette.surface} />
             <AppText variant="heading" style={styles.flex}>
-              Is your {data.cycle.incomeLabel.toLowerCase()} here?
+              {t('today.incomeHere', { income: data.cycle.incomeLabel.toLowerCase() })}
             </AppText>
           </View>
           <AppText variant="small" tone="secondary">
-            It was expected {formatDaysFromNow(data.cycle.nextIncomeDate, today)}. Once it arrives, we'll wrap up this
-            cycle and start the next one.
+            {t('today.incomeExpected', { when: formatDaysFromNow(data.cycle.nextIncomeDate, today) })}
           </AppText>
           <View style={styles.buttonRow}>
             <Button
-              label="Yes, add it"
+              label={t('today.incomeYes')}
               compact
               style={styles.flex}
               onPress={() => router.push({ pathname: '/income', params: { cycleIncome: '1' } })}
             />
             <Button
-              label="Not yet"
+              label={t('today.incomeNotYet')}
               variant="secondary"
               compact
               style={styles.flex}
               onPress={() => {
                 updateCycle({ nextIncomeDate: addDays(today, 1) });
-                showToast("OK, we'll check again tomorrow.");
+                showToast(t('today.incomeLater'));
               }}
             />
           </View>
         </Card>
       ) : null}
 
-      <Card
-        onPress={() => router.push('/breakdown')}
-        accessibilityLabel="See how your safe amount is calculated"
-        style={styles.hero}>
+      <Card onPress={() => router.push('/breakdown')} accessibilityLabel={t('today.heroHint')} style={styles.hero}>
         <View style={[styles.glow, { backgroundColor: colors.bg }]} />
         <View style={styles.spaceBetween}>
-          <StatusPill level={status.riskLevel} label={STATUS_LABELS[status.reason]} />
+          <StatusPill level={status.riskLevel} label={statusLabel(status.reason)} />
           <AppText variant="caption" tone="secondary">
-            Payday: {formatShortDate(data.cycle.nextIncomeDate)}
+            {t('today.payday', { date: formatShortDate(data.cycle.nextIncomeDate) })}
           </AppText>
         </View>
         <View>
           <AppText variant="label" tone="secondary">
-            {hasSpentToday ? 'Left to spend today' : 'Safe to spend today'}
+            {t(hasSpentToday ? 'today.leftToSpend' : 'today.safeToSpend')}
           </AppText>
           <View style={styles.baseline}>
             <AppText variant="hero">{formatAmount(heroValue, currency, { whole: true })}</AppText>
@@ -169,13 +166,13 @@ export default function TodayScreen() {
           />
           <View style={styles.spaceBetween}>
             <AppText variant="caption" tone="secondary">
-              Spent:{' '}
+              {t('today.spent')}
               <AppText variant="caption" style={styles.strong}>
                 {m(status.spentToday)}
               </AppText>
             </AppText>
             <AppText variant="caption" tone="secondary">
-              {overToday ? 'Over by: ' : 'Remaining: '}
+              {t(overToday ? 'today.overBy' : 'today.remaining')}
               <AppText variant="caption" color={overToday ? palette.danger : colors.fg} style={styles.strong}>
                 {m(Math.abs(status.remainingToday))}
               </AppText>
@@ -183,19 +180,25 @@ export default function TodayScreen() {
           </View>
         </View>
         <View style={styles.buttonRow}>
-          <Button label="Add expense" icon="add" style={styles.flex} onPress={() => router.push('/expense')} />
+          <Button label={t('today.addExpense')} icon="add" style={styles.flex} onPress={() => router.push('/expense')} />
           <Button
-            label="What if?"
+            label={t('today.whatIf')}
             icon="help"
             variant="secondary"
             style={styles.flex}
             onPress={() => router.push('/what-if')}
           />
         </View>
-        <Button label="Money received" icon="payments" variant="ghost" compact onPress={() => router.push('/income')} />
+        <Button
+          label={t('today.moneyReceived')}
+          icon="payments"
+          variant="ghost"
+          compact
+          onPress={() => router.push('/income')}
+        />
       </Card>
 
-      <Callout icon="eco" title="Coach perspective" onPress={() => router.push('/breakdown')}>
+      <Callout icon="eco" title={t('today.coachTitle')} onPress={() => router.push('/breakdown')}>
         <AppText variant="small" tone="secondary">
           <AppText variant="small" style={styles.strong}>
             {advice.title}.{' '}
@@ -210,26 +213,25 @@ export default function TodayScreen() {
           <View style={styles.inline}>
             <IconCircle icon="bell" size={36} color={palette.brand} background={palette.surface} />
             <AppText variant="bodyStrong" style={styles.flex}>
-              Want a heads-up before bills are due?
+              {t('today.remindersTitle')}
             </AppText>
           </View>
           <AppText variant="small" tone="secondary">
-            Flousey can remind you the day before a bill, on payday, and when you haven't checked in for a few days.
-            You can change this anytime in Rules.
+            {t('today.remindersBody')}
           </AppText>
           <View style={styles.buttonRow}>
             <Button
-              label="Turn on reminders"
+              label={t('today.remindersTurnOn')}
               compact
               style={styles.flex}
               onPress={async () => {
                 updateSettings({ remindersAsked: true });
                 const granted = await request();
-                showToast(granted ? 'Reminders are on' : 'You can turn reminders on anytime in Rules');
+                showToast(t(granted ? 'today.remindersOn' : 'today.remindersLater'));
               }}
             />
             <Button
-              label="Not now"
+              label={t('common.notNow')}
               variant="secondary"
               compact
               style={styles.flex}
@@ -239,14 +241,14 @@ export default function TodayScreen() {
         </Card>
       ) : null}
 
-      <Card onPress={() => router.push('/breakdown')} accessibilityLabel="See how your money is split">
+      <Card onPress={() => router.push('/breakdown')} accessibilityLabel={t('today.allocationHint')}>
         <View style={styles.spaceBetween}>
           <View style={styles.inline}>
             <Icon name="donut" size={20} color={palette.text} />
-            <AppText variant="heading">Cycle allocation</AppText>
+            <AppText variant="heading">{t('today.allocation')}</AppText>
           </View>
           <AppText variant="small" tone="secondary">
-            {m(status.balance)} total
+            {t('today.total', { amount: m(status.balance) })}
           </AppText>
         </View>
         <SegmentBar
@@ -257,33 +259,33 @@ export default function TodayScreen() {
         />
         <View style={styles.tiles}>
           <View style={[styles.tile, { backgroundColor: palette.surfaceLow }]}>
-            <LegendDot color={palette.inverse} label="Protected" textColor={palette.textSecondary} />
+            <LegendDot color={palette.inverse} label={t('today.protected')} textColor={palette.textSecondary} />
             <TileAmount value={status.protectedTotal} currency={currency} />
             <AppText variant="caption" tone="secondary">
-              • Bills: {m(status.billsProtected)}
+              {t('today.bulletBills', { amount: m(status.billsProtected) })}
             </AppText>
             <AppText variant="caption" tone="secondary">
-              • Savings: {m(status.savingsReserve)}
+              {t('today.bulletSavings', { amount: m(status.savingsReserve) })}
             </AppText>
             <AppText variant="caption" tone="secondary">
-              • Buffer: {m(status.minimumBalance)}
+              {t('today.bulletBuffer', { amount: m(status.minimumBalance) })}
             </AppText>
           </View>
           <View style={[styles.tile, { backgroundColor: palette.comfortableSoft }]}>
-            <LegendDot color={palette.brand} label="Flexible" textColor={palette.textSecondary} />
+            <LegendDot color={palette.brand} label={t('today.flexible')} textColor={palette.textSecondary} />
             <TileAmount
               value={status.flexibleNow}
               currency={currency}
               color={status.flexibleNow < 0 ? palette.danger : undefined}
             />
             <AppText variant="caption" tone="secondary">
-              • {status.daysRemaining} {status.daysRemaining === 1 ? 'day' : 'days'} left
+              {tn('today.bulletDaysLeft', status.daysRemaining)}
             </AppText>
             <AppText variant="caption" tone="secondary">
-              • ~{m(status.upcomingDailyPace)}/day after today
+              {t('today.bulletPace', { amount: m(status.upcomingDailyPace) })}
             </AppText>
             <AppText variant="caption" tone="brand" style={styles.strong}>
-              Unspent money spreads out
+              {t('today.spreadsOut')}
             </AppText>
           </View>
         </View>
@@ -291,22 +293,22 @@ export default function TodayScreen() {
 
       <View style={styles.stats}>
         <StatTile
-          label="Normal day"
+          label={t('today.statNormalDay')}
           value={m(status.normalDay)}
-          caption={NORMAL_DAY_CAPTION[status.normalDaySource]}
+          caption={t(NORMAL_DAY_CAPTION[status.normalDaySource])}
           onPress={() => router.push(status.normalDaySource === 'routines' ? '/routines' : '/protections')}
         />
         <StatTile
-          label="Spent today"
+          label={t('today.statSpent')}
           value={m(status.spentToday)}
-          caption={`${expenseCount} ${expenseCount === 1 ? 'entry' : 'entries'}`}
+          caption={tn('count.entries', expenseCount)}
           onPress={() => router.push('/activity')}
         />
         <StatTile
-          label="Safe room"
+          label={t('today.statSafeRoom')}
           value={formatMoney(status.remainingToday, currency, { whole: true, signed: true })}
           valueColor={overToday ? palette.danger : palette.brand}
-          caption="Until midnight"
+          caption={t('today.untilMidnight')}
           captionColor={palette.textMuted}
           onPress={() => router.push('/breakdown')}
         />
@@ -315,9 +317,9 @@ export default function TodayScreen() {
       {billsSoon.length > 0 ? (
         <>
           <SectionTitle
-            title="Bills coming up"
+            title={t('today.billsSoon')}
             count={billsSoon.length}
-            action={{ label: 'All bills', onPress: () => router.push('/rules') }}
+            action={{ label: t('today.allBills'), onPress: () => router.push('/rules') }}
           />
           <Card style={styles.listCard}>
             {billsSoon.map((occurrence, index) => (
@@ -328,11 +330,11 @@ export default function TodayScreen() {
                   title={occurrence.bill.name}
                   subtitle={
                     occurrence.dueDate < today
-                      ? `Overdue since ${formatShortDate(occurrence.dueDate)} · still protected`
-                      : `Due ${formatDaysFromNow(occurrence.dueDate, today)} · already protected`
+                      ? t('today.overdueSince', { date: formatShortDate(occurrence.dueDate) })
+                      : t('today.dueIn', { when: formatDaysFromNow(occurrence.dueDate, today) })
                   }
                   value={formatMoney(occurrence.bill.amount, currency)}
-                  valueCaption="Tap to pay"
+                  valueCaption={t('today.tapToPay')}
                   onPress={() =>
                     router.push({
                       pathname: '/pay-bill',
@@ -351,16 +353,16 @@ export default function TodayScreen() {
           <View style={styles.spaceBetween}>
             <View style={styles.inline}>
               <AppText style={styles.emoji}>{routine.emoji}</AppText>
-              <AppText variant="bodyStrong">Quick add · {routine.name}</AppText>
+              <AppText variant="bodyStrong">{t('today.quickAdd', { routine: routine.name })}</AppText>
             </View>
             <Pressable onPress={() => router.push('/routines')} hitSlop={8} accessibilityRole="button">
               <AppText variant="small" tone="brand" style={styles.strong}>
-                Edit
+                {t('common.edit')}
               </AppText>
             </Pressable>
           </View>
           <AppText variant="small" tone="secondary">
-            Tap when it actually happens. Nothing is added automatically.
+            {t('today.quickAddHint')}
           </AppText>
           <ChipGroup>
             {routine.items.map((item) => (
@@ -376,25 +378,24 @@ export default function TodayScreen() {
       ) : data.routines.length === 0 ? (
         <Callout
           icon="routine"
-          title="What does a normal day cost you?"
+          title={t('today.routinePromptTitle')}
           background={palette.surface}
           onPress={() => router.push('/routine')}>
           <AppText variant="small" tone="secondary">
-            Add your routine (coffee, lunch, transport…) to compare your plan with real life and log expenses in one
-            tap.
+            {t('today.routinePromptBody')}
           </AppText>
         </Callout>
       ) : null}
 
       <SectionTitle
-        title="Today's expenses"
+        title={t('today.expenses')}
         count={todays.length}
-        action={{ label: 'View all', onPress: () => router.push('/activity') }}
+        action={{ label: t('common.viewAll'), onPress: () => router.push('/activity') }}
       />
       <Card style={styles.listCard}>
         {todays.length === 0 ? (
           <AppText variant="small" tone="secondary">
-            Nothing logged yet today. Add expenses as they happen. It only takes a few seconds.
+            {t('today.noExpenses')}
           </AppText>
         ) : (
           todays.map((transaction, index) => (
@@ -409,10 +410,10 @@ export default function TodayScreen() {
       {showPastSpendingPrompt ? (
         <Callout
           icon="receipt"
-          title="Spent money earlier this month?"
+          title={t('today.pastPromptTitle')}
           onPress={() => router.push({ pathname: '/expense', params: { past: '1' } })}>
           <AppText variant="small" tone="secondary">
-            Add it to see where your money went. It won't change your balance or your safe pace.
+            {t('today.pastPromptBody')}
           </AppText>
         </Callout>
       ) : null}
@@ -420,7 +421,7 @@ export default function TodayScreen() {
       <View style={[styles.footerNote, { backgroundColor: palette.surfaceLow }]}>
         <Icon name="bedtime" size={16} color={palette.textSecondary} />
         <AppText variant="small" tone="secondary" style={styles.flex}>
-          Unspent money spreads over your coming days automatically.
+          {t('today.footerNote')}
         </AppText>
       </View>
     </TabScreen>

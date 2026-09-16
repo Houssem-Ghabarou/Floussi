@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { formatRelativeDay, type LocalDate } from '@/domain/dates';
 import { formatMoney } from '@/domain/money';
 import type { Transaction } from '@/domain/types';
+import { t } from '@/i18n';
 import { useFinancial } from '@/store/use-financial';
 import { AppText, Card, Divider, Segmented, SheetScreen } from '@/ui/components';
 import { Space } from '@/ui/theme';
@@ -19,7 +20,7 @@ export default function ActivityScreen() {
   const { data, today, currency } = financial;
 
   const visible = data.transactions
-    .filter((t) => filter === 'all' || (filter === 'income' ? t.amount > 0 : t.amount < 0))
+    .filter((transaction) => filter === 'all' || (filter === 'income' ? transaction.amount > 0 : transaction.amount < 0))
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 
   const groups: { date: LocalDate; items: Transaction[]; spent: number }[] = [];
@@ -34,12 +35,12 @@ export default function ActivityScreen() {
   }
 
   return (
-    <SheetScreen title="All activity" closeLabel="Close">
+    <SheetScreen title={t('activity.title')} closeLabel={t('common.close')}>
       <Segmented
         options={[
-          { value: 'all', label: 'All' },
-          { value: 'spending', label: 'Money out' },
-          { value: 'income', label: 'Money in' },
+          { value: 'all', label: t('activity.all') },
+          { value: 'spending', label: t('activity.out') },
+          { value: 'income', label: t('activity.in') },
         ]}
         value={filter}
         onChange={setFilter}
@@ -48,7 +49,7 @@ export default function ActivityScreen() {
       {groups.length === 0 ? (
         <Card>
           <AppText variant="small" tone="secondary">
-            Nothing here yet. Your expenses, income and bill payments will show up here.
+            {t('activity.empty')}
           </AppText>
         </Card>
       ) : (
@@ -60,7 +61,7 @@ export default function ActivityScreen() {
               </AppText>
               {group.spent > 0 ? (
                 <AppText variant="caption" tone="muted">
-                  Spent {formatMoney(group.spent, currency)}
+                  {t('activity.spent', { amount: formatMoney(group.spent, currency) })}
                 </AppText>
               ) : null}
             </View>

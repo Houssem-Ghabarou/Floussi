@@ -1,3 +1,5 @@
+import { t, type TranslationKey } from '@/i18n';
+
 import { addDays, addMonths, type LocalDate } from './dates';
 import type { Cycle, IncomeFrequency, Transaction } from './types';
 
@@ -19,12 +21,11 @@ export function isBeforeBoundary(transaction: Pick<Transaction, 'date' | 'create
   );
 }
 
-export const FREQUENCY_LABELS: Record<IncomeFrequency, string> = {
-  monthly: 'Every month',
-  biweekly: 'Every 2 weeks',
-  weekly: 'Every week',
-  irregular: 'No fixed income',
-};
+export const FREQUENCIES: IncomeFrequency[] = ['monthly', 'biweekly', 'weekly', 'irregular'];
+
+export function frequencyLabel(frequency: IncomeFrequency): string {
+  return t(`frequency.${frequency}` as TranslationKey);
+}
 
 /** Suggests the income date after `previous`, always later than `today`. */
 export function suggestNextIncomeDate(

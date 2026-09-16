@@ -1,4 +1,6 @@
-/** Turns engine output into short, supportive, non-judgmental copy. */
+/** Turns engine output into short, supportive, non-judgmental copy, in the chosen language. */
+import { t, type TranslationKey } from '@/i18n';
+
 import type { FinancialStatus, RiskLevel, StatusReason } from './engine';
 import { formatMoney, type CurrencyInfo, type Minor } from './money';
 
@@ -8,119 +10,130 @@ export interface Advice {
   suggestion: string | null;
 }
 
-export const RISK_META: Record<RiskLevel, { emoji: string; label: string }> = {
-  comfortable: { emoji: '🟢', label: 'Breathing room' },
-  on_track: { emoji: '🟢', label: 'On track' },
-  watch: { emoji: '🟡', label: 'Slow down a little' },
-  at_risk: { emoji: '🔴', label: 'May run short' },
+export const RISK_EMOJI: Record<RiskLevel, string> = {
+  comfortable: '🟢',
+  on_track: '🟢',
+  watch: '🟡',
+  at_risk: '🔴',
 };
 
+export function riskLabel(level: RiskLevel): string {
+  return t(`risk.${level}` as TranslationKey);
+}
+
 /** The status pill label: says exactly why the card has its color. */
-export const STATUS_LABELS: Record<StatusReason, string> = {
-  protected_exceeds_balance: 'Plan needs adjusting',
-  no_flexible_money: 'Nothing left to spend',
-  dipping_into_protected: 'Using protected money',
-  untracked_spending: 'Balance lower than tracked',
-  pace_unsustainable: 'May run short',
-  very_tight: 'Very tight',
-  pace_above_safe: 'Spending faster',
-  over_today: 'Over today',
-  almost_used_today: 'Almost used today',
-  over_yesterday: 'Over yesterday',
-  tight: 'Tight',
-  on_track: 'On track',
-  comfortable: 'Breathing room',
-};
+export function statusLabel(reason: StatusReason): string {
+  return t(`status.${reason}` as TranslationKey);
+}
 
 export function buildAdvice(s: FinancialStatus, currency: CurrencyInfo): Advice {
   const m = (value: Minor) => formatMoney(value, currency, { whole: true });
-  const normalDay = `${s.normalDaySource === 'routines' ? 'your normal day' : 'a normal day'} (about ${m(s.normalDay)})`;
-  const setNormalDay =
-    s.normalDaySource === 'default' ? ' You can set what a normal day costs you in Rules → Protections.' : '';
+  const normalDay = t(s.normalDaySource === 'routines' ? 'advice.normalDay.routines' : 'advice.normalDay.custom', {
+    amount: m(s.normalDay),
+  });
+  // Only worth suggesting while the figure is still the currency's default.
+  const setNormalDay = s.normalDaySource === 'default' ? t('advice.setNormalDay') : '';
 
   switch (s.reason) {
     case 'protected_exceeds_balance': {
       const billsGap = s.billsProtected - s.balance;
       return {
-        title: 'Your plan needs a small adjustment',
-        detail: `You have ${m(s.balance)}, but ${m(s.protectedTotal)} is set aside for bills, savings and your minimum balance.`,
+        title: t('advice.protected_exceeds_balance.title'),
+        detail: t('advice.protected_exceeds_balance.detail', {
+          balance: m(s.balance),
+          protected: m(s.protectedTotal),
+        }),
         suggestion:
           billsGap > 0
-            ? `Your upcoming bills need ${m(billsGap)} more than you have. See if a payment can move after your next income.`
-            : `Lowering your savings or minimum balance for this cycle would close the ${m(-s.flexibleStartOfDay)} gap.`,
+            ? t('advice.protected_exceeds_balance.bills', { gap: m(billsGap) })
+            : t('advice.protected_exceeds_balance.reserves', { gap: m(-s.flexibleStartOfDay) }),
       };
     }
     case 'no_flexible_money':
       return {
-        title: 'No flexible money until your next income',
-        detail: 'Your bills, savings and minimum balance are still protected.',
-        suggestion: 'Adding income or lowering savings for this cycle would free up some room.',
+        title: t('advice.no_flexible_money.title'),
+        detail: t('advice.no_flexible_money.detail'),
+        suggestion: t('advice.no_flexible_money.suggestion'),
       };
     case 'dipping_into_protected':
       return {
-        title: "You've dipped into protected money",
-        detail: `Today's spending went ${m(-s.flexibleNow)} into the money set aside for bills, savings and your minimum balance.`,
-        suggestion: 'Holding off on extra spending until your next income keeps your bills covered.',
+        title: t('advice.dipping_into_protected.title'),
+        detail: t('advice.dipping_into_protected.detail', { amount: m(-s.flexibleNow) }),
+        suggestion: t('advice.dipping_into_protected.suggestion'),
       };
     case 'untracked_spending':
       return {
-        title: 'Your balance was lower than tracked',
-        detail: `About ${m(s.recentUntrackedSpending)} went untracked, so your safe pace dropped from ${m(s.paceWithoutUntracked)} to ${m(s.dailyAllowance)}/day.`,
-        suggestion: `Try keeping the next few days around ${m(s.upcomingDailyPace)}. Logging expenses as they happen keeps your plan accurate.`,
+        title: t('advice.untracked_spending.title'),
+        detail: t('advice.untracked_spending.detail', {
+          amount: m(s.recentUntrackedSpending),
+          before: m(s.paceWithoutUntracked),
+          after: m(s.dailyAllowance),
+        }),
+        suggestion: t('advice.untracked_spending.suggestion', { pace: m(s.upcomingDailyPace) }),
       };
     case 'pace_unsustainable':
       return {
-        title: 'You may run short',
-        detail: `At your current pace (${m(s.currentPace ?? 0)}/day), you may use about ${m(-(s.projectedEndFlexible ?? 0))} more than your flexible money before your next income.`,
-        suggestion: `Recommended pace: ${m(s.upcomingDailyPace)}/day.`,
+        title: t('advice.pace_unsustainable.title'),
+        detail: t('advice.pace_unsustainable.detail', {
+          pace: m(s.currentPace ?? 0),
+          gap: m(-(s.projectedEndFlexible ?? 0)),
+        }),
+        suggestion: t('advice.pace_unsustainable.suggestion', { pace: m(s.upcomingDailyPace) }),
       };
     case 'very_tight':
       return {
-        title: 'Very tight until your next income',
-        detail: `Your safe pace is ${m(s.dailyAllowance)}/day, less than half of ${normalDay}.`,
-        suggestion: `Sticking to essentials keeps your bills and savings covered. Adding income or lowering savings for this cycle would give you more room.${setNormalDay}`,
+        title: t('advice.very_tight.title'),
+        detail: t('advice.very_tight.detail', { pace: m(s.dailyAllowance), normalDay }),
+        suggestion: `${t('advice.very_tight.suggestion')}${setNormalDay}`,
       };
     case 'pace_above_safe':
       return {
-        title: "You're spending a bit faster than your pace",
-        detail: `Your recent average is ${m(s.currentPace ?? 0)}/day. Your sustainable pace is ${m(s.dailyAllowance)}/day.`,
-        suggestion: `Keeping the next few days around ${m(s.upcomingDailyPace)} should bring you back on track.`,
+        title: t('advice.pace_above_safe.title'),
+        detail: t('advice.pace_above_safe.detail', { current: m(s.currentPace ?? 0), pace: m(s.dailyAllowance) }),
+        suggestion: t('advice.pace_above_safe.suggestion', { pace: m(s.upcomingDailyPace) }),
       };
     case 'over_today':
       return {
-        title: "You've gone past today's pace",
-        detail: `You've spent ${m(s.spentToday)} today, ${m(-s.remainingToday)} more than today's ${m(s.dailyAllowance)}.`,
-        suggestion: `No problem. Your pace for the coming days adjusts to about ${m(s.upcomingDailyPace)}.`,
+        title: t('advice.over_today.title'),
+        detail: t('advice.over_today.detail', {
+          spent: m(s.spentToday),
+          over: m(-s.remainingToday),
+          allowance: m(s.dailyAllowance),
+        }),
+        suggestion: t('advice.over_today.suggestion', { pace: m(s.upcomingDailyPace) }),
       };
     case 'almost_used_today':
       return {
-        title: s.remainingToday <= 0 ? "You've used today's amount" : "You've almost used today's amount",
-        detail: `${m(Math.max(0, s.remainingToday))} left of today's ${m(s.dailyAllowance)}.`,
-        suggestion: "Whatever you don't spend today spreads over the coming days.",
+        title: t(s.remainingToday <= 0 ? 'advice.almost_used_today.titleUsed' : 'advice.almost_used_today.title'),
+        detail: t('advice.almost_used_today.detail', {
+          left: m(Math.max(0, s.remainingToday)),
+          allowance: m(s.dailyAllowance),
+        }),
+        suggestion: t('advice.almost_used_today.suggestion'),
       };
     case 'over_yesterday':
       return {
-        title: 'Yesterday went over your pace',
-        detail: 'No problem, it happens. Your plan has already adjusted.',
-        suggestion: `Try keeping the next few days around ${m(s.dailyAllowance)}.`,
+        title: t('advice.over_yesterday.title'),
+        detail: t('advice.over_yesterday.detail'),
+        suggestion: t('advice.over_yesterday.suggestion', { pace: m(s.dailyAllowance) }),
       };
     case 'tight':
       return {
-        title: 'A bit tight',
-        detail: `Your safe pace is ${m(s.dailyAllowance)}/day, a little under ${normalDay}.`,
-        suggestion: `Keeping days around ${m(s.dailyAllowance)} covers everything until your next income.${setNormalDay}`,
+        title: t('advice.tight.title'),
+        detail: t('advice.tight.detail', { pace: m(s.dailyAllowance), normalDay }),
+        suggestion: `${t('advice.tight.suggestion', { pace: m(s.dailyAllowance) })}${setNormalDay}`,
       };
     case 'on_track':
       return {
-        title: "You're on track",
-        detail: `Your safe pace is ${m(s.dailyAllowance)}/day, enough for ${normalDay}.`,
-        suggestion: s.currentPace !== null ? `Your recent average is ${m(s.currentPace)}/day.` : null,
+        title: t('advice.on_track.title'),
+        detail: t('advice.on_track.detail', { pace: m(s.dailyAllowance), normalDay }),
+        suggestion: s.currentPace !== null ? t('advice.on_track.suggestion', { current: m(s.currentPace) }) : null,
       };
     case 'comfortable':
       return {
-        title: 'You have breathing room',
-        detail: `Your safe pace is ${m(s.dailyAllowance)}/day, well above ${normalDay}.`,
-        suggestion: `That's around ${m(s.dailyAllowance - s.normalDay)}/day of flexibility.`,
+        title: t('advice.comfortable.title'),
+        detail: t('advice.comfortable.detail', { pace: m(s.dailyAllowance), normalDay }),
+        suggestion: t('advice.comfortable.suggestion', { amount: m(s.dailyAllowance - s.normalDay) }),
       };
   }
 }

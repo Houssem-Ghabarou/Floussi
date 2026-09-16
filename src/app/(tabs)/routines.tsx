@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { expenseCategory } from '@/domain/categories';
-import { WEEKDAY_NAMES, WEEKDAY_SHORT } from '@/domain/dates';
+import { weekdayName, weekdayShortName } from '@/domain/dates';
 import { formatAmount, formatMoney, type CurrencyInfo, type Minor } from '@/domain/money';
 import { routineByWeekday, routineTotal } from '@/domain/routines';
 import type { Routine } from '@/domain/types';
+import { t, tn } from '@/i18n';
 import { useFinancial } from '@/store/use-financial';
 import { TabScreen } from '@/ui/app-header';
 import {
@@ -23,17 +24,24 @@ import { Radius, Space, usePalette } from '@/ui/theme';
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-/** "Monday – Friday", "Saturday & Sunday", "Mon, Wed, Fri"… */
+/** "Monday – Friday", "Saturday & Sunday", "Mon, Wed, Fri"… in the chosen language. */
 function describeDays(weekdays: number[]): string {
   const ordered = WEEK_ORDER.filter((day) => weekdays.includes(day));
-  if (ordered.length === 0) return 'No days assigned yet';
-  if (ordered.length === 7) return 'Active every day';
-  if (ordered.length === 1) return `Active on ${WEEKDAY_NAMES[ordered[0]]}`;
+  if (ordered.length === 0) return t('routines.noDays');
+  if (ordered.length === 7) return t('routines.everyDay');
+  if (ordered.length === 1) return t('routines.activeOn', { day: weekdayName(ordered[0]) });
+  if (ordered.length === 2) {
+    return t('routines.activeTwo', { first: weekdayName(ordered[0]), second: weekdayName(ordered[1]) });
+  }
   const positions = ordered.map((day) => WEEK_ORDER.indexOf(day));
   const contiguous = positions.every((position, index) => index === 0 || position === positions[index - 1] + 1);
-  if (ordered.length === 2) return `Active ${WEEKDAY_NAMES[ordered[0]]} & ${WEEKDAY_NAMES[ordered[1]]}`;
-  if (contiguous) return `Active ${WEEKDAY_NAMES[ordered[0]]} – ${WEEKDAY_NAMES[ordered[ordered.length - 1]]}`;
-  return `Active ${ordered.map((day) => WEEKDAY_SHORT[day]).join(', ')}`;
+  if (contiguous) {
+    return t('routines.activeRange', {
+      from: weekdayName(ordered[0]),
+      to: weekdayName(ordered[ordered.length - 1]),
+    });
+  }
+  return t('routines.activeList', { days: ordered.map((day) => weekdayShortName(day)).join(', ') });
 }
 
 export default function RoutinesScreen() {
@@ -50,12 +58,12 @@ export default function RoutinesScreen() {
   const cushion = status.dailyAllowance - weeklyAverage;
 
   return (
-    <TabScreen section="Routine">
+    <TabScreen section={t('nav.routine')}>
       <PageIntro
-        title="My spending routines"
-        subtitle="Patterns shaping your normal day"
+        title={t('routines.title')}
+        subtitle={t('routines.subtitle')}
         icon="rules"
-        iconLabel="Normal day settings"
+        iconLabel={t('routines.settings')}
         onIconPress={() => router.push('/protections')}
       />
 
@@ -63,19 +71,18 @@ export default function RoutinesScreen() {
         icon="lightbulb"
         iconColor={palette.accentText}
         iconBackground={palette.accentSoft}
-        title="Predictive, not transactional">
+        title={t('routines.explainerTitle')}>
         <AppText variant="small" tone="secondary">
-          Routines are your typical spending patterns, not automatic deductions. They set a realistic normal day and
-          let you log expenses in one tap.
+          {t('routines.explainerBody')}
         </AppText>
       </Callout>
 
       {data.routines.length === 0 ? (
         <Card style={styles.empty}>
           <AppText style={styles.emptyEmoji}>☀️</AppText>
-          <AppText variant="heading">What does a normal day cost you?</AppText>
+          <AppText variant="heading">{t('routines.emptyTitle')}</AppText>
           <AppText variant="small" tone="secondary" style={styles.center}>
-            Start with a workday: coffee, lunch, transport… Add a weekend or gym day later.
+            {t('routines.emptyBody')}
           </AppText>
         </Card>
       ) : (
@@ -89,30 +96,28 @@ export default function RoutinesScreen() {
         ))
       )}
 
-      <Button label="Add routine" icon="add" onPress={() => router.push('/routine')} />
+      <Button label={t('routines.add')} icon="add" onPress={() => router.push('/routine')} />
 
       {weeklyAverage > 0 ? (
         <View style={[styles.horizon, { backgroundColor: palette.surfaceMuted }]}>
           <View style={styles.inline}>
             <IconCircle icon="insights" size={28} color={palette.brandText} background={palette.brand} />
             <AppText variant="label" tone="brand">
-              Coach horizon
+              {t('routines.horizon')}
             </AppText>
           </View>
           <AppText>
-            Your routines average{' '}
-            <AppText style={styles.strong}>~{m(weeklyAverage)}</AppText>/day. Compared to your{' '}
-            <AppText style={styles.strong}>{m(status.dailyAllowance)}</AppText> safe pace,{' '}
-            {cushion >= 0 ? (
-              <>
-                you keep <AppText tone="brand" style={styles.strong}>~{m(cushion)}/day</AppText> of cushion.
-              </>
-            ) : (
-              <>
-                they cost <AppText tone="accent" style={styles.strong}>~{m(-cushion)}/day</AppText> more than you can
-                safely spend.
-              </>
-            )}
+            {cushion >= 0
+              ? t('routines.horizonCushion', {
+                  average: m(weeklyAverage),
+                  pace: m(status.dailyAllowance),
+                  cushion: m(cushion),
+                })
+              : t('routines.horizonOver', {
+                  average: m(weeklyAverage),
+                  pace: m(status.dailyAllowance),
+                  over: m(-cushion),
+                })}
           </AppText>
           <SegmentBar
             height={8}
@@ -124,11 +129,23 @@ export default function RoutinesScreen() {
             ]}
           />
           <View style={styles.spaceBetween}>
-            <LegendDot color={palette.brandDeep} label={`${m(weeklyAverage)} routine`} textColor={palette.text} />
+            <LegendDot
+              color={palette.brandDeep}
+              label={t('routines.legendRoutine', { amount: m(weeklyAverage) })}
+              textColor={palette.text}
+            />
             {cushion >= 0 ? (
-              <LegendDot color="#93D4B5" label={`+${m(cushion)} cushion`} textColor={palette.text} />
+              <LegendDot
+                color="#93D4B5"
+                label={t('routines.legendCushion', { amount: m(cushion) })}
+                textColor={palette.text}
+              />
             ) : (
-              <LegendDot color={palette.accent} label={`${m(-cushion)} over pace`} textColor={palette.text} />
+              <LegendDot
+                color={palette.accent}
+                label={t('routines.legendOver', { amount: m(-cushion) })}
+                textColor={palette.text}
+              />
             )}
           </View>
         </View>
@@ -136,11 +153,11 @@ export default function RoutinesScreen() {
 
       <Callout
         icon="restart"
-        title="Need a seasonal reset?"
+        title={t('routines.seasonalTitle')}
         background={palette.surface}
         onPress={() => router.push('/routine')}>
         <AppText variant="small" tone="secondary">
-          Create a routine for holidays or Ramadan, then give it the days it covers.
+          {t('routines.seasonalBody')}
         </AppText>
       </Callout>
     </TabScreen>
@@ -162,15 +179,20 @@ function RoutineCard({ routine, currency, onPress }: { routine: Routine; currenc
           </AppText>
         </View>
         {days > 0 ? (
-          <Badge label={`Active · ${days}d/wk`} dot color={palette.onBrandSoft} background={palette.comfortableSoft} />
+          <Badge
+            label={t('routines.active', { days: tn('count.daysPerWeek', days) })}
+            dot
+            color={palette.onBrandSoft}
+            background={palette.comfortableSoft}
+          />
         ) : (
-          <Badge label="No days" color={palette.accentText} background={palette.accentSoft} />
+          <Badge label={t('routines.noDaysBadge')} color={palette.accentText} background={palette.accentSoft} />
         )}
       </View>
 
       <View style={[styles.expected, { backgroundColor: palette.surfaceLow }]}>
         <AppText variant="small" tone="secondary">
-          Daily expected
+          {t('routines.dailyExpected')}
         </AppText>
         <View style={styles.baseline}>
           <AppText variant="display">{formatAmount(routineTotal(routine), currency, { whole: true })}</AppText>
@@ -189,7 +211,7 @@ function RoutineCard({ routine, currency, onPress }: { routine: Routine; currenc
       ))}
 
       <View style={styles.actions}>
-        <Button label="Tune details" icon="edit" variant="secondary" compact onPress={onPress} />
+        <Button label={t('routines.tune')} icon="edit" variant="secondary" compact onPress={onPress} />
       </View>
     </Card>
   );
@@ -198,7 +220,6 @@ function RoutineCard({ routine, currency, onPress }: { routine: Routine; currenc
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { textAlign: 'center' },
-  strong: { fontWeight: '700' },
   inline: { flexDirection: 'row', alignItems: 'center', gap: Space.sm },
   spaceBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Space.sm, flexWrap: 'wrap' },
   baseline: { flexDirection: 'row', alignItems: 'baseline', gap: Space.xs },

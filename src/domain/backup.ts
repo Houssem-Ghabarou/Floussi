@@ -2,6 +2,8 @@
  * Portable backup of everything the user entered — never computed values, which the engine rebuilds.
  * Parsing is defensive: a damaged or foreign file is rejected before it can replace any data.
  */
+import { t, tn, type TranslationKey } from '@/i18n';
+
 import { formatShortDate, toLocalDate, type LocalDate } from './dates';
 import { DEFAULT_REMINDERS } from './reminders';
 import type {
@@ -46,23 +48,20 @@ export function backupFileName(today: LocalDate): string {
   return `flousey-backup-${today}.json`;
 }
 
-function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? '' : 's'}`;
-}
-
 /** "Backup from Sep 15 · 42 transactions · 3 bills · 2 routines" */
 export function describeBackup(backup: Backup): string {
   const { transactions, bills, routines } = backup.data;
-  return [
-    `Backup from ${formatShortDate(toLocalDate(new Date(backup.exportedAt)))}`,
-    plural(transactions.length, 'transaction'),
-    plural(bills.filter((bill) => !bill.archived).length, 'bill'),
-    plural(routines.length, 'routine'),
-  ].join(' · ');
+  return t('backup.describe', {
+    date: formatShortDate(toLocalDate(new Date(backup.exportedAt))),
+    transactions: tn('count.transactions', transactions.length),
+    bills: tn('count.bills', bills.filter((bill) => !bill.archived).length),
+    routines: tn('count.routines', routines.length),
+  });
 }
 
-const NOT_A_BACKUP = "This file isn't a Flousey backup.";
-const damaged = (what: string) => `The backup looks damaged (${what}).`;
+const notABackup = () => t('backup.notOurs');
+/** `part` names what failed to read: 'settings', 'transactions'… */
+const damaged = (part: string) => t('backup.damaged', { what: t(`backup.part.${part}` as TranslationKey) });
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TRANSACTION_KINDS: TransactionKind[] = ['expense', 'income', 'bill_payment', 'savings_transfer', 'adjustment'];
@@ -82,23 +81,23 @@ export function parseBackup(text: string): ParsedBackup {
   try {
     raw = JSON.parse(text);
   } catch {
-    return { ok: false, error: NOT_A_BACKUP };
+    return { ok: false, error: notABackup() };
   }
   if (!isObject(raw) || !isString(raw.app) || !BACKUP_APPS.includes(raw.app) || !isObject(raw.data)) {
-    return { ok: false, error: NOT_A_BACKUP };
+    return { ok: false, error: notABackup() };
   }
   if (!isInt(raw.format) || raw.format > BACKUP_FORMAT) {
-    return { ok: false, error: 'This backup was made by a newer version of Flousey. Update the app and try again.' };
+    return { ok: false, error: t('backup.newerVersion') };
   }
   if (!isString(raw.exportedAt) || Number.isNaN(Date.parse(raw.exportedAt))) {
-    return { ok: false, error: damaged('export date') };
+    return { ok: false, error: damaged('exportDate') };
   }
 
   const settings = parseSettings(raw.data.settings);
   if (!settings) return { ok: false, error: damaged('settings') };
   const cycles = parseList(raw.data.cycles, parseCycle);
   if (!cycles) return { ok: false, error: damaged('cycles') };
-  if (!cycles.some((cycle) => cycle.closedAt === null)) return { ok: false, error: damaged('no current cycle') };
+  if (!cycles.some((cycle) => cycle.closedAt === null)) return { ok: false, error: damaged('noCurrentCycle') };
   const transactions = parseList(raw.data.transactions, parseTransaction);
   if (!transactions) return { ok: false, error: damaged('transactions') };
   const bills = parseList(raw.data.bills, parseBill);
@@ -147,6 +146,9 @@ function parseSettings(value: unknown): Settings | null {
     dailyNeed: intOrNull(value.dailyNeed),
     unexpectedIncomeSavePercent: isInt(value.unexpectedIncomeSavePercent) ? value.unexpectedIncomeSavePercent : 0,
     onboarded: true,
+    ...(value.language === 'en' || value.language === 'fr' || value.language === 'ar'
+      ? { language: value.language }
+      : {}),
     ...(isObject(value.reminders) ? { reminders: parseReminders(value.reminders) } : {}),
     ...(typeof value.widgetHideAmounts === 'boolean' ? { widgetHideAmounts: value.widgetHideAmounts } : {}),
     ...(typeof value.remindersAsked === 'boolean' ? { remindersAsked: value.remindersAsked } : {}),

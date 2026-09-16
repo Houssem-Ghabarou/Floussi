@@ -61,7 +61,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
   if (family === 'accessoryRectangular') {
     return (
       <VStack alignment="leading" spacing={1} modifiers={[containerBackground('clear', 'widget'), widgetURL('flousey://')]}>
-        <Text modifiers={[font({ size: 11, weight: 'semibold' })]}>{props.ready ? 'SAFE TO SPEND' : 'FLOUSEY'}</Text>
+        <Text modifiers={[font({ size: 11, weight: 'semibold' })]}>{props.ready ? props.label : 'FLOUSEY'}</Text>
         <Text modifiers={[font({ size: 20, weight: 'bold' }), lineLimit(1), minimumScaleFactor(0.6)]}>
           {props.ready ? `${props.amount} ${props.currency}` : 'Set up your plan'}
         </Text>
@@ -83,7 +83,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
 
   const summary = (
     <VStack alignment="leading" spacing={0} modifiers={[fill]}>
-      <Text modifiers={[font({ size: 11, weight: 'bold' }), foregroundStyle(colors.muted)]}>SAFE TO SPEND</Text>
+      <Text modifiers={[font({ size: 11, weight: 'bold' }), foregroundStyle(colors.muted)]}>{props.label}</Text>
       <HStack spacing={4}>
         <Text
           modifiers={[
@@ -133,7 +133,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
               backgroundOverlay({ color: colors.button }),
               cornerRadius(12),
             ]}>
-            + Expense
+            {props.addExpense}
           </Text>
         </Link>
         <Link destination="flousey://income">
@@ -145,7 +145,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
               backgroundOverlay({ color: colors.secondaryButton }),
               cornerRadius(12),
             ]}>
-            + Money
+            {props.addMoney}
           </Text>
         </Link>
       </VStack>

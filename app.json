@@ -3,7 +3,7 @@
     "name": "Flousey",
     "slug": "flousey",
     "description": "Flousey: know what you can safely spend every day until your next income.",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "flousey",
@@ -11,7 +11,7 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.houssemgh.Flousey",
-      "buildNumber": "16",
+      "buildNumber": "17",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -25,7 +25,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.houssemgh.Flousey",
-      "versionCode": 16
+      "versionCode": 17
     },
     "web": {
       "output": "static",
@@ -49,6 +49,12 @@
       "expo-sqlite",
       "expo-sharing",
       [
+        "expo-localization",
+        {
+          "supportsRTL": true
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/images/notification-icon.png",
@@ -66,7 +72,12 @@
               "name": "SafeToSpend",
               "displayName": "Safe to spend",
               "description": "What you can safely spend today, with quick actions.",
-              "supportedFamilies": ["systemSmall", "systemMedium", "accessoryRectangular", "accessoryInline"],
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "accessoryRectangular",
+                "accessoryInline"
+              ],
               "contentMarginsDisabled": false
             }
           ]

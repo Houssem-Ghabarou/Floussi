@@ -4,6 +4,7 @@ import { describeTransaction, expenseCategory, incomeSource } from '@/domain/cat
 import { formatTime } from '@/domain/dates';
 import { formatAmount, formatMoney, type CurrencyInfo } from '@/domain/money';
 import type { Bill, Transaction } from '@/domain/types';
+import { t, type TranslationKey } from '@/i18n';
 import { useApp } from '@/store/app-store';
 
 import { ListRow } from './components';
@@ -11,10 +12,10 @@ import { confirmDestructive } from './dialog-store';
 import { usePalette } from './theme';
 import { showToast } from './toast';
 
-const KIND_CAPTION: Partial<Record<Transaction['kind'], string>> = {
-  bill_payment: 'Bill',
-  savings_transfer: 'Savings',
-  adjustment: 'Correction',
+const KIND_TAG: Partial<Record<Transaction['kind'], TranslationKey>> = {
+  bill_payment: 'transaction.tag.bill',
+  savings_transfer: 'transaction.tag.savings',
+  adjustment: 'transaction.tag.correction',
 };
 
 export function TransactionRow({
@@ -34,7 +35,7 @@ export function TransactionRow({
 
   let subtitle: string;
   if (!transaction.countsToBalance) {
-    subtitle = 'Before tracking · history only';
+    subtitle = t('transaction.beforeTracking');
   } else {
     const time = transaction.createdAt > 0 ? formatTime(transaction.createdAt) : null;
     const label =
@@ -46,6 +47,7 @@ export function TransactionRow({
     subtitle = [time, label].filter(Boolean).join(' · ');
   }
 
+  const tag = KIND_TAG[transaction.kind];
   const tileColor =
     transaction.kind === 'expense'
       ? `${palette.accentSoft}99`
@@ -60,11 +62,18 @@ export function TransactionRow({
       router.push({ pathname: '/income', params: { id: transaction.id } });
     } else {
       confirmDestructive({
-        title: `Delete “${title}”?`,
-        message: `${formatMoney(transaction.amount, currency, { signed: true })} will be removed from your history. You can undo right after.`,
+        title: t('transaction.deleteTitle', { title }),
+        message: t('transaction.deleteMessage', {
+          amount: formatMoney(transaction.amount, currency, { signed: true }),
+        }),
         onConfirm: () => {
           const removed = deleteTransaction(transaction.id);
-          if (removed) showToast('Deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
+          if (removed) {
+            showToast(t('transaction.deleted'), {
+              label: t('common.undo'),
+              onPress: () => restoreTransaction(removed),
+            });
+          }
         },
       });
     }
@@ -78,7 +87,7 @@ export function TransactionRow({
       subtitle={subtitle || undefined}
       value={`${formatAmount(transaction.amount, currency, { signed: true })} ${currency.label}`}
       valueColor={transaction.amount > 0 ? palette.income : undefined}
-      valueCaption={KIND_CAPTION[transaction.kind]}
+      valueCaption={tag ? t(tag) : undefined}
       onPress={onPress}
     />
   );

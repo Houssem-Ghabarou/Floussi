@@ -1,4 +1,4 @@
-import { EMPTY_WIDGET, widgetTimeline } from '../widget-snapshot';
+import { emptyWidget, widgetTimeline } from '../widget-snapshot';
 import type { AppData, Transaction } from '../types';
 
 const lunch: Transaction = {
@@ -59,6 +59,9 @@ describe('widget content', () => {
         tone: 'good',
         balance: '900 TND available',
         payday: '16 days to payday',
+        label: 'SAFE TO SPEND',
+        addExpense: '+ Expense',
+        addMoney: '+ Money',
       },
     });
     expect(tomorrow).toMatchObject({ date: '2026-09-15', props: { amount: '60', payday: '15 days to payday' } });
@@ -76,6 +79,6 @@ describe('widget content', () => {
   });
 
   it('invites to set up a plan before onboarding', () => {
-    expect(widgetTimeline(null, '2026-09-14')).toEqual([{ date: '2026-09-14', props: EMPTY_WIDGET }]);
+    expect(widgetTimeline(null, '2026-09-14')).toEqual([{ date: '2026-09-14', props: emptyWidget() }]);
   });
 });

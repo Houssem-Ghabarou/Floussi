@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { INCOME_SOURCES } from '@/domain/categories';
-import { FREQUENCY_LABELS } from '@/domain/cycle';
+import { incomeSources } from '@/domain/categories';
+import { FREQUENCIES, frequencyLabel } from '@/domain/cycle';
 import { addDays, dateInMonth, splitDate, type LocalDate } from '@/domain/dates';
 import { calculateFinancialStatus } from '@/domain/engine';
 import { amountToInput, formatMoney, parseAmount } from '@/domain/money';
 import type { IncomeFrequency } from '@/domain/types';
+import { t } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -31,7 +32,7 @@ export default function PaydayScreen() {
   const cycle = financial?.data.cycle;
   const [date, setDate] = useState<LocalDate>(cycle?.nextIncomeDate ?? '');
   const [frequency, setFrequency] = useState<IncomeFrequency>(cycle?.frequency ?? 'monthly');
-  const [label, setLabel] = useState(cycle?.incomeLabel ?? 'Salary');
+  const [label, setLabel] = useState(cycle?.incomeLabel ?? t('income.salary'));
   const [expectedText, setExpectedText] = useState(() =>
     cycle?.expectedIncome && financial ? amountToInput(cycle.expectedIncome, financial.currency) : '',
   );
@@ -45,28 +46,30 @@ export default function PaydayScreen() {
     updateCycle({
       nextIncomeDate: date,
       frequency,
-      incomeLabel: frequency === 'irregular' ? 'Next money' : label,
+      incomeLabel: frequency === 'irregular' ? t('income.nextMoney') : label,
       expectedIncome: parseAmount(expectedText, currency),
     });
     haptics.success();
     router.back();
-    showToast('Next income updated');
+    showToast(t('payday.updated'));
   };
 
   return (
-    <SheetScreen title="Next income" footer={<Button label="Save" onPress={save} disabled={date < today} />}>
-      <Field label="Frequency">
+    <SheetScreen
+      title={t('payday.title')}
+      footer={<Button label={t('common.save')} onPress={save} disabled={date < today} />}>
+      <Field label={t('payday.frequency')}>
         <ChipGroup>
-          {(Object.keys(FREQUENCY_LABELS) as IncomeFrequency[]).map((value) => (
-            <Chip key={value} label={FREQUENCY_LABELS[value]} selected={frequency === value} onPress={() => setFrequency(value)} />
+          {FREQUENCIES.map((value) => (
+            <Chip key={value} label={frequencyLabel(value)} selected={frequency === value} onPress={() => setFrequency(value)} />
           ))}
         </ChipGroup>
       </Field>
 
       {frequency !== 'irregular' ? (
-        <Field label="Income">
+        <Field label={t('payday.income')}>
           <ChipGroup>
-            {INCOME_SOURCES.slice(0, 3).map((source) => (
+            {incomeSources().slice(0, 3).map((source) => (
               <Chip
                 key={source.id}
                 emoji={source.emoji}
@@ -79,35 +82,38 @@ export default function PaydayScreen() {
         </Field>
       ) : null}
 
-      <Field label={frequency === 'irregular' ? 'Make my money last until' : 'Expected on'}>
+      <Field label={t(frequency === 'irregular' ? 'payday.lastUntil' : 'payday.expectedOn')}>
         <DateChoice
           value={date}
           onChange={setDate}
           minDate={today}
           options={[
-            { label: 'Tomorrow', date: addDays(today, 1) },
-            { label: 'In 1 week', date: addDays(today, 7) },
-            { label: 'End of month', date: dateInMonth(year, month, 31) },
+            { label: t('common.tomorrow'), date: addDays(today, 1) },
+            { label: t('common.inOneWeek'), date: addDays(today, 7) },
+            { label: t('common.endOfMonth'), date: dateInMonth(year, month, 31) },
           ]}
         />
       </Field>
 
       {frequency !== 'irregular' ? (
-        <Field label="About how much? (optional)">
+        <Field label={t('payday.expectedAmount')}>
           <AmountField value={expectedText} onChangeText={setExpectedText} currency={currency} size="medium" />
         </Field>
       ) : null}
 
       <Card>
         <MoneyLine
-          label="Safe pace"
-          value={`${formatMoney(status.dailyAllowance, currency, { whole: true })} → ${formatMoney(preview.dailyAllowance, currency, { whole: true })}/day`}
+          label={t('common.safePace')}
+          value={t('common.paceShift', {
+            before: formatMoney(status.dailyAllowance, currency, { whole: true }),
+            after: formatMoney(preview.dailyAllowance, currency, { whole: true }),
+          })}
           strong
         />
       </Card>
 
       <Button
-        label="My income already arrived"
+        label={t('payday.alreadyArrived')}
         variant="ghost"
         onPress={() => router.replace({ pathname: '/income', params: { cycleIncome: '1' } })}
       />

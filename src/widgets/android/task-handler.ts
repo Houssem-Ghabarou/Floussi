@@ -6,17 +6,21 @@ import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 
 import { repository } from '@/data/repository';
 import { toLocalDate } from '@/domain/dates';
-import { EMPTY_WIDGET, widgetTimeline, type WidgetProps } from '@/domain/widget-snapshot';
+import { emptyWidget, widgetTimeline, type WidgetProps } from '@/domain/widget-snapshot';
+import { applyTextLanguage, resolveLanguage } from '@/platform/language';
 import { appDataOf } from '@/store/app-store';
 
 import { renderSafeToSpend } from './safe-to-spend-widget';
 
 function currentProps(): WidgetProps {
   try {
-    return widgetTimeline(appDataOf(repository.loadAll()), toLocalDate())[0].props;
+    const stored = repository.loadAll();
+    // The widget draws outside the app, so it has to pick the language up from the saved settings.
+    applyTextLanguage(resolveLanguage(stored.settings?.language));
+    return widgetTimeline(appDataOf(stored), toLocalDate())[0].props;
   } catch (error) {
     console.warn('Widget could not read the plan', error);
-    return EMPTY_WIDGET;
+    return emptyWidget();
   }
 }
 

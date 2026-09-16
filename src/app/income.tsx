@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { INCOME_SOURCES, incomeSource } from '@/domain/categories';
+import { incomeSources, incomeSource } from '@/domain/categories';
 import { addDays, type LocalDate } from '@/domain/dates';
 import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
+import { t, type TranslationKey } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -23,10 +24,10 @@ import { DateChoice } from '@/ui/date-picker';
 import { confirmDestructive, useUnsavedChanges } from '@/ui/dialog-store';
 import { showToast } from '@/ui/toast';
 
-const SAVE_OPTIONS = [
-  { percent: 0, label: 'Use it this cycle' },
-  { percent: 50, label: 'Save half' },
-  { percent: 100, label: 'Save it all' },
+const SAVE_OPTIONS: { percent: number; label: TranslationKey }[] = [
+  { percent: 0, label: 'incomeScreen.useIt' },
+  { percent: 50, label: 'incomeScreen.saveHalf' },
+  { percent: 100, label: 'incomeScreen.saveAll' },
 ];
 
 export default function IncomeScreen() {
@@ -57,6 +58,7 @@ export default function IncomeScreen() {
   const { currency, status, data, today } = financial;
   const amount = parseAmount(amountText, currency);
   const m = (value: Minor) => formatMoney(value, currency, { whole: true });
+  const incomeName = data.cycle.incomeLabel.toLowerCase();
 
   const offerNewCycle = !existing && status.daysUntilIncome <= 5;
   const offerSplit = !existing && !startNewCycle;
@@ -75,7 +77,7 @@ export default function IncomeScreen() {
     if (existing) {
       updateTransaction({ ...existing, ...fields });
       router.back();
-      showToast('Income updated');
+      showToast(t('incomeScreen.updated'));
       return;
     }
 
@@ -91,10 +93,14 @@ export default function IncomeScreen() {
     router.back();
     showToast(
       counts
-        ? `You added ${m(amount)}. Your safe pace went from ${m(status.dailyAllowance)} to ${m(paceAfter)}/day.`
-        : `${m(amount)} added to your history.`,
+        ? t('incomeScreen.addedToast', {
+            amount: m(amount),
+            before: m(status.dailyAllowance),
+            after: m(paceAfter),
+          })
+        : t('incomeScreen.addedHistory', { amount: m(amount) }),
       {
-        label: 'Undo',
+        label: t('common.undo'),
         onPress: () => {
           deleteTransaction(transaction.id);
           if (saved > 0) updateCycle({ savingsTarget: previousTarget });
@@ -106,12 +112,19 @@ export default function IncomeScreen() {
   const remove = () => {
     if (!existing) return;
     confirmDestructive({
-      title: 'Delete this income?',
-      message: `${formatMoney(existing.amount, currency, { signed: true })} will be removed from your balance and history. You can undo right after.`,
+      title: t('incomeScreen.deleteTitle'),
+      message: t('common.deleteTxMessage', {
+        amount: formatMoney(existing.amount, currency, { signed: true }),
+      }),
       onConfirm: () => {
         router.back();
         const removed = deleteTransaction(existing.id);
-        if (removed) showToast('Income deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
+        if (removed) {
+          showToast(t('incomeScreen.deleted'), {
+            label: t('common.undo'),
+            onPress: () => restoreTransaction(removed),
+          });
+        }
       },
     });
   };
@@ -119,19 +132,27 @@ export default function IncomeScreen() {
   return (
     <SheetScreen
       confirmClose={hasChanges}
-      title={existing ? 'Edit income' : isCycleIncome ? `Your ${data.cycle.incomeLabel.toLowerCase()} arrived` : 'Add money'}
+      title={
+        existing
+          ? t('incomeScreen.editTitle')
+          : isCycleIncome
+            ? t('incomeScreen.arrivedTitle', { income: incomeName })
+            : t('incomeScreen.addTitle')
+      }
       footer={
         <Button
-          label={existing ? 'Save changes' : startNewCycle ? 'Add and review my cycle' : 'Add money'}
+          label={t(
+            existing ? 'common.saveChanges' : startNewCycle ? 'incomeScreen.addAndReview' : 'incomeScreen.addTitle',
+          )}
           onPress={save}
           disabled={!amount || !source}
         />
       }>
       <AmountField value={amountText} onChangeText={setAmountText} currency={currency} autoFocus={!existing} prefix="+" />
 
-      <Field label="Source">
+      <Field label={t('incomeScreen.source')}>
         <ChipGroup>
-          {INCOME_SOURCES.map((item) => (
+          {incomeSources().map((item) => (
             <Chip
               key={item.id}
               emoji={item.emoji}
@@ -144,11 +165,11 @@ export default function IncomeScreen() {
       </Field>
 
       {offerNewCycle ? (
-        <Field label="Your cycle" hint="Closes this cycle with a summary and starts a new plan. Routines and rules carry over.">
+        <Field label={t('incomeScreen.cycle')} hint={t('incomeScreen.cycleHint')}>
           <ChipGroup>
             <Chip
               emoji="🔁"
-              label={`This is my ${data.cycle.incomeLabel.toLowerCase()}, start a new cycle`}
+              label={t('incomeScreen.startNewCycle', { income: incomeName })}
               selected={startNewCycle}
               onPress={() => setStartNewCycle((value) => !value)}
             />
@@ -157,12 +178,12 @@ export default function IncomeScreen() {
       ) : null}
 
       {offerSplit ? (
-        <Field label="What do you want to do with it?">
+        <Field label={t('incomeScreen.whatToDo')}>
           <ChipGroup>
             {SAVE_OPTIONS.map((option) => (
               <Chip
                 key={option.percent}
-                label={option.label}
+                label={t(option.label)}
                 selected={savePercent === option.percent}
                 onPress={() => setSavePercent(option.percent)}
               />
@@ -173,39 +194,43 @@ export default function IncomeScreen() {
 
       {amount && !existing && !startNewCycle ? (
         <Card>
-          {saved > 0 ? <MoneyLine label="Protected as savings" value={m(saved)} /> : null}
-          <MoneyLine label="Safe pace" value={`${m(status.dailyAllowance)} → ${m(paceAfter)}/day`} strong />
+          {saved > 0 ? <MoneyLine label={t('incomeScreen.protectedAsSavings')} value={m(saved)} /> : null}
+          <MoneyLine
+            label={t('common.safePace')}
+            value={t('common.paceShift', { before: m(status.dailyAllowance), after: m(paceAfter) })}
+            strong
+          />
           {!counts ? (
             <AppText variant="caption" tone="muted">
-              This is before you started tracking, so it only appears in your history.
+              {t('incomeScreen.beforeTracking')}
             </AppText>
           ) : null}
         </Card>
       ) : null}
 
-      <Field label="Note (optional)">
+      <Field label={t('common.noteOptional')}>
         <TextField
           value={note}
           onChangeText={setNote}
-          placeholder={source ? incomeSource(source).label : 'Where it came from'}
+          placeholder={source ? incomeSource(source).label : t('incomeScreen.wherePlaceholder')}
         />
       </Field>
 
-      <Field label="Date">
+      <Field label={t('common.date')}>
         <DateChoice
           value={date}
           onChange={setDate}
           maxDate={today}
           options={[
-            { label: 'Today', date: today },
-            { label: 'Yesterday', date: addDays(today, -1) },
+            { label: t('common.todayLabel'), date: today },
+            { label: t('common.yesterdayLabel'), date: addDays(today, -1) },
           ]}
         />
       </Field>
 
       {existing ? (
         <Card>
-          <Button label="Delete income" variant="danger" compact onPress={remove} />
+          <Button label={t('incomeScreen.delete')} variant="danger" compact onPress={remove} />
         </Card>
       ) : null}
     </SheetScreen>

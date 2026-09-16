@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { addDays, formatShortDate, type LocalDate } from '@/domain/dates';
 import { amountToInput, formatMoney, parseAmount } from '@/domain/money';
+import { t } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import { AmountField, AppText, Button, Card, Field, haptics, SheetScreen } from '@/ui/components';
@@ -31,21 +32,21 @@ export default function PayBillScreen() {
 
   let explanation: string;
   if (!countsToBalance) {
-    explanation = `Paid before you started tracking: your balance already includes it, so the ${formatMoney(bill.amount, currency)} set aside goes back to your flexible money.`;
+    explanation = t('payBill.beforeTracking', { amount: formatMoney(bill.amount, currency) });
   } else if (difference === 0) {
-    explanation = "This money was already protected, so your safe pace won't change.";
+    explanation = t('payBill.same');
   } else if (difference > 0) {
-    explanation = `That's ${formatMoney(difference, currency)} more than planned. Your pace will adjust a little.`;
+    explanation = t('payBill.more', { amount: formatMoney(difference, currency) });
   } else {
-    explanation = `That's ${formatMoney(-difference, currency)} less than planned. The difference goes back to your flexible money.`;
+    explanation = t('payBill.less', { amount: formatMoney(-difference, currency) });
   }
 
   const dateOptions = [
-    { label: 'Today', date: today },
-    { label: 'Yesterday', date: addDays(today, -1) },
+    { label: t('common.todayLabel'), date: today },
+    { label: t('common.yesterdayLabel'), date: addDays(today, -1) },
   ];
   if (overdue && dueDate < addDays(today, -1)) {
-    dateOptions.push({ label: `On ${formatShortDate(dueDate)}`, date: dueDate });
+    dateOptions.push({ label: t('payBill.onDate', { date: formatShortDate(dueDate) }), date: dueDate });
   }
 
   const save = () => {
@@ -53,19 +54,24 @@ export default function PayBillScreen() {
     const payment = payBill({ billId: bill.id, dueDate, amount, date });
     haptics.success();
     router.back();
-    showToast(`${bill.emoji} ${bill.name} paid`, { label: 'Undo', onPress: () => deleteTransaction(payment.id) });
+    showToast(t('payBill.paid', { emoji: bill.emoji, name: bill.name }), {
+      label: t('common.undo'),
+      onPress: () => deleteTransaction(payment.id),
+    });
   };
 
   return (
-    <SheetScreen title={`Pay ${bill.name}`} footer={<Button label="Mark as paid" onPress={save} disabled={!amount} />}>
+    <SheetScreen
+      title={t('payBill.title', { name: bill.name })}
+      footer={<Button label={t('payBill.markPaid')} onPress={save} disabled={!amount} />}>
       <AppText variant="title">
         {bill.emoji} {bill.name}
       </AppText>
       <AppText tone="secondary">
         {bill.recurring || bill.dueDate
-          ? `${overdue ? 'Was due' : 'Due'} ${formatShortDate(dueDate)}. `
+          ? t(overdue ? 'payBill.wasDue' : 'payBill.due', { date: formatShortDate(dueDate) })
           : ''}
-        Adjust the amount if the real bill was different.
+        {t('payBill.adjust')}
       </AppText>
 
       <AmountField value={amountText} onChangeText={setAmountText} currency={currency} />
@@ -74,7 +80,7 @@ export default function PayBillScreen() {
         <AppText tone="secondary">{explanation}</AppText>
       </Card>
 
-      <Field label="Paid on">
+      <Field label={t('payBill.paidOn')}>
         <DateChoice value={date} onChange={setDate} maxDate={today} options={dateOptions} />
       </Field>
     </SheetScreen>

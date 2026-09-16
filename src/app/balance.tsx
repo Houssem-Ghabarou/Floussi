@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { STATUS_LABELS } from '@/domain/advice';
+import { statusLabel } from '@/domain/advice';
 import { calculateFinancialStatus } from '@/domain/engine';
 import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
+import { t } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import { AmountField, AppText, Button, Card, haptics, MoneyLine, SheetScreen, StatusPill } from '@/ui/components';
@@ -22,7 +23,7 @@ export default function BalanceScreen() {
   const { currency, status, input } = financial;
   const actual = parseAmount(amountText, currency);
   const difference = actual === null ? 0 : actual - status.balance;
-  const pace = (value: Minor) => `${formatMoney(value, currency, { whole: true })}/day`;
+  const pace = (value: Minor) => t('common.perDay', { amount: formatMoney(value, currency, { whole: true }) });
 
   // The same calculation the plan will run once the correction is recorded.
   const preview =
@@ -40,8 +41,8 @@ export default function BalanceScreen() {
     haptics.success();
     router.back();
     if (adjustment && preview) {
-      showToast(`Balance updated. Your safe pace is now ${pace(preview.dailyAllowance)}.`, {
-        label: 'Undo',
+      showToast(t('balance.updated', { pace: pace(preview.dailyAllowance) }), {
+        label: t('common.undo'),
         onPress: () => deleteTransaction(adjustment.id),
       });
     }
@@ -49,33 +50,36 @@ export default function BalanceScreen() {
 
   return (
     <SheetScreen
-      title="Update balance"
-      footer={<Button label={difference === 0 ? 'Done' : 'Update balance'} onPress={save} disabled={actual === null} />}>
-      <AppText variant="title">What does your account show?</AppText>
-      <AppText tone="secondary">
-        Manual tracking drifts: a forgotten taxi, cash given to family. Enter what you really have and we'll record the
-        difference so your plan matches reality.
-      </AppText>
+      title={t('balance.title')}
+      footer={
+        <Button
+          label={t(difference === 0 ? 'common.done' : 'balance.update')}
+          onPress={save}
+          disabled={actual === null}
+        />
+      }>
+      <AppText variant="title">{t('balance.question')}</AppText>
+      <AppText tone="secondary">{t('balance.intro')}</AppText>
 
       <AmountField value={amountText} onChangeText={setAmountText} currency={currency} autoFocus />
 
       <Card>
-        <MoneyLine label="Flousey thought you had" value={formatMoney(status.balance, currency)} />
+        <MoneyLine label={t('balance.thought')} value={formatMoney(status.balance, currency)} />
         {difference < 0 ? (
-          <AppText tone="secondary">
-            {formatMoney(-difference, currency)} will be recorded as untracked spending.
-          </AppText>
+          <AppText tone="secondary">{t('balance.less', { amount: formatMoney(-difference, currency) })}</AppText>
         ) : difference > 0 ? (
-          <AppText tone="secondary">
-            {formatMoney(difference, currency)} more than expected. It will be recorded as a balance correction.
-          </AppText>
+          <AppText tone="secondary">{t('balance.more', { amount: formatMoney(difference, currency) })}</AppText>
         ) : (
-          <AppText tone="secondary">That matches. Nothing to change.</AppText>
+          <AppText tone="secondary">{t('balance.match')}</AppText>
         )}
         {preview ? (
           <>
-            <MoneyLine label="Safe pace" value={`${pace(status.dailyAllowance)} → ${pace(preview.dailyAllowance)}`} strong />
-            <StatusPill level={preview.riskLevel} label={STATUS_LABELS[preview.reason]} />
+            <MoneyLine
+              label={t('common.safePace')}
+              value={`${pace(status.dailyAllowance)} → ${pace(preview.dailyAllowance)}`}
+              strong
+            />
+            <StatusPill level={preview.riskLevel} label={statusLabel(preview.reason)} />
           </>
         ) : null}
       </Card>

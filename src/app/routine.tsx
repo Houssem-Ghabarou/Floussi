@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { newId } from '@/data/repository';
-import { EXPENSE_CATEGORIES } from '@/domain/categories';
-import { WEEKDAY_SHORT } from '@/domain/dates';
+import { expenseCategories } from '@/domain/categories';
+import { weekdayShortName } from '@/domain/dates';
 import { amountToInput, formatMoney, parseAmount, sanitizeAmountInput } from '@/domain/money';
+import { t, type TranslationKey } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -26,20 +27,20 @@ import { showToast } from '@/ui/toast';
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-const ROUTINE_PRESETS = [
-  { name: 'Workday', emoji: '☀️', weekdays: [1, 2, 3, 4, 5] },
-  { name: 'Weekend', emoji: '🏖️', weekdays: [0, 6] },
-  { name: 'Gym day', emoji: '🏋️', weekdays: [] },
-  { name: 'Study day', emoji: '🎓', weekdays: [] },
+const ROUTINE_PRESETS: { name: TranslationKey; emoji: string; weekdays: number[] }[] = [
+  { name: 'routineForm.presetWorkday', emoji: '☀️', weekdays: [1, 2, 3, 4, 5] },
+  { name: 'routineForm.presetWeekend', emoji: '🏖️', weekdays: [0, 6] },
+  { name: 'routineForm.presetGym', emoji: '🏋️', weekdays: [] },
+  { name: 'routineForm.presetStudy', emoji: '🎓', weekdays: [] },
 ];
 
-const ITEM_SUGGESTIONS = [
-  { name: 'Coffee', category: 'coffee' },
-  { name: 'Breakfast', category: 'food' },
-  { name: 'Lunch', category: 'food' },
-  { name: 'Transport', category: 'transport' },
-  { name: 'Snacks', category: 'food' },
-  { name: 'Groceries', category: 'groceries' },
+const ITEM_SUGGESTIONS: { name: TranslationKey; category: string }[] = [
+  { name: 'routineForm.itemCoffee', category: 'coffee' },
+  { name: 'routineForm.itemBreakfast', category: 'food' },
+  { name: 'routineForm.itemLunch', category: 'food' },
+  { name: 'routineForm.itemTransport', category: 'transport' },
+  { name: 'routineForm.itemSnacks', category: 'food' },
+  { name: 'routineForm.itemGroceries', category: 'groceries' },
 ];
 
 interface DraftItem {
@@ -59,7 +60,7 @@ export default function RoutineScreen() {
   const existing = financial?.data.routines.find((routine) => routine.id === id);
   const isFirstRoutine = (financial?.data.routines.length ?? 0) === 0;
 
-  const [name, setName] = useState(existing?.name ?? (isFirstRoutine ? 'Workday' : ''));
+  const [name, setName] = useState(existing?.name ?? (isFirstRoutine ? t('routineForm.presetWorkday') : ''));
   const [emoji, setEmoji] = useState(existing?.emoji ?? (isFirstRoutine ? '☀️' : '📋'));
   const [weekdays, setWeekdays] = useState<number[]>(existing?.weekdays ?? (isFirstRoutine ? [1, 2, 3, 4, 5] : []));
   const [items, setItems] = useState<DraftItem[]>(() =>
@@ -102,14 +103,16 @@ export default function RoutineScreen() {
     });
     haptics.success();
     router.back();
-    showToast(`${emoji} ${name.trim()} saved · normal total ${formatMoney(total, currency)}`);
+    showToast(
+      t('routineForm.saved', { emoji, name: name.trim(), amount: formatMoney(total, currency) }),
+    );
   };
 
   const remove = () => {
     if (!existing) return;
     confirmDestructive({
-      title: `Delete ${existing.name}?`,
-      message: "Its days go back to no routine. Your recorded expenses aren't affected.",
+      title: t('routineForm.deleteTitle', { name: existing.name }),
+      message: t('routineForm.deleteMessage'),
       onConfirm: () => {
         deleteRoutine(existing.id);
         router.back();
@@ -120,12 +123,9 @@ export default function RoutineScreen() {
   return (
     <SheetScreen
       confirmClose={hasChanges}
-      title={existing ? 'Edit routine' : 'New routine'}
-      footer={<Button label="Save routine" onPress={save} disabled={!valid} />}>
-      <AppText tone="secondary">
-        Describe what a normal day usually costs. It's an expectation, not an expense: nothing is subtracted until you
-        record it.
-      </AppText>
+      title={t(existing ? 'routineForm.editTitle' : 'routineForm.newTitle')}
+      footer={<Button label={t('routineForm.save')} onPress={save} disabled={!valid} />}>
+      <AppText tone="secondary">{t('routineForm.intro')}</AppText>
 
       {!existing ? (
         <ChipGroup>
@@ -133,10 +133,10 @@ export default function RoutineScreen() {
             <Chip
               key={preset.name}
               emoji={preset.emoji}
-              label={preset.name}
-              selected={name === preset.name}
+              label={t(preset.name)}
+              selected={name === t(preset.name)}
               onPress={() => {
-                setName(preset.name);
+                setName(t(preset.name));
                 setEmoji(preset.emoji);
                 setWeekdays(preset.weekdays);
               }}
@@ -145,37 +145,54 @@ export default function RoutineScreen() {
         </ChipGroup>
       ) : null}
 
-      <Field label="Name">
-        <TextField value={name} onChangeText={setName} placeholder="Workday" />
+      <Field label={t('common.name')}>
+        <TextField value={name} onChangeText={setName} placeholder={t('routineForm.presetWorkday')} />
       </Field>
 
       <Field
-        label="Days"
+        label={t('routineForm.days')}
         hint={
           movedDays.length
-            ? `${movedDays.map((entry) => `${WEEKDAY_SHORT[entry.day]} (from ${entry.owner!.name})`).join(', ')} will move to this routine.`
-            : 'Each day of the week belongs to one routine.'
+            ? t('routineForm.daysMoveHint', {
+                days: movedDays
+                  .map((entry) =>
+                    t('routineForm.dayOwner', {
+                      day: weekdayShortName(entry.day),
+                      routine: entry.owner!.name,
+                    }),
+                  )
+                  .join(', '),
+              })
+            : t('routineForm.daysHint')
         }>
         <ChipGroup>
           {WEEK_ORDER.map((day) => (
-            <Chip key={day} label={WEEKDAY_SHORT[day]} selected={weekdays.includes(day)} onPress={() => toggleDay(day)} />
+            <Chip
+              key={day}
+              label={weekdayShortName(day)}
+              selected={weekdays.includes(day)}
+              onPress={() => toggleDay(day)}
+            />
           ))}
         </ChipGroup>
       </Field>
 
-      <Field label="What it usually costs">
+      <Field label={t('routineForm.costs')}>
         <ChipGroup>
           {ITEM_SUGGESTIONS.map((suggestion) => (
             <Chip
               key={suggestion.name}
-              label={`+ ${suggestion.name}`}
+              label={t('routineForm.addItem', { name: t(suggestion.name) })}
               onPress={() =>
-                setItems((current) => [...current, { id: newId(), name: suggestion.name, amountText: '', category: suggestion.category }])
+                setItems((current) => [
+                  ...current,
+                  { id: newId(), name: t(suggestion.name), amountText: '', category: suggestion.category },
+                ])
               }
             />
           ))}
           <Chip
-            label="+ Other"
+            label={t('routineForm.other')}
             onPress={() => setItems((current) => [...current, { id: newId(), name: '', amountText: '', category: 'other' }])}
           />
         </ChipGroup>
@@ -185,7 +202,7 @@ export default function RoutineScreen() {
               <TextField
                 value={item.name}
                 onChangeText={(text) => updateItem(item.id, { name: text })}
-                placeholder="Item"
+                placeholder={t('routineForm.itemPlaceholder')}
                 style={styles.itemName}
               />
               <TextField
@@ -197,7 +214,7 @@ export default function RoutineScreen() {
               />
               <Pressable
                 hitSlop={10}
-                accessibilityLabel={`Remove ${item.name || 'item'}`}
+                accessibilityLabel={t('routineForm.removeItem', { name: item.name || t('routineForm.item') })}
                 onPress={() => setItems((current) => current.filter((candidate) => candidate.id !== item.id))}>
                 <AppText variant="heading" tone="muted">
                   ✕
@@ -205,7 +222,7 @@ export default function RoutineScreen() {
               </Pressable>
             </View>
             <View style={styles.emojiRow}>
-              {EXPENSE_CATEGORIES.map((category) => (
+              {expenseCategories().map((category) => (
                 <Pressable
                   key={category.id}
                   accessibilityLabel={category.label}
@@ -221,12 +238,12 @@ export default function RoutineScreen() {
       </Field>
 
       <Card>
-        <MoneyLine label="Normal total" value={formatMoney(total, currency)} strong />
+        <MoneyLine label={t('routineForm.normalTotal')} value={formatMoney(total, currency)} strong />
       </Card>
 
       {existing ? (
         <Card>
-          <Button label="Delete routine" variant="danger" compact onPress={remove} />
+          <Button label={t('routineForm.delete')} variant="danger" compact onPress={remove} />
         </Card>
       ) : null}
     </SheetScreen>

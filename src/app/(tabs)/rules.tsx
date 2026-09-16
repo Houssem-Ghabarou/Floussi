@@ -3,12 +3,14 @@ import { Fragment } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import { nextDueAfter } from '@/domain/bills';
-import { FREQUENCY_LABELS } from '@/domain/cycle';
+import { frequencyLabel } from '@/domain/cycle';
 import { formatDaysFromNow, formatShortDate } from '@/domain/dates';
 import { cycleBillOccurrences, savingsMovedInCycle } from '@/domain/derive';
 import { formatMoney, type Minor } from '@/domain/money';
 import { formatMinutes, reminderPreferences } from '@/domain/reminders';
 import type { Bill, ReminderPreferences } from '@/domain/types';
+import { LANGUAGE_NAMES, LANGUAGES, t, type TranslationKey } from '@/i18n';
+import { applyLanguage, resolveLanguage } from '@/platform/language';
 import { useNotificationAccess } from '@/platform/use-notification-access';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
@@ -27,17 +29,17 @@ import {
   SectionTitle,
 } from '@/ui/components';
 import type { IconName } from '@/ui/icon';
-import { confirmDestructive } from '@/ui/dialog-store';
+import { confirmDestructive, showDialog } from '@/ui/dialog-store';
 import { Space, usePalette } from '@/ui/theme';
 import { useBackupActions } from '@/ui/use-backup';
 
 const CHECK_IN_TIMES = [19 * 60, 20 * 60, 21 * 60, 22 * 60];
 
-const NORMAL_DAY_SOURCE = {
-  routines: 'From your routines',
-  custom: 'Your estimate',
-  default: 'Currency default · tap to set yours',
-} as const;
+const NORMAL_DAY_SOURCE: Record<string, TranslationKey> = {
+  routines: 'rules.normalDay.routines',
+  custom: 'rules.normalDay.custom',
+  default: 'rules.normalDay.default',
+};
 
 export default function RulesScreen() {
   const financial = useFinancial();
@@ -61,7 +63,22 @@ export default function RulesScreen() {
   const moved = savingsMovedInCycle(cycle, transactions);
   const laterBillSubtitle = (bill: Bill) => {
     const next = nextDueAfter(bill, cycle.nextIncomeDate);
-    return next ? `Next due ${formatShortDate(next)}, after your income · not protected yet` : 'No upcoming due date';
+    return next ? t('rules.billLater', { date: formatShortDate(next) }) : t('rules.billNoDate');
+  };
+
+  const language = resolveLanguage(settings.language);
+  const changeLanguage = (next: (typeof LANGUAGES)[number]) => {
+    updateSettings({ language: next });
+    // Arabic mirrors the whole layout, which React Native only does after a restart.
+    if (applyLanguage(next)) {
+      showDialog({
+        icon: 'restart',
+        title: t('language.restartTitle'),
+        message: t('language.restartMessage'),
+        confirmLabel: t('common.ok'),
+        cancelLabel: null,
+      });
+    }
   };
 
   const reminders = reminderPreferences(settings);
@@ -71,26 +88,28 @@ export default function RulesScreen() {
   const confirmReset = () =>
     confirmDestructive({
       icon: 'warning',
-      title: 'Erase all data?',
-      message:
-        'This removes your plan, bills, routines and history from this device. It cannot be undone, so export a backup first if you want to keep them.',
-      confirmLabel: 'Erase everything',
-      cancelLabel: 'Cancel',
+      title: t('rules.eraseTitle'),
+      message: t('rules.eraseMessage'),
+      confirmLabel: t('rules.eraseConfirm'),
+      cancelLabel: t('common.cancel'),
       onConfirm: resetAll,
     });
 
   return (
-    <TabScreen section="Rules">
-      <PageIntro title="Plan rules" subtitle="Everything that shapes your safe pace." />
+    <TabScreen section={t('nav.rules')}>
+      <PageIntro title={t('rules.title')} subtitle={t('rules.subtitle')} />
 
-      <SectionTitle title="Next income" />
+      <SectionTitle title={t('rules.nextIncome')} />
       <Card>
         <ListRow
           icon="event"
-          title={`${cycle.incomeLabel} · ${formatShortDate(cycle.nextIncomeDate)}`}
+          title={t('rules.incomeTitle', {
+            income: cycle.incomeLabel,
+            date: formatShortDate(cycle.nextIncomeDate),
+          })}
           subtitle={[
-            FREQUENCY_LABELS[cycle.frequency],
-            cycle.expectedIncome ? `about ${m(cycle.expectedIncome)}` : null,
+            frequencyLabel(cycle.frequency),
+            cycle.expectedIncome ? t('rules.about', { amount: m(cycle.expectedIncome) }) : null,
             formatDaysFromNow(cycle.nextIncomeDate, today),
           ]
             .filter(Boolean)
@@ -98,7 +117,7 @@ export default function RulesScreen() {
           onPress={() => router.push('/payday')}
         />
         <Button
-          label="My income arrived"
+          label={t('rules.incomeArrived')}
           icon="payments"
           variant="secondary"
           compact
@@ -106,26 +125,26 @@ export default function RulesScreen() {
         />
       </Card>
 
-      <SectionTitle title="Balance" />
+      <SectionTitle title={t('rules.balance')} />
       <Card>
         <ListRow
           icon="wallet"
-          title="In your account"
-          subtitle="Tap to match what your bank or wallet shows"
+          title={t('rules.inYourAccount')}
+          subtitle={t('rules.balanceHint')}
           value={m(status.balance)}
           onPress={() => router.push('/balance')}
         />
       </Card>
 
       <SectionTitle
-        title="Bills this cycle"
+        title={t('rules.billsThisCycle')}
         count={unpaidCount}
-        action={{ label: 'Add', onPress: () => router.push('/bill') }}
+        action={{ label: t('common.add'), onPress: () => router.push('/bill') }}
       />
       <Card style={styles.listCard}>
         {occurrences.length === 0 && otherBills.length === 0 ? (
           <AppText variant="small" tone="secondary">
-            No bills due before your next income.
+            {t('rules.noBills')}
           </AppText>
         ) : null}
         {occurrences.map((occurrence, index) => (
@@ -144,17 +163,22 @@ export default function RulesScreen() {
               title={occurrence.bill.name}
               subtitle={
                 occurrence.paid
-                  ? `Paid ${m(occurrence.paidAmount)} · was due ${formatShortDate(occurrence.dueDate)}`
+                  ? t('rules.billPaid', {
+                      amount: m(occurrence.paidAmount),
+                      date: formatShortDate(occurrence.dueDate),
+                    })
                   : occurrence.dueDate < today
-                    ? `Overdue since ${formatShortDate(occurrence.dueDate)} · protected`
-                    : `${occurrence.bill.recurring || occurrence.bill.dueDate ? `Due ${formatShortDate(occurrence.dueDate)}` : 'Before your next income'} · protected`
+                    ? t('rules.billOverdue', { date: formatShortDate(occurrence.dueDate) })
+                    : occurrence.bill.recurring || occurrence.bill.dueDate
+                      ? t('rules.billDue', { date: formatShortDate(occurrence.dueDate) })
+                      : t('rules.billBeforeIncome')
               }
               value={occurrence.paid ? undefined : m(occurrence.bill.amount)}
               onPress={() => router.push({ pathname: '/bill', params: { id: occurrence.bill.id } })}
               right={
                 occurrence.paid ? undefined : (
                   <Button
-                    label="Pay"
+                    label={t('rules.pay')}
                     compact
                     onPress={() =>
                       router.push({
@@ -182,57 +206,77 @@ export default function RulesScreen() {
         ))}
         {occurrences.length > 0 ? (
           <AppText variant="caption" tone="muted">
-            Unpaid bills stay protected until you tap Pay. Tap a bill to edit it.
+            {t('rules.billsHint')}
           </AppText>
         ) : null}
       </Card>
 
-      <SectionTitle title="Protections" action={{ label: 'Edit', onPress: () => router.push('/protections') }} />
+      <SectionTitle
+        title={t('rules.protections')}
+        action={{ label: t('common.edit'), onPress: () => router.push('/protections') }}
+      />
       <Card style={styles.listCard} onPress={() => router.push('/protections')}>
         <ListRow
           icon="savings"
-          title="Savings this cycle"
-          subtitle={moved > 0 ? `${m(moved)} already moved` : 'Kept aside until you move it'}
+          title={t('rules.savingsThisCycle')}
+          subtitle={moved > 0 ? t('rules.savingsMoved', { amount: m(moved) }) : t('rules.savingsKept')}
           value={m(cycle.savingsTarget)}
         />
         <Divider />
         <ListRow
           icon="shield"
-          title="Minimum balance"
-          subtitle="A cushion you never go below"
+          title={t('rules.minimumBalance')}
+          subtitle={t('rules.minimumHint')}
           value={m(settings.minimumBalance)}
         />
         <Divider />
         <ListRow
           icon="routine"
-          title="Normal day"
-          subtitle={NORMAL_DAY_SOURCE[status.normalDaySource]}
+          title={t('rules.normalDay')}
+          subtitle={t(NORMAL_DAY_SOURCE[status.normalDaySource])}
           value={formatMoney(status.normalDay, currency, { whole: true })}
         />
         <Divider />
         <ListRow
           icon="bolt"
-          title="Unexpected income"
-          subtitle="Money beyond your regular income"
+          title={t('rules.unexpectedIncome')}
+          subtitle={t('rules.unexpectedHint')}
           value={
-            settings.unexpectedIncomeSavePercent === 0 ? 'Use it' : `Save ${settings.unexpectedIncomeSavePercent}%`
+            settings.unexpectedIncomeSavePercent === 0
+              ? t('rules.useIt')
+              : t('rules.savePercent', { percent: settings.unexpectedIncomeSavePercent })
           }
         />
         <Divider />
-        <ListRow icon="restart" title="Unspent money" subtitle="Spreads over the coming days" />
+        <ListRow icon="restart" title={t('rules.unspentMoney')} subtitle={t('rules.unspentHint')} />
       </Card>
 
-      <SectionTitle title="Reminders" subtitle="Local notifications, scheduled on this phone" />
+      <SectionTitle title={t('language.section')} />
+      <Card>
+        <ChipGroup>
+          {LANGUAGES.map((option) => (
+            <Chip
+              key={option}
+              label={LANGUAGE_NAMES[option]}
+              selected={language === option}
+              onPress={() => changeLanguage(option)}
+            />
+          ))}
+        </ChipGroup>
+        <AppText variant="caption" tone="muted">
+          {t('language.followsPhone')}
+        </AppText>
+      </Card>
+
+      <SectionTitle title={t('rules.reminders')} subtitle={t('rules.remindersSubtitle')} />
       <Card style={styles.listCard}>
         {access && !access.granted ? (
           <View style={[styles.notice, { backgroundColor: palette.watchSoft }]}>
             <AppText variant="small" style={styles.flex}>
-              {access.canAskAgain
-                ? 'Notifications are off for Flousey, so these reminders stay silent.'
-                : 'Notifications are blocked for Flousey in your phone settings.'}
+              {t(access.canAskAgain ? 'rules.notificationsOff' : 'rules.notificationsBlocked')}
             </AppText>
             <Button
-              label={access.canAskAgain ? 'Turn on' : 'Open settings'}
+              label={t(access.canAskAgain ? 'common.turnOn' : 'common.openSettings')}
               compact
               onPress={() => {
                 void request();
@@ -242,27 +286,27 @@ export default function RulesScreen() {
         ) : null}
         <ToggleRow
           icon="receipt"
-          title="Bill due tomorrow"
-          subtitle="9:00 the day before a bill is due"
+          title={t('rules.reminderBill')}
+          subtitle={t('rules.reminderBillHint')}
           value={reminders.bills}
           onChange={(bills) => setReminder({ bills })}
         />
         <Divider />
         <ToggleRow
           icon="event"
-          title="Payday"
-          subtitle="9:00 on the day your income is expected"
+          title={t('rules.reminderPayday')}
+          subtitle={t('rules.reminderPaydayHint')}
           value={reminders.payday}
           onChange={(payday) => setReminder({ payday })}
         />
         <Divider />
         <ToggleRow
           icon="bedtime"
-          title="Evening check-in"
+          title={t('rules.reminderCheckIn')}
           subtitle={
             reminders.checkIn
-              ? `Every day at ${formatMinutes(reminders.checkInMinutes)}`
-              : 'A calm daily nudge to look at your day'
+              ? t('rules.reminderCheckInOn', { time: formatMinutes(reminders.checkInMinutes) })
+              : t('rules.reminderCheckInOff')
           }
           value={reminders.checkIn}
           onChange={(checkIn) => setReminder({ checkIn })}
@@ -282,48 +326,62 @@ export default function RulesScreen() {
         <Divider />
         <ToggleRow
           icon="schedule"
-          title="When you haven't opened Flousey"
-          subtitle={reminders.checkIn ? 'Not needed while the daily check-in is on' : 'After 3 days, at 19:00'}
+          title={t('rules.reminderInactivity')}
+          subtitle={t(reminders.checkIn ? 'rules.reminderInactivityOff' : 'rules.reminderInactivityOn')}
           value={reminders.inactivity}
           onChange={(inactivity) => setReminder({ inactivity })}
         />
       </Card>
 
-      <SectionTitle title="Home screen widget" />
+      <SectionTitle title={t('rules.widget')} />
       <Card style={styles.listCard}>
         <ToggleRow
           icon="lock"
-          title="Hide amounts"
-          subtitle="Show ••• instead of your money on the widget"
+          title={t('rules.hideAmounts')}
+          subtitle={t('rules.hideAmountsHint')}
           value={settings.widgetHideAmounts === true}
           onChange={(widgetHideAmounts) => updateSettings({ widgetHideAmounts })}
         />
         <AppText variant="caption" tone="muted">
-          To add it, touch and hold an empty spot on your home screen, then choose Widgets → Flousey.
+          {t('rules.widgetHint')}
         </AppText>
       </Card>
 
-      <SectionTitle title="Backup" />
+      <SectionTitle title={t('rules.backup')} />
       <Card>
         <View style={styles.inline}>
           <IconCircle icon="backup" size={40} color={palette.brand} />
           <AppText variant="small" tone="secondary" style={styles.flex}>
-            Your data lives only on this phone. Export a backup regularly and keep it somewhere safe (Drive, email…).
+            {t('rules.backupHint')}
           </AppText>
         </View>
         <View style={styles.buttonRow}>
-          <Button label="Export" icon="upload" variant="secondary" compact style={styles.flex} onPress={share} />
-          <Button label="Restore" icon="download" variant="secondary" compact style={styles.flex} onPress={restore} />
+          <Button
+            label={t('rules.export')}
+            icon="upload"
+            variant="secondary"
+            compact
+            style={styles.flex}
+            onPress={share}
+          />
+          <Button
+            label={t('rules.restore')}
+            icon="download"
+            variant="secondary"
+            compact
+            style={styles.flex}
+            onPress={restore}
+          />
         </View>
       </Card>
 
-      <SectionTitle title="App" />
+      <SectionTitle title={t('rules.app')} />
       <Card>
-        <MoneyLine label="Currency" value={currency.code} />
+        <MoneyLine label={t('rules.currency')} value={currency.code} />
         <AppText variant="caption" tone="muted">
-          Your data stays on this device. Nothing is sent anywhere.
+          {t('rules.privacy')}
         </AppText>
-        <Button label="Erase all data" variant="danger" compact onPress={confirmReset} />
+        <Button label={t('rules.eraseAll')} variant="danger" compact onPress={confirmReset} />
       </Card>
     </TabScreen>
   );

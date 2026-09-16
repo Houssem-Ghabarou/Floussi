@@ -2,6 +2,8 @@
  * Money is stored as integers in the currency's minor unit (TND: 1 dinar = 1000 millimes)
  * so sums never accumulate floating-point errors.
  */
+import { t, type TranslationKey } from '@/i18n';
+
 export type Minor = number;
 
 export interface CurrencyInfo {
@@ -12,13 +14,25 @@ export interface CurrencyInfo {
   typicalDailyNeed: number;
 }
 
+/** The label follows the language: "42 TND" in English and French, "42 د.ت" in Arabic. */
+function currency(code: string, decimals: number, typicalDailyNeed: number): CurrencyInfo {
+  return {
+    code,
+    decimals,
+    typicalDailyNeed,
+    get label() {
+      return t(`currency.${code}` as TranslationKey);
+    },
+  };
+}
+
 export const CURRENCIES: CurrencyInfo[] = [
-  { code: 'TND', label: 'TND', decimals: 3, typicalDailyNeed: 15 },
-  { code: 'EUR', label: 'EUR', decimals: 2, typicalDailyNeed: 20 },
-  { code: 'USD', label: 'USD', decimals: 2, typicalDailyNeed: 20 },
-  { code: 'GBP', label: 'GBP', decimals: 2, typicalDailyNeed: 15 },
-  { code: 'MAD', label: 'MAD', decimals: 2, typicalDailyNeed: 60 },
-  { code: 'DZD', label: 'DZD', decimals: 2, typicalDailyNeed: 1000 },
+  currency('TND', 3, 15),
+  currency('EUR', 2, 20),
+  currency('USD', 2, 20),
+  currency('GBP', 2, 15),
+  currency('MAD', 2, 60),
+  currency('DZD', 2, 1000),
 ];
 
 export function getCurrency(code: string): CurrencyInfo {

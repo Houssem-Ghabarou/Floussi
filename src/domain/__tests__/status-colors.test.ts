@@ -59,6 +59,17 @@ describe('status color from the safe pace vs a normal day (15 TND)', () => {
     expect(status.reason).toBe('tight');
   });
 
+  it('keeps the figure the user set, even when routines exist', () => {
+    const status = pacePerDay(15, {
+      routineByWeekday: Array(7).fill(tnd(20)),
+      dailyNeed: tnd(12),
+      dailyNeedIsDefault: false,
+    });
+    expect(status.normalDaySource).toBe('custom');
+    expect(status.normalDay).toBe(tnd(12));
+    expect(status.reason).toBe('on_track');
+  });
+
   it('tells a user on the default to set their own normal day', () => {
     expect(buildAdvice(pacePerDay(3), TND).suggestion).toContain('Rules → Protections');
     expect(buildAdvice(pacePerDay(3, { dailyNeedIsDefault: false }), TND).suggestion).not.toContain('Protections');

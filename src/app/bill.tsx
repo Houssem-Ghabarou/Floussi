@@ -3,11 +3,12 @@ import { useState } from 'react';
 
 import { newId } from '@/data/repository';
 import { billOccurrences, nextDueAfter } from '@/domain/bills';
-import { BILL_PRESETS } from '@/domain/categories';
+import { billPresets } from '@/domain/categories';
 import { addDays, formatShortDate, type LocalDate } from '@/domain/dates';
 import { cycleBillOccurrences } from '@/domain/derive';
 import { amountToInput, parseAmount } from '@/domain/money';
 import type { Bill } from '@/domain/types';
+import { t } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -95,10 +96,10 @@ export default function BillScreen() {
   const laterDue = !pastDue && !upcoming ? nextDueAfter(draft, data.cycle.nextIncomeDate) : null;
   const scheduleHint = upcoming
     ? draft.recurring || draft.dueDate
-      ? `Next due ${formatShortDate(upcoming.dueDate)} · protected before your income.`
-      : 'Protected until you pay it.'
+      ? t('bill.nextDueProtected', { date: formatShortDate(upcoming.dueDate) })
+      : t('bill.protectedUntilPaid')
     : laterDue
-      ? `Next due ${formatShortDate(laterDue)}, after your income · protected from next cycle.`
+      ? t('bill.nextDueLater', { date: formatShortDate(laterDue) })
       : undefined;
 
   const unpaid =
@@ -120,21 +121,23 @@ export default function BillScreen() {
     router.back();
     if (pastDue) {
       showToast(
-        answer?.paid
-          ? `${emoji} ${bill.name} saved · marked paid for ${formatShortDate(pastDue)}`
-          : `${emoji} ${bill.name} saved · overdue since ${formatShortDate(pastDue)}, kept protected`,
+        t(answer?.paid ? 'bill.savedPaid' : 'bill.savedOverdue', {
+          emoji,
+          name: bill.name,
+          date: formatShortDate(pastDue),
+        }),
       );
     } else {
-      showToast(existing ? 'Bill updated' : `${emoji} ${bill.name} added`);
+      showToast(existing ? t('bill.updated') : t('bill.added', { emoji, name: bill.name }));
     }
   };
 
   const remove = () => {
     if (!existing) return;
     confirmDestructive({
-      title: `Remove ${existing.name}?`,
-      message: 'It stops being protected. Payments you already recorded stay in your history.',
-      confirmLabel: 'Remove',
+      title: t('bill.removeTitle', { name: existing.name }),
+      message: t('bill.removeMessage'),
+      confirmLabel: t('common.remove'),
       onConfirm: () => {
         deleteBill(existing.id);
         router.back();
@@ -145,19 +148,19 @@ export default function BillScreen() {
   return (
     <SheetScreen
       confirmClose={hasChanges}
-      title={existing ? 'Edit bill' : 'Add bill'}
-      footer={<Button label={existing ? 'Save changes' : 'Add bill'} onPress={save} disabled={!valid} />}>
+      title={t(existing ? 'bill.editTitle' : 'bill.addTitle')}
+      footer={<Button label={t(existing ? 'common.saveChanges' : 'bill.addTitle')} onPress={save} disabled={!valid} />}>
       {unpaid ? (
         <Card tint={unpaid.dueDate < today ? palette.watchSoft : undefined}>
           <AppText variant="bodyStrong">
             {unpaid.dueDate < today
-              ? `⚠️ Overdue since ${formatShortDate(unpaid.dueDate)}`
+              ? t('bill.overdueSince', { date: formatShortDate(unpaid.dueDate) })
               : existing?.recurring || existing?.dueDate
-                ? `Due ${formatShortDate(unpaid.dueDate)}`
-                : 'Due before your next income'}
+                ? t('bill.dueOn', { date: formatShortDate(unpaid.dueDate) })
+                : t('bill.dueBeforeIncome')}
           </AppText>
           <Button
-            label="Mark as paid"
+            label={t('bill.markPaid')}
             compact
             onPress={() =>
               router.replace({ pathname: '/pay-bill', params: { billId: unpaid.bill.id, dueDate: unpaid.dueDate } })
@@ -168,7 +171,7 @@ export default function BillScreen() {
 
       {!existing ? (
         <ChipGroup>
-          {BILL_PRESETS.map((preset) => (
+          {billPresets().map((preset) => (
             <Chip
               key={preset.id}
               emoji={preset.emoji}
@@ -183,19 +186,19 @@ export default function BillScreen() {
         </ChipGroup>
       ) : null}
 
-      <Field label="Name">
-        <TextField value={name} onChangeText={setName} placeholder="Rent" />
+      <Field label={t('common.name')}>
+        <TextField value={name} onChangeText={setName} placeholder={t('bill.namePlaceholder')} />
       </Field>
 
-      <Field label="Amount" hint="For variable bills, use your best estimate. You'll confirm the real amount when you pay.">
+      <Field label={t('bill.amount')} hint={t('bill.amountHint')}>
         <AmountField value={amountText} onChangeText={setAmountText} currency={currency} size="medium" />
       </Field>
 
-      <Field label="How often">
+      <Field label={t('bill.howOften')}>
         <Segmented
           options={[
-            { value: 'monthly', label: 'Every month' },
-            { value: 'once', label: 'One time' },
+            { value: 'monthly', label: t('bill.everyMonth') },
+            { value: 'once', label: t('bill.oneTime') },
           ]}
           value={kind}
           onChange={setKind}
@@ -203,25 +206,25 @@ export default function BillScreen() {
       </Field>
 
       {kind === 'monthly' ? (
-        <Field label="Due on day" hint={scheduleHint ?? 'Day of the month (1–31). Short months use their last day.'}>
+        <Field label={t('bill.dueOnDay')} hint={scheduleHint ?? t('bill.dueDayHint')}>
           <TextField
             value={dueDayText}
             onChangeText={(text) => setDueDayText(text.replace(/\D/g, '').slice(0, 2))}
-            placeholder="1"
+            placeholder={t('bill.dayPlaceholder')}
             keyboardType="number-pad"
           />
         </Field>
       ) : (
-        <Field label="Due" hint={scheduleHint}>
+        <Field label={t('bill.due')} hint={scheduleHint}>
           <ChipGroup>
-            <Chip label="Before my next income" selected={dueDate === null} onPress={() => setDueDate(null)} />
+            <Chip label={t('bill.beforeNextIncome')} selected={dueDate === null} onPress={() => setDueDate(null)} />
           </ChipGroup>
           <DateChoice
             value={dueDate ?? data.cycle.nextIncomeDate}
             onChange={setDueDate}
             options={[
-              { label: 'In 1 week', date: addDays(today, 7) },
-              { label: 'In 2 weeks', date: addDays(today, 14) },
+              { label: t('common.inOneWeek'), date: addDays(today, 7) },
+              { label: t('common.inTwoWeeks'), date: addDays(today, 14) },
             ]}
           />
         </Field>
@@ -230,19 +233,21 @@ export default function BillScreen() {
       {pastDue ? (
         <Card tint={palette.watchSoft}>
           <AppText variant="bodyStrong">
-            📅 {kind === 'monthly' ? "This month's payment" : 'This payment'} was due {formatShortDate(pastDue)}
+            {t(kind === 'monthly' ? 'bill.pastDueMonthly' : 'bill.pastDueOnce', {
+              date: formatShortDate(pastDue),
+            })}
           </AppText>
-          <AppText tone="secondary">Have you already paid it?</AppText>
+          <AppText tone="secondary">{t('bill.alreadyPaid')}</AppText>
           <ChipGroup>
             <Chip
               emoji="✅"
-              label="Yes, already paid"
+              label={t('bill.yesPaid')}
               selected={answer?.paid === true}
               onPress={() => setPaidAnswer({ dueDate: pastDue, paid: true })}
             />
             <Chip
               emoji="⏳"
-              label="Not yet"
+              label={t('bill.notYet')}
               selected={answer?.paid === false}
               onPress={() => setPaidAnswer({ dueDate: pastDue, paid: false })}
             />
@@ -251,9 +256,9 @@ export default function BillScreen() {
             <AppText variant="caption" tone="secondary">
               {answer.paid
                 ? pastDue < data.settings.openingDate
-                  ? "We'll mark it paid. Your balance already includes it, so it won't change."
-                  : `We'll record the payment on ${formatShortDate(pastDue)} and take it from your balance.`
-                : "It stays protected and shows as overdue until you pay it."}
+                  ? t('bill.paidBeforeTracking')
+                  : t('bill.paidRecorded', { date: formatShortDate(pastDue) })
+                : t('bill.unpaidNote')}
             </AppText>
           ) : null}
         </Card>
@@ -262,9 +267,9 @@ export default function BillScreen() {
       {existing ? (
         <Card>
           <AppText variant="caption" tone="muted">
-            Removing a bill stops protecting it. Payments you already recorded stay in Activity.
+            {t('bill.removeHint')}
           </AppText>
-          <Button label="Remove bill" variant="danger" compact onPress={remove} />
+          <Button label={t('bill.remove')} variant="danger" compact onPress={remove} />
         </Card>
       ) : null}
     </SheetScreen>

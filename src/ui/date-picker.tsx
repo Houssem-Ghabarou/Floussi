@@ -5,11 +5,13 @@ import {
   dateInMonth,
   daysInMonth,
   formatLongDate,
-  MONTH_NAMES,
+  monthName,
   splitDate,
   weekday,
+  weekdayShortName,
   type LocalDate,
 } from '@/domain/dates';
+import { t } from '@/i18n';
 
 import { AppText, Chip, ChipGroup, haptics } from './components';
 import { Radius, Space, usePalette } from './theme';
@@ -47,25 +49,25 @@ export function CalendarPicker({
   return (
     <View style={[styles.calendar, { backgroundColor: palette.surface, borderColor: palette.border }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => shiftMonth(-1)} hitSlop={12} accessibilityLabel="Previous month">
+        <Pressable onPress={() => shiftMonth(-1)} hitSlop={12} accessibilityLabel={t('datePicker.previousMonth')}>
           <AppText variant="heading" tone="brand">
             ‹
           </AppText>
         </Pressable>
         <AppText variant="bodyStrong">
-          {MONTH_NAMES[view.month - 1]} {view.year}
+          {monthName(view.month)} {view.year}
         </AppText>
-        <Pressable onPress={() => shiftMonth(1)} hitSlop={12} accessibilityLabel="Next month">
+        <Pressable onPress={() => shiftMonth(1)} hitSlop={12} accessibilityLabel={t('datePicker.nextMonth')}>
           <AppText variant="heading" tone="brand">
             ›
           </AppText>
         </Pressable>
       </View>
       <View style={styles.grid}>
-        {WEEKDAY_INITIALS.map((initial, index) => (
+        {WEEKDAY_INITIALS.map((_, index) => (
           <View key={`w${index}`} style={styles.cell}>
-            <AppText variant="caption" tone="muted">
-              {initial}
+            <AppText variant="caption" tone="muted" numberOfLines={1}>
+              {weekdayShortName(index)}
             </AppText>
           </View>
         ))}
@@ -131,7 +133,7 @@ export function DateChoice({
             }}
           />
         ))}
-        <Chip label="Pick a date" emoji="📅" selected={showCalendar} onPress={() => setShowCalendar(true)} />
+        <Chip label={t('datePicker.pick')} emoji="📅" selected={showCalendar} onPress={() => setShowCalendar(true)} />
       </ChipGroup>
       {showCalendar ? (
         <CalendarPicker value={value} onChange={onChange} minDate={minDate} maxDate={maxDate} />

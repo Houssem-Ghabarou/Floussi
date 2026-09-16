@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { EXPENSE_CATEGORIES, expenseCategory } from '@/domain/categories';
+import { expenseCategories, expenseCategory } from '@/domain/categories';
 import { addDays, type LocalDate } from '@/domain/dates';
 import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
+import { t } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -59,45 +60,58 @@ export default function ExpenseScreen() {
     router.back();
     if (existing) {
       updateTransaction({ ...existing, ...fields });
-      showToast('Expense updated');
+      showToast(t('expense.updated'));
       return;
     }
     const transaction = addTransaction({ kind: 'expense', ...fields });
-    showToast(`${expenseCategory(category).emoji} ${formatMoney(amount, currency)} added`, {
-      label: 'Undo',
-      onPress: () => deleteTransaction(transaction.id),
-    });
+    showToast(
+      t('expense.added', { emoji: expenseCategory(category).emoji, amount: formatMoney(amount, currency) }),
+      {
+        label: t('common.undo'),
+        onPress: () => deleteTransaction(transaction.id),
+      },
+    );
   };
 
   const remove = () => {
     if (!existing) return;
     confirmDestructive({
-      title: 'Delete this expense?',
-      message: `${formatMoney(existing.amount, currency, { signed: true })} will be removed from your balance and history. You can undo right after.`,
+      title: t('expense.deleteTitle'),
+      message: t('common.deleteTxMessage', {
+        amount: formatMoney(existing.amount, currency, { signed: true }),
+      }),
       onConfirm: () => {
         router.back();
         const removed = deleteTransaction(existing.id);
-        if (removed) showToast('Expense deleted', { label: 'Undo', onPress: () => restoreTransaction(removed) });
+        if (removed) {
+          showToast(t('expense.deleted'), { label: t('common.undo'), onPress: () => restoreTransaction(removed) });
+        }
       },
     });
   };
 
   let preview: string | null = null;
   if (beforeTracking) {
-    preview = "Before you started tracking: it's kept for your monthly picture and won't change your balance.";
+    preview = t('expense.beforeTracking');
   } else if (amount && !existing && date === financial.today) {
     const after = status.remainingToday - amount;
     preview =
       after >= 0
-        ? `Left today: ${m(status.remainingToday)} → ${m(after)}`
-        : `This goes ${m(-after)} past today's pace. The coming days will adjust.`;
+        ? t('expense.leftToday', { before: m(status.remainingToday), after: m(after) })
+        : t('expense.pastPace', { amount: m(-after) });
   }
 
   return (
     <SheetScreen
       confirmClose={hasChanges}
-      title={existing ? 'Edit expense' : params.past ? 'Earlier expense' : 'Add expense'}
-      footer={<Button label={existing ? 'Save changes' : 'Save expense'} onPress={save} disabled={!amount || !category} />}>
+      title={t(existing ? 'expense.editTitle' : params.past ? 'expense.earlierTitle' : 'expense.addTitle')}
+      footer={
+        <Button
+          label={t(existing ? 'common.saveChanges' : 'expense.save')}
+          onPress={save}
+          disabled={!amount || !category}
+        />
+      }>
       <AmountField value={amountText} onChangeText={setAmountText} currency={currency} autoFocus={!existing} prefix="−" />
       {preview ? (
         <AppText variant="small" tone="secondary">
@@ -105,9 +119,9 @@ export default function ExpenseScreen() {
         </AppText>
       ) : null}
 
-      <Field label="Category">
+      <Field label={t('expense.category')}>
         <ChipGroup>
-          {EXPENSE_CATEGORIES.map((item) => (
+          {expenseCategories().map((item) => (
             <Chip
               key={item.id}
               emoji={item.emoji}
@@ -119,25 +133,30 @@ export default function ExpenseScreen() {
         </ChipGroup>
       </Field>
 
-      <Field label="Note (optional)">
-        <TextField value={note} onChangeText={setNote} placeholder="Lunch with Sami" returnKeyType="done" />
+      <Field label={t('common.noteOptional')}>
+        <TextField
+          value={note}
+          onChangeText={setNote}
+          placeholder={t('expense.notePlaceholder')}
+          returnKeyType="done"
+        />
       </Field>
 
-      <Field label="Date">
+      <Field label={t('common.date')}>
         <DateChoice
           value={date}
           onChange={setDate}
           maxDate={financial.today}
           options={[
-            { label: 'Today', date: financial.today },
-            { label: 'Yesterday', date: addDays(financial.today, -1) },
+            { label: t('common.todayLabel'), date: financial.today },
+            { label: t('common.yesterdayLabel'), date: addDays(financial.today, -1) },
           ]}
         />
       </Field>
 
       {existing ? (
         <Card>
-          <Button label="Delete expense" variant="danger" compact onPress={remove} />
+          <Button label={t('expense.delete')} variant="danger" compact onPress={remove} />
         </Card>
       ) : null}
     </SheetScreen>

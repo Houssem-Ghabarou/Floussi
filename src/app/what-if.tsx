@@ -2,9 +2,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { STATUS_LABELS } from '@/domain/advice';
+import { statusLabel } from '@/domain/advice';
 import { amountToInput, formatAmount, formatMoney, fromMajor, parseAmount, type Minor } from '@/domain/money';
 import { evaluateWhatIf } from '@/domain/what-if';
+import { t, tn } from '@/i18n';
 import { useFinancial } from '@/store/use-financial';
 import {
   AmountField,
@@ -52,23 +53,25 @@ export default function WhatIfScreen() {
 
   return (
     <SheetScreen
-      title="What if?"
-      closeLabel="Close"
+      title={t('whatIf.title')}
+      closeLabel={t('common.close')}
       footer={
         <View style={styles.footer}>
           <Button
-            label={amount ? `Record purchase (−${formatMoney(amount, currency)})` : 'Record purchase'}
+            label={
+              amount ? t('whatIf.record', { amount: formatMoney(amount, currency) }) : t('whatIf.recordPlain')
+            }
             icon="shopping"
             disabled={!amount}
             onPress={() => router.replace({ pathname: '/expense', params: { amount: amountText } })}
           />
-          <Button label="Never mind, keep plan" variant="secondary" onPress={() => router.back()} />
+          <Button label={t('whatIf.keepPlan')} variant="secondary" onPress={() => router.back()} />
         </View>
       }>
       <View style={styles.intro}>
-        <AppText variant="title">Purchase simulator</AppText>
+        <AppText variant="title">{t('whatIf.simulator')}</AppText>
         <AppText variant="small" tone="secondary">
-          Test a purchase before spending. Your balance won't change until you decide.
+          {t('whatIf.simulatorHint')}
         </AppText>
       </View>
 
@@ -76,10 +79,10 @@ export default function WhatIfScreen() {
         <View style={[styles.glow, { backgroundColor: palette.accentSoft }]} />
         <View style={styles.spaceBetween}>
           <AppText variant="caption" tone="muted">
-            Simulated amount
+            {t('whatIf.simulatedAmount')}
           </AppText>
           <AppText variant="label" tone="secondary">
-            Dry run only
+            {t('whatIf.dryRun')}
           </AppText>
         </View>
         <AmountField value={amountText} onChangeText={setAmountText} currency={currency} autoFocus />
@@ -111,30 +114,35 @@ export default function WhatIfScreen() {
 
       <Card>
         <View style={styles.spaceBetween}>
-          <AppText variant="heading">Daily pace shift</AppText>
+          <AppText variant="heading">{t('whatIf.paceShift')}</AppText>
           <AppText variant="caption" tone="muted">
-            {status.daysRemaining} {status.daysRemaining === 1 ? 'day' : 'days'} remaining
+            {t('whatIf.daysRemaining', { days: tn('count.days', status.daysRemaining) })}
           </AppText>
         </View>
         <View style={styles.tiles}>
           <View style={[styles.tile, { backgroundColor: palette.surfaceLow }]}>
             <AppText variant="caption" tone="muted">
-              Current safe pace
+              {t('whatIf.currentPace')}
             </AppText>
             <PaceValue color={palette.brand} value={m(status.dailyAllowance)} />
             <AppText variant="caption" tone="brand">
-              {STATUS_LABELS[status.reason]}
+              {statusLabel(status.reason)}
             </AppText>
           </View>
           <View style={[styles.tile, { backgroundColor: resultColors?.bg ?? palette.surfaceLow }]}>
             <AppText variant="caption" color={resultColors?.fg} tone="muted">
-              After purchase
+              {t('whatIf.afterPurchase')}
             </AppText>
             {result ? (
               <>
                 <PaceValue color={resultColors?.fg ?? palette.accent} value={m(result.paceAfter)} />
                 <AppText variant="caption" color={resultColors?.fg}>
-                  {formatMoney(result.paceAfter - result.paceBefore, currency, { whole: true, signed: true })}/day shift
+                  {t('whatIf.shift', {
+                    amount: formatMoney(result.paceAfter - result.paceBefore, currency, {
+                      whole: true,
+                      signed: true,
+                    }),
+                  })}
                 </AppText>
               </>
             ) : (
@@ -143,7 +151,7 @@ export default function WhatIfScreen() {
                   —
                 </AppText>
                 <AppText variant="caption" tone="muted">
-                  Enter an amount
+                  {t('whatIf.enterAmount')}
                 </AppText>
               </>
             )}
@@ -152,10 +160,10 @@ export default function WhatIfScreen() {
         <View style={styles.allocation}>
           <View style={styles.spaceBetween}>
             <AppText variant="caption" tone="secondary">
-              Money until your next income
+              {t('whatIf.moneyUntilIncome')}
             </AppText>
             <AppText variant="caption" style={styles.strong}>
-              {m(Math.max(0, flexibleAfter))} flexible
+              {t('whatIf.flexibleAmount', { amount: m(Math.max(0, flexibleAfter)) })}
             </AppText>
           </View>
           <SegmentBar
@@ -166,37 +174,49 @@ export default function WhatIfScreen() {
             ]}
           />
           <View style={styles.spaceBetween}>
-            <LegendDot color={palette.inverse} label="Protected" />
-            <LegendDot color={palette.brand} label="Flexible" />
-            <LegendDot color={palette.accent} label="Simulation" />
+            <LegendDot color={palette.inverse} label={t('whatIf.legendProtected')} />
+            <LegendDot color={palette.brand} label={t('whatIf.legendFlexible')} />
+            <LegendDot color={palette.accent} label={t('whatIf.legendSimulation')} />
           </View>
         </View>
       </Card>
 
       <Card style={styles.guards}>
         <AppText variant="label" tone="muted">
-          Protections check
+          {t('whatIf.protectionsCheck')}
         </AppText>
         <GuardRow
           icon="receipt"
-          title="Upcoming bills"
-          subtitle={status.billsProtected > 0 ? `${m(status.billsProtected)} due before your income` : 'None due'}
+          title={t('whatIf.upcomingBills')}
+          subtitle={
+            status.billsProtected > 0
+              ? t('whatIf.billsDue', { amount: m(status.billsProtected) })
+              : t('whatIf.noneDue')
+          }
           guard={billsGuard}
         />
         <Divider />
         <GuardRow
           icon="savings"
-          title="Savings"
-          subtitle={status.savingsReserve > 0 ? `${m(status.savingsReserve)} this cycle` : 'None set'}
+          title={t('whatIf.savings')}
+          subtitle={
+            status.savingsReserve > 0
+              ? t('whatIf.savingsThis', { amount: m(status.savingsReserve) })
+              : t('whatIf.noneSet')
+          }
           guard={savingsGuard}
         />
         <Divider />
         <GuardRow
           icon="shield"
-          title="Safety cushion"
-          subtitle={status.minimumBalance > 0 ? `${m(status.minimumBalance)} minimum balance` : 'None set'}
+          title={t('whatIf.cushion')}
+          subtitle={
+            status.minimumBalance > 0
+              ? t('whatIf.minimumBalance', { amount: m(status.minimumBalance) })
+              : t('whatIf.noneSet')
+          }
           guard={cushionGuard}
-          safeLabel="Untouched"
+          safeLabel={t('whatIf.untouched')}
         />
       </Card>
 
@@ -209,14 +229,20 @@ export default function WhatIfScreen() {
             </AppText>
           </View>
           <AppText variant="small" tone="secondary">
-            {result.detail} Your pace would go from {m(result.paceBefore)} to {m(result.paceAfter)} a day.
+            {t('whatIf.verdict', {
+              detail: result.detail,
+              before: m(result.paceBefore),
+              after: m(result.paceAfter),
+            })}
           </AppText>
         </View>
       ) : (
-        <Callout icon="info" title="Try an amount">
+        <Callout icon="info" title={t('whatIf.tryTitle')}>
           <AppText variant="small" tone="secondary">
-            You have {formatAmount(Math.max(0, status.flexibleNow), currency, { whole: true })} {currency.label} of
-            flexible money until your next income. Nothing is recorded unless you choose to.
+            {t('whatIf.tryBody', {
+              amount: formatAmount(Math.max(0, status.flexibleNow), currency, { whole: true }),
+              currency: currency.label,
+            })}
           </AppText>
         </Callout>
       )}
@@ -231,7 +257,7 @@ function PaceValue({ color, value }: { color: string; value: string }) {
       <AppText variant="number">
         {value}
         <AppText variant="small" tone="secondary">
-          /day
+          {t('whatIf.perDaySuffix')}
         </AppText>
       </AppText>
     </View>
@@ -243,7 +269,7 @@ function GuardRow({
   title,
   subtitle,
   guard,
-  safeLabel = 'Protected',
+  safeLabel,
 }: {
   icon: IconName;
   title: string;
@@ -253,9 +279,24 @@ function GuardRow({
 }) {
   const palette = usePalette();
   const badge = {
-    safe: { label: safeLabel, color: palette.onBrandSoft, background: palette.comfortableSoft, icon: 'checkCircle' as const },
-    touched: { label: 'Touched', color: palette.watch, background: palette.watchSoft, icon: 'info' as const },
-    at_risk: { label: 'At risk', color: palette.atRisk, background: palette.atRiskSoft, icon: 'info' as const },
+    safe: {
+      label: safeLabel ?? t('whatIf.guardProtected'),
+      color: palette.onBrandSoft,
+      background: palette.comfortableSoft,
+      icon: 'checkCircle' as const,
+    },
+    touched: {
+      label: t('whatIf.guardTouched'),
+      color: palette.watch,
+      background: palette.watchSoft,
+      icon: 'info' as const,
+    },
+    at_risk: {
+      label: t('whatIf.guardAtRisk'),
+      color: palette.atRisk,
+      background: palette.atRiskSoft,
+      icon: 'info' as const,
+    },
   }[guard];
   return (
     <View style={styles.guardRow}>

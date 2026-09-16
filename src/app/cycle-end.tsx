@@ -6,6 +6,7 @@ import { cycleStart, suggestNextIncomeDate, type CycleBoundary } from '@/domain/
 import { addDays, formatShortDate, type LocalDate } from '@/domain/dates';
 import { summarizeCycle } from '@/domain/insights';
 import { amountToInput, formatMoney, parseAmount, type Minor } from '@/domain/money';
+import { t } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import { useFinancial } from '@/store/use-financial';
 import {
@@ -44,6 +45,7 @@ export default function CycleEndScreen() {
   if (!financial || !cycle) return null;
   const { currency, data } = financial;
   const m = (value: Minor) => formatMoney(value, currency, { whole: true });
+  const incomeName = cycle.incomeLabel.toLowerCase();
 
   // The income that ends this cycle starts the next one; everything recorded before it stays here.
   const income = data.transactions.find((t) => t.id === incomeId && t.kind === 'income');
@@ -77,39 +79,49 @@ export default function CycleEndScreen() {
     haptics.success();
     if (router.canGoBack()) router.back();
     else router.replace('/');
-    showToast('New cycle started. Your routines and rules came with you.');
+    showToast(t('cycleEnd.started'));
   };
 
   return (
     <SheetScreen
-      title="Your cycle"
-      footer={<Button label="Start next cycle" onPress={start} disabled={nextIncomeDate <= today} />}>
+      title={t('cycleEnd.title')}
+      footer={<Button label={t('cycleEnd.start')} onPress={start} disabled={nextIncomeDate <= today} />}>
       <AppText variant="title">
         {lastDay > cycle.startDate
-          ? `${formatShortDate(cycle.startDate)} – ${formatShortDate(lastDay)}`
+          ? t('cycleEnd.range', { from: formatShortDate(cycle.startDate), to: formatShortDate(lastDay) })
           : formatShortDate(cycle.startDate)}
       </AppText>
 
-      <CycleMoneyCard summary={summary} currency={currency} endLabel="Finished with" />
+      <CycleMoneyCard summary={summary} currency={currency} endLabel={t('cycleEnd.finishedWith')} />
       <AppText variant="caption" tone="muted">
         {income
-          ? `Everything you recorded before your ${cycle.incomeLabel.toLowerCase()} is counted here. The ${formatMoney(income.amount, currency)} you just added starts your new cycle.`
-          : 'Everything you recorded until now is counted here.'}
+          ? t('cycleEnd.countedIncome', {
+              income: incomeName,
+              amount: formatMoney(income.amount, currency),
+            })
+          : t('cycleEnd.countedNow')}
       </AppText>
 
       {summary.expectedDailyAverage !== null ? (
         <>
-          <SectionTitle title="Your normal day" />
+          <SectionTitle title={t('cycleEnd.normalDay')} />
           <Card>
-            <MoneyLine label="Expected" value={`${m(summary.expectedDailyAverage)}/day`} />
-            <MoneyLine label="Actual" value={`${m(summary.dailyAverage)}/day`} strong />
+            <MoneyLine
+              label={t('cycleEnd.expected')}
+              value={t('common.perDay', { amount: m(summary.expectedDailyAverage) })}
+            />
+            <MoneyLine
+              label={t('cycleEnd.actual')}
+              value={t('common.perDay', { amount: m(summary.dailyAverage) })}
+              strong
+            />
           </Card>
         </>
       ) : null}
 
       {summary.biggest ? (
         <>
-          <SectionTitle title="Biggest category" />
+          <SectionTitle title={t('cycleEnd.biggest')} />
           <Card>
             <MoneyLine
               label={`${summary.biggest.category.emoji} ${summary.biggest.category.label}`}
@@ -118,8 +130,10 @@ export default function CycleEndScreen() {
             />
             {summary.mostOverRoutine ? (
               <AppText tone="secondary">
-                You spent {m(summary.mostOverRoutine.trackedActual - summary.mostOverRoutine.expected)} more on{' '}
-                {summary.mostOverRoutine.category.label.toLowerCase()} than your routine predicted.
+                {t('cycleEnd.overRoutine', {
+                  amount: m(summary.mostOverRoutine.trackedActual - summary.mostOverRoutine.expected),
+                  category: summary.mostOverRoutine.category.label.toLowerCase(),
+                })}
               </AppText>
             ) : null}
           </Card>
@@ -128,27 +142,40 @@ export default function CycleEndScreen() {
 
       {unpaid.length > 0 ? (
         <Card>
-          <AppText variant="bodyStrong">Still unpaid from this cycle</AppText>
+          <AppText variant="bodyStrong">{t('cycleEnd.stillUnpaid')}</AppText>
           <AppText tone="secondary">
-            {unpaid.map((occurrence) => `${occurrence.bill.name} (${formatShortDate(occurrence.dueDate)})`).join(', ')}.
-            They stay protected as overdue in your next cycle until you mark them paid in Rules.
+            {t('cycleEnd.unpaidNote', {
+              bills: unpaid
+                .map((occurrence) =>
+                  t('cycleEnd.unpaidItem', {
+                    name: occurrence.bill.name,
+                    date: formatShortDate(occurrence.dueDate),
+                  }),
+                )
+                .join(', '),
+            })}
           </AppText>
         </Card>
       ) : null}
 
-      <SectionTitle title="Next cycle" />
-      <Field label={`Next ${cycle.incomeLabel.toLowerCase()} expected on`}>
+      <SectionTitle title={t('cycleEnd.nextCycle')} />
+      <Field label={t('cycleEnd.nextExpectedOn', { income: incomeName })}>
         <DateChoice
           value={nextIncomeDate}
           onChange={setNextIncomeDate}
           minDate={addDays(today, 1)}
-          options={[{ label: 'Suggested', date: suggestNextIncomeDate(cycle.nextIncomeDate, cycle.frequency, today) }]}
+          options={[
+            {
+              label: t('cycleEnd.suggested'),
+              date: suggestNextIncomeDate(cycle.nextIncomeDate, cycle.frequency, today),
+            },
+          ]}
         />
       </Field>
-      <Field label="Expected amount (optional)">
+      <Field label={t('cycleEnd.expectedAmount')}>
         <AmountField value={expectedText} onChangeText={setExpectedText} currency={currency} size="medium" />
       </Field>
-      <Field label="🐷 Savings for next cycle">
+      <Field label={t('cycleEnd.savingsNext')}>
         <AmountField value={savingsText} onChangeText={setSavingsText} currency={currency} size="medium" />
       </Field>
     </SheetScreen>

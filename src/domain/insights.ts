@@ -1,5 +1,5 @@
 /** "Where did my money go?" — cycle summaries and actual vs expected. */
-import { BILLS_CATEGORY, expenseCategory, type CategoryInfo } from './categories';
+import { billsCategory, expenseCategory, type CategoryInfo } from './categories';
 import { isBeforeBoundary, type CycleBoundary } from './cycle';
 import { addDays, eachDay, maxDate, weekday } from './dates';
 import type { Minor } from './money';
@@ -89,7 +89,7 @@ export function summarizeCycle({ settings, transactions, routines, start, end }:
         entry(expenseCategory(t.category)).actual -= t.amount;
       } else if (t.kind === 'bill_payment') {
         historicalSpending -= t.amount;
-        entry(BILLS_CATEGORY).actual -= t.amount;
+        entry(billsCategory()).actual -= t.amount;
       }
       continue;
     }
@@ -112,7 +112,7 @@ export function summarizeCycle({ settings, transactions, routines, start, end }:
       }
       case 'bill_payment':
         billsPaid -= t.amount;
-        entry(BILLS_CATEGORY).actual -= t.amount;
+        entry(billsCategory()).actual -= t.amount;
         break;
       case 'savings_transfer':
         savedMoved -= t.amount;
@@ -154,7 +154,7 @@ export function summarizeCycle({ settings, transactions, routines, start, end }:
     savedMoved,
     adjustments,
     categories,
-    biggest: categories.find((insight) => insight.category.id !== BILLS_CATEGORY.id && insight.actual > 0) ?? null,
+    biggest: categories.find((insight) => insight.category.id !== billsCategory().id && insight.actual > 0) ?? null,
     mostOverRoutine,
     dailyAverage: Math.round(spending / trackedDays),
     expectedDailyAverage: expectedTotal > 0 ? Math.round(expectedTotal / trackedDays) : null,

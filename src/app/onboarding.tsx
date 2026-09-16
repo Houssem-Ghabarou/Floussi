@@ -6,10 +6,10 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { newId } from '@/data/repository';
-import { buildAdvice, STATUS_LABELS } from '@/domain/advice';
+import { buildAdvice, statusLabel } from '@/domain/advice';
 import { billOccurrences, nextDueAfter } from '@/domain/bills';
-import { BILL_PRESETS, INCOME_SOURCES } from '@/domain/categories';
-import { FREQUENCY_LABELS } from '@/domain/cycle';
+import { billPresets, incomeSources } from '@/domain/categories';
+import { FREQUENCIES, frequencyLabel } from '@/domain/cycle';
 import { addDays, dateInMonth, formatLongDate, formatShortDate, splitDate, type LocalDate } from '@/domain/dates';
 import { calculateFinancialStatus } from '@/domain/engine';
 import {
@@ -24,6 +24,7 @@ import {
   type Minor,
 } from '@/domain/money';
 import type { Bill, IncomeFrequency, Transaction } from '@/domain/types';
+import { t, tn, type TranslationKey } from '@/i18n';
 import { useApp } from '@/store/app-store';
 import {
   AmountField,
@@ -51,20 +52,20 @@ const STEPS = ['welcome', 'now', 'bills', 'protect', 'plan'] as const;
 type Step = (typeof STEPS)[number];
 
 /** Shown next to the brand in the header. */
-const STEP_CONTEXT: Record<Step, string> = {
-  welcome: 'Welcome',
-  now: 'Money & payday',
-  bills: 'Fixed commitments',
-  protect: 'Protections',
-  plan: 'Plan generated',
+const STEP_CONTEXT: Record<Step, TranslationKey> = {
+  welcome: 'onb.step.welcome',
+  now: 'onb.step.now',
+  bills: 'onb.step.bills',
+  protect: 'onb.step.protect',
+  plan: 'onb.step.plan',
 };
 
-const NEXT_LABEL: Record<Step, string> = {
-  welcome: 'Get started',
-  now: 'Next: payments',
-  bills: 'Next: protections',
-  protect: 'Next: see my plan',
-  plan: 'Enter Flousey today',
+const NEXT_LABEL: Record<Step, TranslationKey> = {
+  welcome: 'onb.next.welcome',
+  now: 'onb.next.now',
+  bills: 'onb.next.bills',
+  protect: 'onb.next.protect',
+  plan: 'onb.next.plan',
 };
 
 interface DraftBill {
@@ -109,7 +110,7 @@ export default function OnboardingScreen() {
   const [currencyCode, setCurrencyCode] = useState('TND');
   const [balanceText, setBalanceText] = useState('');
   const [frequency, setFrequency] = useState<IncomeFrequency>('monthly');
-  const [incomeLabel, setIncomeLabel] = useState('Salary');
+  const [incomeLabel, setIncomeLabel] = useState(() => t('income.salary'));
   const [nextIncomeDate, setNextIncomeDate] = useState(() => lastDayOfMonth(today));
   const [expectedText, setExpectedText] = useState('');
   const [drafts, setDrafts] = useState<DraftBill[]>([]);
@@ -132,7 +133,7 @@ export default function OnboardingScreen() {
     return [
       {
         id: draft.key,
-        name: draft.name.trim() || 'Payment',
+        name: draft.name.trim() || t('onb.paymentFallback'),
         emoji: draft.emoji,
         amount,
         recurring: dueDay !== null,
@@ -193,7 +194,7 @@ export default function OnboardingScreen() {
     (step !== 'bills' || drafts.every((draft) => pastDueDate(draft, today) === null || draft.paidAnswer !== null));
   const irregular = frequency === 'irregular';
   const days = status.daysRemaining;
-  const daysLabel = `${days} ${days === 1 ? 'day' : 'days'}`;
+  const daysLabel = tn('count.days', days);
   const [incomeWeekday, incomeMonthDay] = formatLongDate(nextIncomeDate).split(', ');
 
   const goNext = () => {
@@ -203,7 +204,7 @@ export default function OnboardingScreen() {
         balance: balance ?? 0,
         nextIncomeDate,
         expectedIncome: parseAmount(expectedText, currency),
-        incomeLabel: irregular ? 'Next money' : incomeLabel,
+        incomeLabel: irregular ? t('income.nextMoney') : incomeLabel,
         frequency,
         savingsTarget: savings,
         minimumBalance: minimum,
@@ -232,19 +233,18 @@ export default function OnboardingScreen() {
     case 'welcome':
       content = (
         <>
-          <Badge dot label="A calm money rhythm" color={palette.onBrandSoft} background={palette.brandSoft} />
+          <Badge dot label={t('onb.badge')} color={palette.onBrandSoft} background={palette.brandSoft} />
           <View style={styles.intro}>
-            <AppText style={styles.welcomeTitle}>Make your money last until your next income.</AppText>
+            <AppText style={styles.welcomeTitle}>{t('onb.title')}</AppText>
             <AppText tone="secondary" style={styles.lead}>
-              A calm, manual coach that shows what you can safely spend today — no bank connection, no spreadsheets,
-              no guilt.
+              {t('onb.lead')}
             </AppText>
           </View>
 
           <View style={[styles.quote, { backgroundColor: palette.surfaceLow }, CardShadow]}>
             <IconCircle icon="eco" size={32} color={palette.onBrandSoft} background={palette.brandSoft} />
             <AppText variant="small" tone="secondary" style={[styles.flex, styles.italic]}>
-              “Flousey doesn't move your money or judge your choices. It just keeps you safe until payday.”
+              {t('onb.quote')}
             </AppText>
           </View>
 
@@ -252,38 +252,38 @@ export default function OnboardingScreen() {
             icon="month"
             tile={palette.surfaceHigh}
             color={palette.textSecondary}
-            title="Start anywhere, even mid-month"
-            body="No past receipts, no clean spreadsheets, no waiting for the 1st of the month."
+            title={t('onb.feature1Title')}
+            body={t('onb.feature1Body')}
           />
           <FeatureCard
             icon="shield"
             tile={palette.brandSoft}
             color={palette.onBrandSoft}
-            title="Know your safe daily spend"
-            body="Rent, bills and savings are protected before you spend a single dinar."
+            title={t('onb.feature2Title')}
+            body={t('onb.feature2Body')}
           />
           <FeatureCard
             icon="routine"
             tile={palette.accentSoft}
             color={palette.accentText}
-            title="Personal routines, zero judgment"
-            body="Realistic pacing that adapts to how you actually live."
+            title={t('onb.feature3Title')}
+            body={t('onb.feature3Body')}
           />
           <FeatureCard
             icon="lock"
             tile={palette.atRiskSoft}
             color={palette.danger}
-            title="Manual & private"
-            body="Offline-first. Your numbers stay on this phone, no login required."
+            title={t('onb.feature4Title')}
+            body={t('onb.feature4Body')}
           />
 
           <Card>
             <View style={styles.spaceBetween}>
               <AppText variant="label" tone="secondary">
-                Your currency
+                {t('onb.currency')}
               </AppText>
               <AppText variant="caption" tone="muted">
-                Used for every amount
+                {t('onb.currencyHint')}
               </AppText>
             </View>
             <ChipGroup>
@@ -301,10 +301,10 @@ export default function OnboardingScreen() {
           <View style={[styles.glanceBox, { backgroundColor: palette.surfaceHigh }]}>
             <View style={styles.spaceBetween}>
               <AppText variant="label" tone="secondary">
-                How your plan works
+                {t('onb.howItWorks')}
               </AppText>
               <AppText variant="small" tone="brand" style={styles.strong}>
-                Safe pace / day
+                {t('onb.safePacePerDay')}
               </AppText>
             </View>
             <SegmentBar
@@ -316,13 +316,13 @@ export default function OnboardingScreen() {
               ]}
             />
             <View style={styles.spaceBetween}>
-              <LegendDot color={palette.brand} label="Safe to spend" textColor={palette.textSecondary} />
-              <LegendDot color={palette.accent} label="Protected" textColor={palette.textSecondary} />
-              <LegendDot color={palette.outline} label="Bills" textColor={palette.textSecondary} />
+              <LegendDot color={palette.brand} label={t('onb.legendSafe')} textColor={palette.textSecondary} />
+              <LegendDot color={palette.accent} label={t('onb.legendProtected')} textColor={palette.textSecondary} />
+              <LegendDot color={palette.outline} label={t('onb.legendBills')} textColor={palette.textSecondary} />
             </View>
           </View>
 
-          <Button label="Already use Flousey? Restore a backup" variant="ghost" onPress={restore} />
+          <Button label={t('onb.restore')} variant="ghost" onPress={restore} />
         </>
       );
       break;
@@ -330,23 +330,20 @@ export default function OnboardingScreen() {
     case 'now':
       content = (
         <>
-          <Badge icon="spa" label="Zero-judgment starting point" color={palette.brand} background={`${palette.brand}1A`} />
-          <StepIntro
-            title="Tell us about right now"
-            subtitle="Two simple numbers set your starting point and your daily safe pace. No need to wait for the 1st."
-          />
+          <Badge icon="spa" label={t('onb.nowBadge')} color={palette.brand} background={`${palette.brand}1A`} />
+          <StepIntro title={t('onb.nowTitle')} subtitle={t('onb.nowSubtitle')} />
 
           <Card style={CardShadow}>
             <FieldHeader
               dot={palette.brandDeep}
-              title="Money available right now"
-              tag="Starting point"
-              subtitle="Cash in your wallet + what's in your account"
+              title={t('onb.balanceTitle')}
+              tag={t('onb.balanceTag')}
+              subtitle={t('onb.balanceSubtitle')}
             />
             <View style={[styles.inputPanel, { backgroundColor: palette.surfaceLow }]}>
               <AmountField value={balanceText} onChangeText={setBalanceText} currency={currency} />
               <AppText variant="caption" tone="secondary" style={styles.center}>
-                Whatever you can spend from. No need to go back to the start of the month.
+                {t('onb.balanceHint')}
               </AppText>
             </View>
             <View style={styles.quickRow}>
@@ -358,24 +355,24 @@ export default function OnboardingScreen() {
                   onPress={() => setBalanceText(amountToInput((balance ?? 0) + fromMajor(value, currency), currency))}
                 />
               ))}
-              <QuickButton icon="close" label="Clear" muted onPress={() => setBalanceText('')} />
+              <QuickButton icon="close" label={t('onb.clear')} muted onPress={() => setBalanceText('')} />
             </View>
           </Card>
 
           <Card style={CardShadow}>
             <FieldHeader
               dot={palette.accent}
-              title={irregular ? 'Until when should this money last?' : 'When is your next income?'}
-              tag="Your horizon"
+              title={t(irregular ? 'onb.horizonTitleIrregular' : 'onb.horizonTitle')}
+              tag={t('onb.horizonTag')}
               tagColor={palette.accentText}
               tagBackground={`${palette.accentSoft}80`}
-              subtitle="Sets how many days your money needs to cover"
+              subtitle={t('onb.horizonSubtitle')}
             />
             <ChipGroup>
-              {(Object.keys(FREQUENCY_LABELS) as IncomeFrequency[]).map((value) => (
+              {FREQUENCIES.map((value) => (
                 <Chip
                   key={value}
-                  label={FREQUENCY_LABELS[value]}
+                  label={frequencyLabel(value)}
                   selected={frequency === value}
                   onPress={() => setFrequency(value)}
                 />
@@ -392,7 +389,12 @@ export default function OnboardingScreen() {
                     {incomeWeekday}
                   </AppText>
                 </View>
-                <Badge dot label={`${daysLabel} ahead`} color={palette.onBrandSoft} background={palette.brandSoft} />
+                <Badge
+                  dot
+                  label={t('onb.daysAhead', { days: daysLabel })}
+                  color={palette.onBrandSoft}
+                  background={palette.brandSoft}
+                />
               </View>
             ) : null}
             <DateChoice
@@ -400,18 +402,18 @@ export default function OnboardingScreen() {
               onChange={setNextIncomeDate}
               minDate={addDays(today, 1)}
               options={[
-                { label: 'In 1 week', date: addDays(today, 7) },
-                { label: 'In 2 weeks', date: addDays(today, 14) },
-                { label: 'End of month', date: lastDayOfMonth(today) },
+                { label: t('common.inOneWeek'), date: addDays(today, 7) },
+                { label: t('common.inTwoWeeks'), date: addDays(today, 14) },
+                { label: t('common.endOfMonth'), date: lastDayOfMonth(today) },
               ]}
             />
             {!irregular ? (
               <>
                 <AppText variant="label" tone="secondary">
-                  Income type
+                  {t('onb.incomeType')}
                 </AppText>
                 <ChipGroup>
-                  {INCOME_SOURCES.slice(0, 3).map((source) => (
+                  {incomeSources().slice(0, 3).map((source) => (
                     <Chip
                       key={source.id}
                       emoji={source.emoji}
@@ -421,19 +423,20 @@ export default function OnboardingScreen() {
                     />
                   ))}
                 </ChipGroup>
-                <Field
-                  label="About how much? (optional)"
-                  hint="Only used for your summary. We never count money before it arrives.">
+                <Field label={t('onb.expectedLabel')} hint={t('onb.expectedHint')}>
                   <AmountField value={expectedText} onChangeText={setExpectedText} currency={currency} size="medium" />
                 </Field>
               </>
             ) : null}
           </Card>
 
-          <Callout icon="lightbulb" iconColor={palette.onBrandSoft} iconBackground={palette.brandSoft} title="Why this matters">
+          <Callout
+            icon="lightbulb"
+            iconColor={palette.onBrandSoft}
+            iconBackground={palette.brandSoft}
+            title={t('onb.whyTitle')}>
             <AppText variant="small" tone="secondary">
-              Traditional budgets make you backlog weeks of past coffees. Flousey only cares about the days ahead, and
-              you can correct this number anytime.
+              {t('onb.whyBody')}
             </AppText>
           </Callout>
 
@@ -442,10 +445,10 @@ export default function OnboardingScreen() {
               <Icon name="insights" size={18} color={palette.brand} />
               <View style={styles.flex}>
                 <AppText variant="small" style={styles.strong}>
-                  First look at your daily pace
+                  {t('onb.firstLook')}
                 </AppText>
                 <AppText variant="caption" tone="secondary">
-                  Before bills and savings are protected
+                  {t('onb.firstLookHint')}
                 </AppText>
               </View>
               <View style={styles.alignEnd}>
@@ -453,7 +456,7 @@ export default function OnboardingScreen() {
                   ~{m(Math.floor(balance / days))}
                 </AppText>
                 <AppText variant="caption" tone="secondary">
-                  / day for {daysLabel}
+                  {t('onb.perDayFor', { days: daysLabel })}
                 </AppText>
               </View>
             </View>
@@ -465,17 +468,17 @@ export default function OnboardingScreen() {
     case 'bills':
       content = (
         <>
-          <Badge icon="receipt" label="Fixed commitments" color={palette.brand} background={`${palette.brand}1A`} />
+          <Badge icon="receipt" label={t('onb.billsBadge')} color={palette.brand} background={`${palette.brand}1A`} />
           <StepIntro
-            title={`What payments are still coming before ${formatShortDate(nextIncomeDate)}?`}
-            subtitle="Rent, bills, subscriptions… We'll keep that money protected."
+            title={t('onb.billsTitle', { date: formatShortDate(nextIncomeDate) })}
+            subtitle={t('onb.billsSubtitle')}
           />
           <Card style={CardShadow}>
             <AppText variant="label" tone="secondary">
-              Tap to add
+              {t('onb.tapToAdd')}
             </AppText>
             <ChipGroup>
-              {BILL_PRESETS.map((preset) => (
+              {billPresets().map((preset) => (
                 <Chip
                   key={preset.id}
                   emoji={preset.emoji}
@@ -498,9 +501,9 @@ export default function OnboardingScreen() {
             </ChipGroup>
           </Card>
           {drafts.length === 0 ? (
-            <Callout icon="info" title="Nothing due before payday?">
+            <Callout icon="info" title={t('onb.noBillsTitle')}>
               <AppText variant="small" tone="secondary">
-                You can continue. Bills can be added anytime from Rules.
+                {t('onb.noBillsBody')}
               </AppText>
             </Callout>
           ) : null}
@@ -521,13 +524,13 @@ export default function OnboardingScreen() {
                   <TextField
                     value={draft.name}
                     onChangeText={(name) => updateDraft(draft.key, { name })}
-                    placeholder="Name"
+                    placeholder={t('onb.namePlaceholder')}
                     style={styles.flex}
                   />
                   <Pressable
                     hitSlop={10}
                     accessibilityRole="button"
-                    accessibilityLabel="Remove payment"
+                    accessibilityLabel={t('onb.removePayment')}
                     onPress={() => setDrafts((current) => current.filter((item) => item.key !== draft.key))}>
                     <Icon name="close" size={22} color={palette.textMuted} />
                   </Pressable>
@@ -543,43 +546,41 @@ export default function OnboardingScreen() {
                   onChangeText={(text) =>
                     updateDraft(draft.key, { dueDayText: text.replace(/\D/g, '').slice(0, 2), paidAnswer: null })
                   }
-                  placeholder="Every month on day… (optional)"
+                  placeholder={t('onb.dueDayPlaceholder')}
                   keyboardType="number-pad"
                 />
                 <AppText variant="caption" tone="muted">
                   {dueDay === null || !nextDue
-                    ? `One-time payment before ${formatShortDate(nextIncomeDate)}.`
+                    ? t('onb.oneTime', { date: formatShortDate(nextIncomeDate) })
                     : nextDue <= nextIncomeDate
-                      ? `Monthly · next due ${formatShortDate(nextDue)} · protected now.`
-                      : `Monthly · next due ${formatShortDate(nextDue)}, after your income · protected from next cycle.`}
+                      ? t('onb.monthlyProtected', { date: formatShortDate(nextDue) })
+                      : t('onb.monthlyLater', { date: formatShortDate(nextDue) })}
                 </AppText>
                 {pastDue ? (
                   <View style={[styles.question, { backgroundColor: palette.watchSoft }]}>
                     <View style={styles.questionRow}>
                       <Icon name="event" size={16} color={palette.watch} />
                       <AppText variant="small" style={[styles.flex, styles.bold]}>
-                        This month's payment was due {formatShortDate(pastDue)}. Have you already paid it?
+                        {t('onb.pastDueQuestion', { date: formatShortDate(pastDue) })}
                       </AppText>
                     </View>
                     <ChipGroup>
                       <Chip
                         emoji="✅"
-                        label="Yes, paid"
+                        label={t('onb.yesPaid')}
                         selected={draft.paidAnswer === true}
                         onPress={() => updateDraft(draft.key, { paidAnswer: true })}
                       />
                       <Chip
                         emoji="⏳"
-                        label="Not yet"
+                        label={t('onb.notYet')}
                         selected={draft.paidAnswer === false}
                         onPress={() => updateDraft(draft.key, { paidAnswer: false })}
                       />
                     </ChipGroup>
                     {draft.paidAnswer !== null ? (
                       <AppText variant="caption" tone="secondary">
-                        {draft.paidAnswer
-                          ? 'Marked paid. The money you entered already reflects it.'
-                          : 'It stays protected as overdue until you pay it.'}
+                        {t(draft.paidAnswer ? 'onb.paidNote' : 'onb.unpaidNote')}
                       </AppText>
                     ) : null}
                   </View>
@@ -594,19 +595,23 @@ export default function OnboardingScreen() {
     case 'protect':
       content = (
         <>
-          <Badge icon="shield" label="Peace-of-mind buffer" color={palette.brand} background={`${palette.brand}1A`} />
-          <StepIntro
-            title="What do you want to protect?"
-            subtitle="This money stays untouchable. Your daily pace comes from what's left."
-          />
+          <Badge icon="shield" label={t('onb.protectBadge')} color={palette.brand} background={`${palette.brand}1A`} />
+          <StepIntro title={t('onb.protectTitle')} subtitle={t('onb.protectSubtitle')} />
           <Card style={CardShadow}>
-            <FieldHeader dot={palette.brand} title="Savings this cycle" subtitle="Kept aside until you move it to savings" />
+            <FieldHeader dot={palette.brand} title={t('onb.savingsTitle')} subtitle={t('onb.savingsSubtitle')} />
             <AmountField value={savingsText} onChangeText={setSavingsText} currency={currency} size="medium" />
             <ChipGroup>
               {[0, 5, 10, 20].map((percent) => (
                 <Chip
                   key={percent}
-                  label={percent === 0 ? 'None' : `${percent}% · ${formatAmount(suggestion(percent), currency, { whole: true })}`}
+                  label={
+                    percent === 0
+                      ? t('onb.none')
+                      : t('onb.percentChip', {
+                          percent,
+                          amount: formatAmount(suggestion(percent), currency, { whole: true }),
+                        })
+                  }
                   onPress={() => setSavingsText(percent === 0 ? '' : formatAmount(suggestion(percent), currency, { whole: true }).replace(/,/g, ''))}
                 />
               ))}
@@ -615,13 +620,17 @@ export default function OnboardingScreen() {
           <Card style={CardShadow}>
             <FieldHeader
               dot={palette.accent}
-              title="Minimum balance"
-              subtitle="A safety cushion you never want to go below"
+              title={t('onb.minimumTitle')}
+              subtitle={t('onb.minimumSubtitle')}
             />
             <AmountField value={minimumText} onChangeText={setMinimumText} currency={currency} size="medium" />
             <ChipGroup>
               {[0, 50, 100, 200].map((value) => (
-                <Chip key={value} label={value === 0 ? 'None' : `${value}`} onPress={() => setMinimumText(value ? String(value) : '')} />
+                <Chip
+                  key={value}
+                  label={value === 0 ? t('onb.none') : `${value}`}
+                  onPress={() => setMinimumText(value ? String(value) : '')}
+                />
               ))}
             </ChipGroup>
           </Card>
@@ -637,20 +646,20 @@ export default function OnboardingScreen() {
       content = (
         <>
           <StepIntro
-            title="Here is your first plan"
-            subtitle={`Calculated for the ${daysLabel} ahead, until ${incomeMonthDay}.`}
+            title={t('onb.planTitle')}
+            subtitle={t('onb.planSubtitle', { days: daysLabel, date: incomeMonthDay })}
           />
 
           <View style={[styles.planHero, { backgroundColor: hero.bg }]}>
             <View style={[styles.planHeroGlow, { backgroundColor: hero.glow }]} />
             <View style={styles.spaceBetween}>
               <AppText variant="label" color={hero.text}>
-                Your safe daily pace
+                {t('onb.safeDailyPace')}
               </AppText>
               <View style={styles.heroBadge}>
                 <View style={[styles.dot, { backgroundColor: hero.strong }]} />
                 <AppText variant="caption" color={hero.strong} style={styles.strong}>
-                  {STATUS_LABELS[status.reason]}
+                  {statusLabel(status.reason)}
                 </AppText>
               </View>
             </View>
@@ -662,15 +671,21 @@ export default function OnboardingScreen() {
                 {currency.label}
               </AppText>
               <AppText variant="small" color={hero.text}>
-                / day
+                {t('onb.perDay')}
               </AppText>
             </View>
             <View style={styles.formula}>
               <Icon name="info" size={16} color={hero.text} />
               <Text style={styles.formulaText}>
-                {`${whole(balance ?? 0)} available − ${whole(status.billsProtected)} bills − ${whole(reserved)} protected = `}
-                <Text style={[styles.formulaStrong, { color: hero.strong }]}>{`${m(status.flexibleNow)} flexible`}</Text>
-                {` / ${daysLabel}`}
+                {t('onb.formula', {
+                  available: whole(balance ?? 0),
+                  bills: whole(status.billsProtected),
+                  protected: whole(reserved),
+                })}
+                <Text style={[styles.formulaStrong, { color: hero.strong }]}>
+                  {t('onb.formulaFlexible', { amount: m(status.flexibleNow) })}
+                </Text>
+                {t('onb.formulaDays', { days: daysLabel })}
               </Text>
             </View>
           </View>
@@ -678,10 +693,10 @@ export default function OnboardingScreen() {
           <View style={styles.breakdown}>
             <View style={[styles.spaceBetween, styles.breakdownHeader]}>
               <AppText variant="small" style={styles.strong}>
-                Breakdown of your money
+                {t('onb.breakdownTitle')}
               </AppText>
               <AppText variant="caption" tone="secondary">
-                {daysLabel} pool
+                {t('onb.pool', { days: daysLabel })}
               </AppText>
             </View>
             <SegmentBar
@@ -696,19 +711,19 @@ export default function OnboardingScreen() {
               icon="wallet"
               tile={palette.surfaceLow}
               iconColor={palette.brand}
-              title="Money in hand"
-              subtitle="Starting balance counted"
+              title={t('onb.moneyInHand')}
+              subtitle={t('onb.moneyInHandHint')}
               value={m(balance ?? 0)}
               onPress={() => setStep('now')}
             />
             <BreakdownRow
               icon="receipt"
               tile={palette.surfaceHigh}
-              title="Committed bills"
+              title={t('onb.committedBills')}
               subtitle={
                 protectedBills.length > 0
                   ? protectedBills.map((occurrence) => `${occurrence.bill.name} ${m(occurrence.bill.amount)}`).join(', ')
-                  : 'Nothing due before payday'
+                  : t('onb.nothingDue')
               }
               value={status.billsProtected > 0 ? `−${m(status.billsProtected)}` : m(0)}
               valueColor={palette.textMuted}
@@ -718,8 +733,8 @@ export default function OnboardingScreen() {
               icon="shield"
               tile={`${palette.accentSoft}80`}
               iconColor={palette.accentText}
-              title="Protected reserves"
-              subtitle={`Savings ${m(savings)}, safety buffer ${m(minimum)}`}
+              title={t('onb.protectedReserves')}
+              subtitle={t('onb.reservesHint', { savings: m(savings), minimum: m(minimum) })}
               value={reserved > 0 ? `−${m(reserved)}` : m(0)}
               valueColor={palette.accentText}
               onPress={() => setStep('protect')}
@@ -729,8 +744,8 @@ export default function OnboardingScreen() {
               icon="savings"
               tile={palette.brandSoft}
               iconColor={palette.onBrandSoft}
-              title="Flexible money left"
-              subtitle="Your guilt-free spending pool"
+              title={t('onb.flexibleLeft')}
+              subtitle={t('onb.flexibleHint')}
               value={m(status.flexibleNow)}
               valueColor={status.flexibleNow < 0 ? palette.danger : palette.brand}
             />
@@ -739,8 +754,8 @@ export default function OnboardingScreen() {
           <Card style={CardShadow}>
             <FieldHeader
               dot={palette.brand}
-              title="A normal day costs me about"
-              subtitle="Coffee, food, transport… It decides green, yellow or red. Routines can replace it later."
+              title={t('onb.normalDayTitle')}
+              subtitle={t('onb.normalDaySubtitle')}
             />
             <AmountField
               value={dailyNeedText ?? amountToInput(defaultDailyNeed(currency), currency)}
@@ -754,7 +769,7 @@ export default function OnboardingScreen() {
             <IconCircle icon="eco" size={32} color={palette.brandText} background={palette.brand} />
             <View style={styles.coachText}>
               <AppText variant="small" style={styles.strong}>
-                Coach perspective
+                {t('onb.coach')}
               </AppText>
               <AppText variant="small" tone="secondary">
                 <AppText variant="small" style={styles.strong}>
@@ -774,14 +789,13 @@ export default function OnboardingScreen() {
             />
             <View style={styles.companionShade} />
             <AppText variant="caption" color="#FFFFFF" style={styles.companionCaption}>
-              A judgment-free rhythm designed for real life
+              {t('onb.companionCaption')}
             </AppText>
           </View>
 
-          <Callout icon="routine" title="Optional: your normal workday">
+          <Callout icon="routine" title={t('onb.routineTitle')}>
             <AppText variant="small" tone="secondary">
-              Add regular coffees, lunches or transport from the Routine tab to forecast more accurately. Today will
-              remind you.
+              {t('onb.routineBody')}
             </AppText>
           </Callout>
         </>
@@ -802,7 +816,7 @@ export default function OnboardingScreen() {
                 onPress={goBack}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Go back"
+                accessibilityLabel={t('onb.goBack')}
                 style={styles.headerBack}>
                 <Icon name="chevronLeft" size={24} color={palette.text} />
               </Pressable>
@@ -813,11 +827,11 @@ export default function OnboardingScreen() {
             </AppText>
           </View>
           {step === 'welcome' ? (
-            <Badge label="No sign-up needed" background={palette.surfaceHigh} />
+            <Badge label={t('onb.noSignup')} background={palette.surfaceHigh} />
           ) : (
             <View style={styles.headerBrand}>
               <AppText variant="caption" tone="secondary">
-                {STEP_CONTEXT[step]}
+                {t(STEP_CONTEXT[step])}
               </AppText>
               <View style={[styles.headerCheck, { backgroundColor: palette.brandDeep }]}>
                 <Icon name="check" size={14} color="#FFFFFF" />
@@ -837,10 +851,10 @@ export default function OnboardingScreen() {
             <View style={styles.progress}>
               <View style={styles.spaceBetween}>
                 <AppText variant="label" tone={step === 'plan' ? 'brand' : 'secondary'}>
-                  Step {stepIndex} of {stepCount}
+                  {t('onb.progress', { step: stepIndex, count: stepCount })}
                 </AppText>
                 <AppText variant="caption" tone="brand" style={styles.bold}>
-                  {Math.round((stepIndex / stepCount) * 100)}% complete
+                  {t('onb.percent', { percent: Math.round((stepIndex / stepCount) * 100) })}
                 </AppText>
               </View>
               <ProgressBar progress={stepIndex / stepCount} color={palette.brandDeep} />
@@ -859,34 +873,34 @@ export default function OnboardingScreen() {
           {showPreview ? (
             <View style={[styles.preview, { backgroundColor: palette.surfaceMuted }]}>
               <AppText variant="small" tone="secondary">
-                Safe pace so far
+                {t('onb.safePaceSoFar')}
               </AppText>
-              <AppText variant="bodyStrong">{m(status.dailyAllowance)}/day</AppText>
+              <AppText variant="bodyStrong">{t('onb.perDayValue', { amount: m(status.dailyAllowance) })}</AppText>
             </View>
           ) : null}
           {step === 'welcome' ? (
             <>
-              <Button label={NEXT_LABEL.welcome} iconRight="arrowForward" onPress={goNext} />
+              <Button label={t(NEXT_LABEL.welcome)} iconRight="arrowForward" onPress={goNext} />
               <View style={styles.footnote}>
                 <Icon name="schedule" size={14} color={palette.textSecondary} />
                 <AppText variant="caption" tone="secondary">
-                  Takes about a minute
+                  {t('onb.takesMinute')}
                 </AppText>
                 <AppText variant="caption" tone="secondary">
                   •
                 </AppText>
                 <Icon name="lock" size={14} color={palette.textSecondary} />
                 <AppText variant="caption" tone="secondary">
-                  No bank login needed
+                  {t('onb.noBankLogin')}
                 </AppText>
               </View>
             </>
           ) : (
             <>
               <View style={styles.footerButtons}>
-                <Button label="Back" icon="chevronLeft" variant="secondary" onPress={goBack} />
+                <Button label={t('common.back')} icon="chevronLeft" variant="secondary" onPress={goBack} />
                 <Button
-                  label={NEXT_LABEL[step]}
+                  label={t(NEXT_LABEL[step])}
                   iconRight="arrowForward"
                   onPress={goNext}
                   disabled={!canContinue}
@@ -895,7 +909,7 @@ export default function OnboardingScreen() {
               </View>
               {step === 'plan' ? (
                 <AppText variant="caption" tone="secondary" style={styles.center}>
-                  You can adjust bills, savings or payday anytime in Rules.
+                  {t('onb.adjustLater')}
                 </AppText>
               ) : null}
             </>
@@ -911,7 +925,7 @@ function BrandMark({ size }: { size: number }) {
     <Image
       source={require('../../assets/images/logo-mark.png')}
       style={{ width: size, height: size, borderRadius: Math.round(size * 0.25) }}
-      accessibilityLabel="Flousey logo"
+      accessibilityLabel={t('onb.logo')}
     />
   );
 }
@@ -1069,7 +1083,7 @@ function BreakdownRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityHint="Edit this step"
+      accessibilityHint={t('onb.editStep')}
       style={({ pressed }) => pressed && styles.pressed}>
       {body}
     </Pressable>

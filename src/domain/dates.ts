@@ -103,22 +103,84 @@ export function minDate(a: LocalDate, b: LocalDate): LocalDate {
   return a < b ? a : b;
 }
 
+/**
+ * Month and weekday names, and the order they appear in, come from the chosen language
+ * ("Monday, September 14", "lundi 14 septembre", "الاثنين، 14 سبتمبر"). English is the default.
+ */
+export interface DateNames {
+  months: string[];
+  monthsShort: string[];
+  weekdays: string[];
+  weekdaysShort: string[];
+  today: string;
+  yesterday: string;
+  tomorrow: string;
+  /** Lowercase forms used inside a sentence ("expected tomorrow"). */
+  todayLower: string;
+  yesterdayLower: string;
+  tomorrowLower: string;
+  inDays: (days: number) => string;
+  daysAgo: (days: number) => string;
+  short: (day: number, month: string) => string;
+  long: (weekday: string, day: number, month: string) => string;
+  monthYear: (month: string, year: number) => string;
+  shortWithWeekday: (weekdayShort: string, short: string) => string;
+}
+
+const ENGLISH: DateNames = {
+  months: MONTH_NAMES,
+  monthsShort: MONTH_NAMES.map((month) => month.slice(0, 3)),
+  weekdays: WEEKDAY_NAMES,
+  weekdaysShort: WEEKDAY_SHORT,
+  today: 'Today',
+  yesterday: 'Yesterday',
+  tomorrow: 'Tomorrow',
+  todayLower: 'today',
+  yesterdayLower: 'yesterday',
+  tomorrowLower: 'tomorrow',
+  inDays: (days) => `in ${days} days`,
+  daysAgo: (days) => `${days} days ago`,
+  short: (day, month) => `${month} ${day}`,
+  long: (weekday, day, month) => `${weekday}, ${month} ${day}`,
+  monthYear: (month, year) => `${month} ${year}`,
+  shortWithWeekday: (weekdayShort, short) => `${weekdayShort}, ${short}`,
+};
+
+let names: DateNames = ENGLISH;
+
+/** Called when the language changes; without it, dates stay English. */
+export function setDateNames(next: DateNames) {
+  names = next;
+}
+
+export function monthName(month: number): string {
+  return names.months[month - 1];
+}
+
+export function weekdayName(index: number): string {
+  return names.weekdays[index];
+}
+
+export function weekdayShortName(index: number): string {
+  return names.weekdaysShort[index];
+}
+
 /** 'Sep 30' */
 export function formatShortDate(date: LocalDate): string {
   const [, month, day] = splitDate(date);
-  return `${MONTH_NAMES[month - 1].slice(0, 3)} ${day}`;
+  return names.short(day, names.monthsShort[month - 1]);
 }
 
 /** 'Monday, September 14' */
 export function formatLongDate(date: LocalDate): string {
   const [, month, day] = splitDate(date);
-  return `${WEEKDAY_NAMES[weekday(date)]}, ${MONTH_NAMES[month - 1]} ${day}`;
+  return names.long(names.weekdays[weekday(date)], day, names.months[month - 1]);
 }
 
 /** 'September 2026' */
 export function formatMonthYear(date: LocalDate): string {
   const [year, month] = splitDate(date);
-  return `${MONTH_NAMES[month - 1]} ${year}`;
+  return names.monthYear(names.months[month - 1], year);
 }
 
 /** '1:15 PM' in local time. */
@@ -131,17 +193,17 @@ export function formatTime(timestamp: number): string {
 /** 'Today', 'Yesterday', 'Tomorrow' or 'Mon, Sep 14' */
 export function formatRelativeDay(date: LocalDate, today: LocalDate): string {
   const diff = daysBetween(today, date);
-  if (diff === 0) return 'Today';
-  if (diff === -1) return 'Yesterday';
-  if (diff === 1) return 'Tomorrow';
-  return `${WEEKDAY_SHORT[weekday(date)]}, ${formatShortDate(date)}`;
+  if (diff === 0) return names.today;
+  if (diff === -1) return names.yesterday;
+  if (diff === 1) return names.tomorrow;
+  return names.shortWithWeekday(names.weekdaysShort[weekday(date)], formatShortDate(date));
 }
 
 /** 'today', 'tomorrow', 'in 3 days', '2 days ago' */
 export function formatDaysFromNow(date: LocalDate, today: LocalDate): string {
   const diff = daysBetween(today, date);
-  if (diff === 0) return 'today';
-  if (diff === 1) return 'tomorrow';
-  if (diff === -1) return 'yesterday';
-  return diff > 0 ? `in ${diff} days` : `${-diff} days ago`;
+  if (diff === 0) return names.todayLower;
+  if (diff === 1) return names.tomorrowLower;
+  if (diff === -1) return names.yesterdayLower;
+  return diff > 0 ? names.inDays(diff) : names.daysAgo(-diff);
 }
