@@ -35,7 +35,7 @@ export default function RootLayout() {
   const refreshToday = useApp((state) => state.refreshToday);
   const scheme = useColorScheme();
   const palette = usePalette();
-  const chosenLanguage = useApp((state) => state.settings?.language);
+  const chosenLanguage = useApp((state) => state.language);
   // Applied while rendering, so the first screen already shows the right language.
   useMemo(() => applyLanguage(resolveLanguage(chosenLanguage)), [chosenLanguage]);
   const [fontsLoaded, fontError] = useFonts({

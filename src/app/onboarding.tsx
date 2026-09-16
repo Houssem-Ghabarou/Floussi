@@ -23,8 +23,9 @@ import {
   parseAmount,
   type Minor,
 } from '@/domain/money';
-import type { Bill, IncomeFrequency, Transaction } from '@/domain/types';
-import { t, tn, type TranslationKey } from '@/i18n';
+import type { Bill, IncomeFrequency, Language, Transaction } from '@/domain/types';
+import { LANGUAGE_NAMES, LANGUAGES, t, tn, type TranslationKey } from '@/i18n';
+import { applyLanguage, resolveLanguage } from '@/platform/language';
 import { useApp } from '@/store/app-store';
 import {
   AmountField,
@@ -44,6 +45,7 @@ import {
   TextField,
 } from '@/ui/components';
 import { DateChoice } from '@/ui/date-picker';
+import { showDialog } from '@/ui/dialog-store';
 import { Icon, type IconName } from '@/ui/icon';
 import { CardShadow, Fonts, heroColors, MaxContentWidth, Radius, Space, usePalette } from '@/ui/theme';
 import { useBackupActions } from '@/ui/use-backup';
@@ -104,13 +106,16 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const today = useApp((state) => state.today);
   const completeOnboarding = useApp((state) => state.completeOnboarding);
+  const storedLanguage = useApp((state) => state.language);
+  const chooseLanguage = useApp((state) => state.chooseLanguage);
   const { restore } = useBackupActions({ onRestored: () => router.replace('/') });
 
   const [step, setStep] = useState<Step>('welcome');
   const [currencyCode, setCurrencyCode] = useState('TND');
   const [balanceText, setBalanceText] = useState('');
   const [frequency, setFrequency] = useState<IncomeFrequency>('monthly');
-  const [incomeLabel, setIncomeLabel] = useState(() => t('income.salary'));
+  /** Null until a source is picked, so the default follows the language. */
+  const [incomeLabel, setIncomeLabel] = useState<string | null>(null);
   const [nextIncomeDate, setNextIncomeDate] = useState(() => lastDayOfMonth(today));
   const [expectedText, setExpectedText] = useState('');
   const [drafts, setDrafts] = useState<DraftBill[]>([]);
@@ -118,6 +123,23 @@ export default function OnboardingScreen() {
   const [minimumText, setMinimumText] = useState('');
   /** Null until the user changes it, so it follows the chosen currency's default. */
   const [dailyNeedText, setDailyNeedText] = useState<string | null>(null);
+
+  const language = resolveLanguage(storedLanguage);
+  const incomeName = incomeLabel ?? t('income.salary');
+  const changeLanguage = (next: Language) => {
+    if (next === language) return;
+    chooseLanguage(next);
+    // Arabic mirrors the whole layout, which React Native only does after a restart.
+    if (applyLanguage(next)) {
+      showDialog({
+        icon: 'restart',
+        title: t('language.restartTitle'),
+        message: t('language.restartMessage'),
+        confirmLabel: t('common.ok'),
+        cancelLabel: null,
+      });
+    }
+  };
 
   const currency = getCurrency(currencyCode);
   const balance = parseAmount(balanceText, currency);
@@ -204,7 +226,7 @@ export default function OnboardingScreen() {
         balance: balance ?? 0,
         nextIncomeDate,
         expectedIncome: parseAmount(expectedText, currency),
-        incomeLabel: irregular ? t('income.nextMoney') : incomeLabel,
+        incomeLabel: irregular ? t('income.nextMoney') : incomeName,
         frequency,
         savingsTarget: savings,
         minimumBalance: minimum,
@@ -233,6 +255,27 @@ export default function OnboardingScreen() {
     case 'welcome':
       content = (
         <>
+          <Card>
+            <View style={styles.spaceBetween}>
+              <AppText variant="label" tone="secondary">
+                {t('language.section')}
+              </AppText>
+              <AppText variant="caption" tone="muted">
+                {t('onb.languageHint')}
+              </AppText>
+            </View>
+            <ChipGroup>
+              {LANGUAGES.map((option) => (
+                <Chip
+                  key={option}
+                  label={LANGUAGE_NAMES[option]}
+                  selected={language === option}
+                  onPress={() => changeLanguage(option)}
+                />
+              ))}
+            </ChipGroup>
+          </Card>
+
           <Badge dot label={t('onb.badge')} color={palette.onBrandSoft} background={palette.brandSoft} />
           <View style={styles.intro}>
             <AppText style={styles.welcomeTitle}>{t('onb.title')}</AppText>
@@ -418,7 +461,7 @@ export default function OnboardingScreen() {
                       key={source.id}
                       emoji={source.emoji}
                       label={source.label}
-                      selected={incomeLabel === source.label}
+                      selected={incomeName === source.label}
                       onPress={() => setIncomeLabel(source.label)}
                     />
                   ))}

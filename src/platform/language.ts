@@ -14,8 +14,10 @@ export function deviceLanguage(): Language {
   return 'en';
 }
 
-export function resolveLanguage(chosen: Language | undefined): Language {
-  return chosen ?? deviceLanguage();
+/** Falls back to the phone when nothing was chosen, or when a stored value isn't a language we speak. */
+export function resolveLanguage(chosen: string | null | undefined): Language {
+  if (chosen && (LANGUAGES as readonly string[]).includes(chosen)) return chosen as Language;
+  return deviceLanguage();
 }
 
 /**

@@ -399,6 +399,7 @@ const en = {
   'onb.adjustLater': 'You can adjust bills, savings or payday anytime in Rules.',
   'onb.editStep': 'Edit this step',
 
+  'onb.languageHint': 'Change it anytime',
   'onb.badge': 'A calm money rhythm',
   'onb.title': 'Make your money last until your next income.',
   'onb.lead':

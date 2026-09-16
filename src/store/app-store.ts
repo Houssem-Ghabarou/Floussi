@@ -5,7 +5,7 @@ import { createBackup, type Backup } from '@/domain/backup';
 import { toLocalDate, type LocalDate } from '@/domain/dates';
 import { computeBalance, countsToBalance } from '@/domain/derive';
 import type { Minor } from '@/domain/money';
-import type { AppData, Bill, Cycle, IncomeFrequency, Routine, Settings, Transaction } from '@/domain/types';
+import type { AppData, Bill, Cycle, IncomeFrequency, Language, Routine, Settings, Transaction } from '@/domain/types';
 
 export type NewTransaction = Pick<Transaction, 'kind' | 'amount' | 'date'> &
   Partial<Pick<Transaction, 'category' | 'note' | 'billId' | 'billDueDate'>>;
@@ -31,6 +31,8 @@ interface AppState {
   status: 'loading' | 'ready' | 'error';
   today: LocalDate;
   settings: Settings | null;
+  /** The chosen language, available before onboarding. Null: follow the phone. */
+  language: Language | null;
   cycles: Cycle[];
   transactions: Transaction[];
   bills: Bill[];
@@ -49,6 +51,8 @@ interface AppState {
   saveRoutine(routine: Routine): void;
   deleteRoutine(id: string): void;
   updateSettings(patch: Partial<Settings>): void;
+  /** Picks the language. Works during onboarding, before a settings row exists. */
+  chooseLanguage(language: Language): void;
   updateCycle(patch: Partial<Cycle>): void;
   reconcileBalance(actualBalance: Minor): Transaction | null;
   /** `start` is when the income that ends the current cycle was recorded. */
@@ -99,6 +103,7 @@ export const useApp = create<AppState>()((set, get) => {
     status: 'loading',
     today: toLocalDate(),
     settings: null,
+    language: null,
     cycles: [],
     transactions: [],
     bills: [],
@@ -119,7 +124,7 @@ export const useApp = create<AppState>()((set, get) => {
     },
 
     completeOnboarding(plan) {
-      const { today } = get();
+      const { today, language } = get();
       const settings: Settings = {
         currency: plan.currency,
         openingBalance: plan.balance,
@@ -128,6 +133,8 @@ export const useApp = create<AppState>()((set, get) => {
         dailyNeed: plan.dailyNeed,
         unexpectedIncomeSavePercent: 0,
         onboarded: true,
+        // Carried into Settings so backups take the choice to another device.
+        language: language ?? undefined,
       };
       const cycle: Cycle = {
         id: newId(),
@@ -260,6 +267,15 @@ export const useApp = create<AppState>()((set, get) => {
       set({ settings });
     },
 
+    chooseLanguage(language) {
+      const { settings } = get();
+      repository.transaction(() => {
+        repository.saveLanguage(language);
+        if (settings) repository.saveSettings({ ...settings, language });
+      });
+      set({ language, settings: settings ? { ...settings, language } : null });
+    },
+
     updateCycle(patch) {
       const cycle = currentCycle(get().cycles);
       if (!cycle) return;
@@ -290,7 +306,7 @@ export const useApp = create<AppState>()((set, get) => {
 
     resetAll() {
       repository.resetAll();
-      set({ settings: null, cycles: [], transactions: [], bills: [], routines: [] });
+      set({ settings: null, language: null, cycles: [], transactions: [], bills: [], routines: [] });
     },
 
     exportBackup() {

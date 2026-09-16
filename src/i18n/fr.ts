@@ -401,6 +401,7 @@ const fr: Catalog = {
   'onb.adjustLater': 'Tu peux ajuster factures, épargne ou jour de paie à tout moment dans Règles.',
   'onb.editStep': 'Modifier cette étape',
 
+  'onb.languageHint': 'Modifiable à tout moment',
   'onb.badge': 'Un rythme d’argent serein',
   'onb.title': 'Fais durer ton argent jusqu’à ta prochaine rentrée.',
   'onb.lead':

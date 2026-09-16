@@ -7,7 +7,16 @@
 import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 
 import type { BackupData } from '@/domain/backup';
-import type { Bill, Cycle, IncomeFrequency, Routine, Settings, Transaction, TransactionKind } from '@/domain/types';
+import type {
+  Bill,
+  Cycle,
+  IncomeFrequency,
+  Language,
+  Routine,
+  Settings,
+  Transaction,
+  TransactionKind,
+} from '@/domain/types';
 
 const MIGRATIONS = [
   `CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
@@ -192,6 +201,8 @@ interface RoutineRow {
 
 export interface StoredData {
   settings: Settings | null;
+  /** Null until the user picks one, which they can do before onboarding writes any settings. */
+  language: Language | null;
   cycles: Cycle[];
   transactions: Transaction[];
   bills: Bill[];
@@ -202,6 +213,10 @@ export const repository = {
   loadAll(): StoredData {
     const settingsRow = db().getFirstSync<{ value: string }>(
       "SELECT value FROM settings WHERE key = 'settings' AND deleted_at IS NULL",
+    );
+    // Its own row, so a language picked during onboarding survives the restart Arabic needs.
+    const languageRow = db().getFirstSync<{ value: string }>(
+      "SELECT value FROM settings WHERE key = 'language' AND deleted_at IS NULL",
     );
 
     const cycles = db()
@@ -260,6 +275,7 @@ export const repository = {
 
     return {
       settings: settingsRow ? (JSON.parse(settingsRow.value) as Settings) : null,
+      language: (languageRow?.value as Language | undefined) ?? null,
       cycles,
       transactions,
       bills,
@@ -274,6 +290,10 @@ export const repository = {
 
   saveSettings(settings: Settings) {
     upsert('settings', 'settings', 'settings', { key: 'settings', value: JSON.stringify(settings) });
+  },
+
+  saveLanguage(language: Language) {
+    upsert('settings', 'settings', 'language', { key: 'language', value: language });
   },
 
   upsertCycle(cycle: Cycle) {
@@ -360,6 +380,8 @@ export const repository = {
     atomically(() => {
       repository.resetAll();
       repository.saveSettings(data.settings);
+      // resetAll cleared the language row, so put the backup's choice back.
+      if (data.settings.language) repository.saveLanguage(data.settings.language);
       data.cycles.forEach((cycle) => repository.upsertCycle(cycle));
       data.transactions.forEach((transaction) => repository.upsertTransaction(transaction));
       data.bills.forEach((bill) => repository.upsertBill(bill));
