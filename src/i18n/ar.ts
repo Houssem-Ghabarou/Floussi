@@ -544,6 +544,37 @@ const ar: Catalog = {
   'onb.routineBody':
     'أضف قهوتك وغداءك وتنقّلاتك المعتادة من تبويب الروتين لتوقّع أدق. سيذكّرك تبويب اليوم بذلك.',
 
+  // Day-by-day history
+  'history.section': 'يومًا بيوم',
+  'history.open': 'تصفّح يومًا بيوم',
+  'history.subtitle': 'اضغط على يوم لترى ما حدث فيه بالضبط.',
+  'history.modeDay': 'يوم واحد',
+  'history.modeRange': 'فترة',
+  'history.billsOnly': 'الفواتير فقط',
+  'history.clearFilters': 'مسح عوامل التصفية',
+  'history.filtered': 'مُصفّى',
+  'history.monthTotals': '{out} خارج · {in} داخل',
+  'history.empty': 'لا شيء مسجَّل هذا الشهر.',
+  'history.emptyFiltered': 'لا شيء يطابق هذه التصفية هذا الشهر.',
+  'history.rangeHint': 'اضغط أول يوم ثم آخر يوم.',
+  'history.rangeTitle': '{from} → {to}',
+  'history.rangeDays': 'على مدى {days}',
+  'history.dailyAverage': '{amount} في اليوم',
+  'history.busiest': 'أكثر يوم إنفاقًا',
+  'history.topCategories': 'أين ذهب',
+  'history.clearRange': 'مسح الفترة',
+
+  // One day
+  'day.in': 'مال داخل',
+  'day.out': 'مال خارج',
+  'day.nothing': 'لا شيء مسجَّل في هذا اليوم.',
+  'day.routineExpected': 'المتوقّع من الروتين',
+  'day.noRoutine': 'لا روتين في هذا اليوم من الأسبوع',
+  'day.overRoutine': '{amount} فوق روتينك',
+  'day.underRoutine': '{amount} تحت روتينك',
+  'day.previous': 'اليوم السابق',
+  'day.next': 'اليوم التالي',
+
   // Rules screen
   'rules.title': 'قواعد الخطة',
   'rules.subtitle': 'كل ما يحدّد وتيرتك الآمنة.',

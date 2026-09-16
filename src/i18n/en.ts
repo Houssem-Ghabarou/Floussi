@@ -501,6 +501,37 @@ const en = {
   'onb.routineBody':
     'Add regular coffees, lunches or transport from the Routine tab to forecast more accurately. Today will remind you.',
 
+  // Day-by-day history
+  'history.section': 'Day by day',
+  'history.open': 'Browse day by day',
+  'history.subtitle': 'Tap a day to see exactly what happened.',
+  'history.modeDay': 'One day',
+  'history.modeRange': 'Range',
+  'history.billsOnly': 'Bills only',
+  'history.clearFilters': 'Clear filters',
+  'history.filtered': 'Filtered',
+  'history.monthTotals': '{out} out · {in} in',
+  'history.empty': 'Nothing recorded this month.',
+  'history.emptyFiltered': 'Nothing matches these filters this month.',
+  'history.rangeHint': 'Tap the first day, then the last.',
+  'history.rangeTitle': '{from} → {to}',
+  'history.rangeDays': 'over {days}',
+  'history.dailyAverage': '{amount} a day',
+  'history.busiest': 'Busiest day',
+  'history.topCategories': 'Where it went',
+  'history.clearRange': 'Clear range',
+
+  // One day
+  'day.in': 'Money in',
+  'day.out': 'Money out',
+  'day.nothing': 'Nothing recorded on this day.',
+  'day.routineExpected': 'Routine expected',
+  'day.noRoutine': 'No routine on this weekday',
+  'day.overRoutine': '{amount} over your routine',
+  'day.underRoutine': '{amount} under your routine',
+  'day.previous': 'Previous day',
+  'day.next': 'Next day',
+
   // Rules screen
   'rules.title': 'Plan rules',
   'rules.subtitle': 'Everything that shapes your safe pace.',

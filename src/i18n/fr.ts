@@ -504,6 +504,37 @@ const fr: Catalog = {
   'onb.routineBody':
     'Ajoute tes cafés, déjeuners ou trajets réguliers depuis l’onglet Routine pour prévoir plus juste. Today te le rappellera.',
 
+  // Day-by-day history
+  'history.section': 'Jour par jour',
+  'history.open': 'Parcourir jour par jour',
+  'history.subtitle': 'Touche un jour pour voir exactement ce qui s’est passé.',
+  'history.modeDay': 'Un jour',
+  'history.modeRange': 'Période',
+  'history.billsOnly': 'Factures seules',
+  'history.clearFilters': 'Effacer les filtres',
+  'history.filtered': 'Filtré',
+  'history.monthTotals': '{out} sortis · {in} entrés',
+  'history.empty': 'Rien d’enregistré ce mois-ci.',
+  'history.emptyFiltered': 'Rien ne correspond à ces filtres ce mois-ci.',
+  'history.rangeHint': 'Touche le premier jour, puis le dernier.',
+  'history.rangeTitle': '{from} → {to}',
+  'history.rangeDays': 'sur {days}',
+  'history.dailyAverage': '{amount} par jour',
+  'history.busiest': 'Journée la plus chargée',
+  'history.topCategories': 'Où c’est parti',
+  'history.clearRange': 'Effacer la période',
+
+  // One day
+  'day.in': 'Argent entré',
+  'day.out': 'Argent sorti',
+  'day.nothing': 'Rien d’enregistré ce jour-là.',
+  'day.routineExpected': 'Prévu par la routine',
+  'day.noRoutine': 'Aucune routine ce jour de la semaine',
+  'day.overRoutine': '{amount} de plus que ta routine',
+  'day.underRoutine': '{amount} de moins que ta routine',
+  'day.previous': 'Jour précédent',
+  'day.next': 'Jour suivant',
+
   // Rules screen
   'rules.title': 'Règles du plan',
   'rules.subtitle': 'Tout ce qui façonne ton rythme sûr.',

@@ -100,6 +100,8 @@ export default function RootLayout() {
           <Stack.Protected guard={onboarded}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="activity" options={modal} />
+            <Stack.Screen name="history" options={modal} />
+            <Stack.Screen name="day" options={modal} />
             <Stack.Screen name="expense" options={modal} />
             <Stack.Screen name="income" options={modal} />
             <Stack.Screen name="what-if" options={modal} />

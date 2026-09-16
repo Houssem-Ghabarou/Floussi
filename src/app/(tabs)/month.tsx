@@ -125,14 +125,19 @@ export default function MonthScreen() {
           disabled={index === 0}
           onPress={() => setOffset(offset + 1)}
         />
-        <View style={styles.flex}>
-          <AppText variant="title" style={styles.center}>
-            {formatMonthYear(cycle.startDate)}
-          </AppText>
+        <Pressable
+          style={styles.flex}
+          accessibilityRole="button"
+          accessibilityLabel={t('history.open')}
+          onPress={() => router.push({ pathname: '/history', params: { month: cycle.startDate } })}>
+          <View style={styles.titleRow}>
+            <AppText variant="title">{formatMonthYear(cycle.startDate)}</AppText>
+            <Icon name="event" size={18} color={palette.textSecondary} />
+          </View>
           <AppText variant="caption" tone="secondary" style={styles.center}>
             {t('month.cycleRange', { from: formatShortDate(cycle.startDate), to: formatShortDate(finalDay) })}
           </AppText>
-        </View>
+        </Pressable>
         <RoundButton
           icon="chevronRight"
           label={t('month.nextCycle')}
@@ -444,6 +449,7 @@ const styles = StyleSheet.create({
   spaceBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Space.sm },
   baseline: { flexDirection: 'row', alignItems: 'baseline', gap: Space.xs },
   selector: { flexDirection: 'row', alignItems: 'center', gap: Space.md },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Space.xs },
   round: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   pace: {
     flexDirection: 'row',
