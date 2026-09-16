@@ -48,6 +48,8 @@ export default function RulesScreen() {
   const resetAll = useApp((state) => state.resetAll);
   const { share, restore } = useBackupActions();
   const updateSettings = useApp((state) => state.updateSettings);
+  const storedLanguage = useApp((state) => state.language);
+  const chooseLanguage = useApp((state) => state.chooseLanguage);
   const { access, request } = useNotificationAccess();
 
   if (!financial) return null;
@@ -66,9 +68,9 @@ export default function RulesScreen() {
     return next ? t('rules.billLater', { date: formatShortDate(next) }) : t('rules.billNoDate');
   };
 
-  const language = resolveLanguage(settings.language);
+  const language = resolveLanguage(storedLanguage);
   const changeLanguage = (next: (typeof LANGUAGES)[number]) => {
-    updateSettings({ language: next });
+    chooseLanguage(next);
     // Arabic mirrors the whole layout, which React Native only does after a restart.
     if (applyLanguage(next)) {
       showDialog({

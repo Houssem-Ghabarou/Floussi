@@ -218,6 +218,7 @@ export const repository = {
     const languageRow = db().getFirstSync<{ value: string }>(
       "SELECT value FROM settings WHERE key = 'language' AND deleted_at IS NULL",
     );
+    const settings = settingsRow ? (JSON.parse(settingsRow.value) as Settings) : null;
 
     const cycles = db()
       .getAllSync<CycleRow>('SELECT * FROM cycles WHERE deleted_at IS NULL ORDER BY start_date')
@@ -274,8 +275,9 @@ export const repository = {
       }));
 
     return {
-      settings: settingsRow ? (JSON.parse(settingsRow.value) as Settings) : null,
-      language: (languageRow?.value as Language | undefined) ?? null,
+      settings,
+      // Installs from before the language row kept the choice inside settings.
+      language: (languageRow?.value as Language | undefined) ?? settings?.language ?? null,
       cycles,
       transactions,
       bills,

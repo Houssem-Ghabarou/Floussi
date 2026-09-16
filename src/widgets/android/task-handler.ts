@@ -15,8 +15,8 @@ import { renderSafeToSpend } from './safe-to-spend-widget';
 function currentProps(): WidgetProps {
   try {
     const stored = repository.loadAll();
-    // The widget draws outside the app, so it has to pick the language up from the saved settings.
-    applyTextLanguage(resolveLanguage(stored.settings?.language));
+    // The widget draws outside the app, so it has to pick the language up from the database.
+    applyTextLanguage(resolveLanguage(stored.language));
     return widgetTimeline(appDataOf(stored), toLocalDate())[0].props;
   } catch (error) {
     console.warn('Widget could not read the plan', error);
