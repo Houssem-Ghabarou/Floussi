@@ -13,7 +13,7 @@ import { riskColors, Space, usePalette } from './theme';
 
 const LOGO = require('../../assets/images/logo-mark.png');
 
-/** A tab screen: the Flousey header (logo, section, today, status badge) above scrollable content. */
+/** A tab screen: the Spnday header (logo, section, today, status badge) above scrollable content. */
 export function TabScreen({ section, children }: { section: string; children: ReactNode }) {
   return <Screen header={<AppHeader section={section} />}>{children}</Screen>;
 }
@@ -32,7 +32,7 @@ function AppHeader({ section }: { section: string }) {
         <Image source={LOGO} style={styles.logo} accessibilityLabel={t('header.logo')} />
         <View style={styles.titles}>
           <AppText variant="heading" style={styles.brand}>
-            Flousey
+            Spnday
           </AppText>
           <View style={styles.crumbs}>
             <AppText variant="caption" tone="secondary">

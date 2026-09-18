@@ -216,7 +216,7 @@ const fr: Catalog = {
   'widget.daysToPayday.one': '{count} jour avant la paie',
   'widget.daysToPayday.other': '{count} jours avant la paie',
   'widget.incomeExpected': 'Rentrée attendue',
-  'widget.setUp': 'Ouvre Flousey pour créer ton plan',
+  'widget.setUp': 'Ouvre Spnday pour créer ton plan',
   'widget.addExpense': '+ Dépense',
   'widget.addMoney': '+ Argent',
 
@@ -280,7 +280,7 @@ const fr: Catalog = {
   'today.added': '{name} · {amount} ajouté',
   'today.remindersTitle': 'Un rappel avant tes factures ?',
   'today.remindersBody':
-    'Flousey peut te prévenir la veille d’une facture, le jour de paie, et quand tu n’as pas fait le point depuis quelques jours. Tu peux changer ça dans Règles.',
+    'Spnday peut te prévenir la veille d’une facture, le jour de paie, et quand tu n’as pas fait le point depuis quelques jours. Tu peux changer ça dans Règles.',
   'today.remindersTurnOn': 'Activer les rappels',
   'today.remindersOn': 'Rappels activés',
   'today.remindersLater': 'Tu peux activer les rappels à tout moment dans Règles',
@@ -388,12 +388,12 @@ const fr: Catalog = {
   'onb.next.now': 'Suite : paiements',
   'onb.next.bills': 'Suite : protections',
   'onb.next.protect': 'Suite : voir mon plan',
-  'onb.next.plan': 'Entrer dans Flousey',
+  'onb.next.plan': 'Entrer dans Spnday',
   'onb.progress': 'Étape {step} sur {count}',
   'onb.percent': '{percent} % terminé',
   'onb.noSignup': 'Aucune inscription',
   'onb.goBack': 'Retour',
-  'onb.logo': 'Logo Flousey',
+  'onb.logo': 'Logo Spnday',
   'onb.safePaceSoFar': 'Rythme sûr jusqu’ici',
   'onb.perDayValue': '{amount}/jour',
   'onb.takesMinute': 'Environ une minute',
@@ -407,7 +407,7 @@ const fr: Catalog = {
   'onb.lead':
     'Un coach calme et manuel qui montre ce que tu peux dépenser aujourd’hui sans risque — sans lien bancaire, sans tableur, sans culpabilité.',
   'onb.quote':
-    '« Flousey ne touche pas à ton argent et ne juge pas tes choix. Il te garde simplement en sécurité jusqu’à la paie. »',
+    '« Spnday ne touche pas à ton argent et ne juge pas tes choix. Il te garde simplement en sécurité jusqu’à la paie. »',
   'onb.feature1Title': 'Commence n’importe quand, même en plein mois',
   'onb.feature1Body': 'Aucun ticket passé, aucun tableur propre, pas besoin d’attendre le 1er.',
   'onb.feature2Title': 'Connais ta dépense quotidienne sûre',
@@ -423,7 +423,7 @@ const fr: Catalog = {
   'onb.legendSafe': 'Disponible',
   'onb.legendProtected': 'Protégé',
   'onb.legendBills': 'Factures',
-  'onb.restore': 'Tu utilises déjà Flousey ? Restaure une sauvegarde',
+  'onb.restore': 'Tu utilises déjà Spnday ? Restaure une sauvegarde',
 
   'onb.nowBadge': 'Un point de départ sans jugement',
   'onb.nowTitle': 'Parle-nous de maintenant',
@@ -444,7 +444,7 @@ const fr: Catalog = {
   'onb.expectedHint': 'Sert seulement à ton résumé. On ne compte jamais l’argent avant son arrivée.',
   'onb.whyTitle': 'Pourquoi c’est important',
   'onb.whyBody':
-    'Les budgets classiques t’obligent à ressaisir des semaines de cafés passés. Flousey ne s’occupe que des jours à venir, et tu peux corriger ce chiffre à tout moment.',
+    'Les budgets classiques t’obligent à ressaisir des semaines de cafés passés. Spnday ne s’occupe que des jours à venir, et tu peux corriger ce chiffre à tout moment.',
   'onb.firstLook': 'Premier aperçu de ton rythme quotidien',
   'onb.firstLookHint': 'Avant la protection des factures et de l’épargne',
   'onb.perDayFor': '/ jour pendant {days}',
@@ -541,11 +541,11 @@ const fr: Catalog = {
   'privacy.title': 'Confidentialité',
   'privacy.updated': 'Mise à jour le 16 septembre 2026',
   'privacy.summary':
-    'Tout ce que tu saisis — ton solde, tes dépenses, tes factures et tes routines — est stocké uniquement sur ce téléphone. Flousey n’a ni compte ni serveur : tes données ne nous parviennent jamais et nous ne pouvons pas les voir.',
-  'privacy.storedTitle': 'Ce que Flousey enregistre',
+    'Tout ce que tu saisis — ton solde, tes dépenses, tes factures et tes routines — est stocké uniquement sur ce téléphone. Spnday n’a ni compte ni serveur : tes données ne nous parviennent jamais et nous ne pouvons pas les voir.',
+  'privacy.storedTitle': 'Ce que Spnday enregistre',
   'privacy.storedBody':
     'L’argent dont tu disposes et tes corrections de solde, tes dépenses et l’argent que tu reçois, tes factures et leurs échéances, tes routines, et tes réglages : devise, prochaine rentrée, objectif d’épargne, solde minimum, langue, rappels et options du widget.',
-  'privacy.neverTitle': 'Ce que Flousey ne fait jamais',
+  'privacy.neverTitle': 'Ce que Spnday ne fait jamais',
   'privacy.neverBody':
     'Aucun compte, aucune inscription, aucun mot de passe. Aucun serveur et rien d’envoyé. Aucune connexion bancaire, et jamais de demande d’identifiants bancaires. Aucun suivi, aucune analyse, aucune publicité. L’application ne contacte pas Internet pendant que tu l’utilises.',
   'privacy.remindersTitle': 'Rappels et widget',
@@ -556,13 +556,13 @@ const fr: Catalog = {
     'Exporter une sauvegarde est le seul moment où tes données peuvent quitter l’application, et c’est toi qui choisis la destination. À partir de là, le fichier dépend de l’endroit où tu l’as envoyé — Drive, e-mail ou autre. Il contient ton historique financier en clair : traite-le comme un relevé bancaire.',
   'privacy.deleteTitle': 'Effacer tes données',
   'privacy.deleteBody':
-    'Effacer toutes les données dans Règles supprime ton plan, tes factures, tes routines et ton historique de ce téléphone, sans retour possible. Désinstaller Flousey supprime aussi sa base de données. Comme nous ne recevons jamais tes données, nous n’avons rien à effacer de notre côté.',
+    'Effacer toutes les données dans Règles supprime ton plan, tes factures, tes routines et ton historique de ce téléphone, sans retour possible. Désinstaller Spnday supprime aussi sa base de données. Comme nous ne recevons jamais tes données, nous n’avons rien à effacer de notre côté.',
   'privacy.storesTitle': 'Les magasins d’applications',
   'privacy.storesBody':
-    'Flousey est distribué via l’App Store et Google Play. Ces sociétés peuvent collecter leurs propres informations sur les téléchargements et les plantages, selon leurs propres politiques de confidentialité, que nous ne contrôlons pas.',
+    'Spnday est distribué via l’App Store et Google Play. Ces sociétés peuvent collecter leurs propres informations sur les téléchargements et les plantages, selon leurs propres politiques de confidentialité, que nous ne contrôlons pas.',
   'privacy.changesTitle': 'Cette politique peut changer',
   'privacy.changesBody':
-    'À mesure que Flousey évolue, de nouvelles fonctions peuvent changer sa façon de traiter les données. Le cas échéant, nous mettons à jour cette page et la date ci-dessus, et tout ce qui ferait sortir des données de ton téléphone restera facultatif et désactivé tant que tu ne l’actives pas.',
+    'À mesure que Spnday évolue, de nouvelles fonctions peuvent changer sa façon de traiter les données. Le cas échéant, nous mettons à jour cette page et la date ci-dessus, et tout ce qui ferait sortir des données de ton téléphone restera facultatif et désactivé tant que tu ne l’actives pas.',
   'privacy.contactTitle': 'Des questions',
   'privacy.contactBody': 'Si quelque chose n’est pas clair, écris-nous à {email}.',
 
@@ -603,8 +603,8 @@ const fr: Catalog = {
   'rules.unspentHint': 'Se répartit sur les jours à venir',
   'rules.reminders': 'Rappels',
   'rules.remindersSubtitle': 'Notifications locales, planifiées sur ce téléphone',
-  'rules.notificationsOff': 'Les notifications sont désactivées pour Flousey, ces rappels resteront silencieux.',
-  'rules.notificationsBlocked': 'Les notifications sont bloquées pour Flousey dans les réglages du téléphone.',
+  'rules.notificationsOff': 'Les notifications sont désactivées pour Spnday, ces rappels resteront silencieux.',
+  'rules.notificationsBlocked': 'Les notifications sont bloquées pour Spnday dans les réglages du téléphone.',
   'rules.reminderBill': 'Facture à payer demain',
   'rules.reminderBillHint': 'À 9h00, la veille de l’échéance',
   'rules.reminderPayday': 'Jour de paie',
@@ -612,14 +612,14 @@ const fr: Catalog = {
   'rules.reminderCheckIn': 'Point du soir',
   'rules.reminderCheckInOn': 'Chaque jour à {time}',
   'rules.reminderCheckInOff': 'Un rappel calme pour regarder ta journée',
-  'rules.reminderInactivity': 'Quand tu n’ouvres pas Flousey',
+  'rules.reminderInactivity': 'Quand tu n’ouvres pas Spnday',
   'rules.reminderInactivityOff': 'Inutile tant que le point du soir est activé',
   'rules.reminderInactivityOn': 'Après 3 jours, à 19h00',
   'rules.widget': 'Widget d’écran d’accueil',
   'rules.hideAmounts': 'Masquer les montants',
   'rules.hideAmountsHint': 'Afficher ••• au lieu de ton argent sur le widget',
   'rules.widgetHint':
-    'Pour l’ajouter, appuie longuement sur un espace vide de ton écran d’accueil, puis choisis Widgets → Flousey.',
+    'Pour l’ajouter, appuie longuement sur un espace vide de ton écran d’accueil, puis choisis Widgets → Spnday.',
   'rules.backup': 'Sauvegarde',
   'rules.backupHint':
     'Tes données ne vivent que sur ce téléphone. Exporte une sauvegarde régulièrement et garde-la en lieu sûr (Drive, e-mail…).',
@@ -650,7 +650,7 @@ const fr: Catalog = {
   'nav.addExpense': 'Ajouter une dépense',
   'header.today': 'Aujourd’hui, {date}',
   'header.statusHint': 'Comment ton montant sûr est calculé',
-  'header.logo': 'Logo Flousey',
+  'header.logo': 'Logo Spnday',
 
   // Activity
   'activity.title': 'Toute l’activité',
@@ -813,7 +813,7 @@ const fr: Catalog = {
   'balance.question': 'Qu’affiche ton compte ?',
   'balance.intro':
     'Le suivi manuel dérive : un taxi oublié, du liquide donné à la famille. Saisis ce que tu as vraiment et on enregistrera la différence pour que ton plan colle à la réalité.',
-  'balance.thought': 'Flousey pensait que tu avais',
+  'balance.thought': 'Spnday pensait que tu avais',
   'balance.less': '{amount} seront enregistrés comme dépenses non suivies.',
   'balance.more': '{amount} de plus que prévu. Ce sera enregistré comme correction de solde.',
   'balance.match': 'Ça correspond. Rien à changer.',
@@ -1037,21 +1037,21 @@ const fr: Catalog = {
 
   // Language
   'language.section': 'Langue',
-  'language.followsPhone': 'Flousey suit la langue de ton téléphone tant que tu n’en choisis pas une ici.',
-  'language.restartTitle': 'Redémarre Flousey pour terminer',
+  'language.followsPhone': 'Spnday suit la langue de ton téléphone tant que tu n’en choisis pas une ici.',
+  'language.restartTitle': 'Redémarre Spnday pour terminer',
   'language.restartMessage':
-    'L’arabe se lit de droite à gauche. Ferme Flousey puis rouvre-le pour que toute l’application suive.',
+    'L’arabe se lit de droite à gauche. Ferme Spnday puis rouvre-le pour que toute l’application suive.',
 
   // Notifications channel
   'notifications.channelName': 'Rappels',
   'notifications.channelDescription': 'Factures, jour de paie et points réguliers',
 
   // Backup flows
-  'backup.shareTitle': 'Enregistrer ta sauvegarde Flousey',
+  'backup.shareTitle': 'Enregistrer ta sauvegarde Spnday',
   'backup.createError.title': 'Impossible de créer la sauvegarde',
   'backup.createError.body': 'Réessaie.',
   'backup.pickError.title': 'Impossible d’ouvrir ce fichier',
-  'backup.pickError.body': 'Choisis un fichier de sauvegarde Flousey (.json).',
+  'backup.pickError.body': 'Choisis un fichier de sauvegarde Spnday (.json).',
   'backup.restoreError.title': 'Restauration impossible',
   'backup.replaceTitle': 'Remplacer tes données ?',
   'backup.replaceMessage': 'Tout ce qui est sur ce téléphone sera remplacé.',
@@ -1061,9 +1061,9 @@ const fr: Catalog = {
   'backup.restored': 'Sauvegarde restaurée',
 
   // Backups
-  'backup.notOurs': 'Ce fichier n’est pas une sauvegarde Flousey.',
+  'backup.notOurs': 'Ce fichier n’est pas une sauvegarde Spnday.',
   'backup.newerVersion':
-    'Cette sauvegarde vient d’une version plus récente de Flousey. Mets l’application à jour et réessaie.',
+    'Cette sauvegarde vient d’une version plus récente de Spnday. Mets l’application à jour et réessaie.',
   'backup.damaged': 'La sauvegarde semble abîmée ({what}).',
   'backup.part.exportDate': 'date d’export',
   'backup.part.settings': 'réglages',

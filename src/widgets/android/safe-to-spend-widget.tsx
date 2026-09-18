@@ -58,7 +58,7 @@ const DARK: Colors = {
   },
 };
 
-const OPEN_TODAY = { uri: 'flousey://' };
+const OPEN_TODAY = { uri: 'spnday://' };
 /** From this width (dp) the buttons move to their own column next to the amount. */
 const WIDE_FROM_DP = 230;
 /** From this height (dp) the small widget also has room for the status text. */
@@ -122,7 +122,7 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
         clickAction="OPEN_URI"
         clickActionData={OPEN_TODAY}
         style={{ ...container, padding: 14, flexDirection: 'column', justifyContent: 'center', flexGap: 4 }}>
-        <TextWidget text="Flousey" style={{ fontSize: 16, fontFamily: FONT.bold, color: colors.text }} />
+        <TextWidget text="Spnday" style={{ fontSize: 16, fontFamily: FONT.bold, color: colors.text }} />
         <TextWidget text={props.caption} style={{ fontSize: 12, fontFamily: FONT.medium, color: colors.secondary }} />
       </FlexWidget>
     );
@@ -163,8 +163,8 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
           ) : null}
         </FlexWidget>
         <FlexWidget style={{ flexDirection: 'row', flexGap: 6, width: 'match_parent' }}>
-          <QuickAction label={props.addExpense} uri="flousey://expense" colors={colors} primary compact />
-          <QuickAction label={props.addMoney} uri="flousey://income" colors={colors} compact />
+          <QuickAction label={props.addExpense} uri="spnday://expense" colors={colors} primary compact />
+          <QuickAction label={props.addMoney} uri="spnday://income" colors={colors} compact />
         </FlexWidget>
       </FlexWidget>
     );
@@ -221,8 +221,8 @@ function Layout({ props, colors, size }: { props: WidgetProps; colors: Colors; s
           truncate="END"
           style={{ fontSize: 10, fontFamily: FONT.medium, color: colors.muted, textAlign: 'right' }}
         />
-        <QuickAction label={props.addExpense} uri="flousey://expense" colors={colors} primary />
-        <QuickAction label={props.addMoney} uri="flousey://income" colors={colors} />
+        <QuickAction label={props.addExpense} uri="spnday://expense" colors={colors} primary />
+        <QuickAction label={props.addMoney} uri="spnday://income" colors={colors} />
       </FlexWidget>
     </FlexWidget>
   );

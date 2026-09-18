@@ -90,8 +90,8 @@ describe('backups', () => {
     expect(describeBackup(backup)).toBe('Backup from Sep 15 · 2 transactions · 1 bill · 1 routine');
   });
 
-  it('refuses files that are not Flousey backups', () => {
-    expect(parseBackup('not json')).toMatchObject({ ok: false, error: "This file isn't a Flousey backup." });
+  it('refuses files that are not Spnday backups', () => {
+    expect(parseBackup('not json')).toMatchObject({ ok: false, error: "This file isn't a Spnday backup." });
     expect(parseBackup(JSON.stringify({ app: 'other', data: {} }))).toMatchObject({ ok: false });
   });
 

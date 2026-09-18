@@ -2,7 +2,7 @@ import { useColorScheme } from 'react-native';
 
 import type { RiskLevel } from '@/domain/engine';
 
-/** Tokens follow the Flousey Figma file (Material-style tonal surfaces, emerald primary, warm amber accent). */
+/** Tokens follow the Spnday Figma file (Material-style tonal surfaces, emerald primary, warm amber accent). */
 const light = {
   background: '#F8F9FF',
   surface: '#FFFFFF',

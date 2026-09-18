@@ -19,8 +19,8 @@ import type {
 
 export const BACKUP_FORMAT = 1;
 
-/** 'floussi' is how backups were marked before the app was renamed; they still restore. */
-const BACKUP_APPS = ['flousey', 'floussi'];
+/** 'flousey' and 'floussi' are how backups were marked before the app was renamed; they still restore. */
+const BACKUP_APPS = ['spnday', 'flousey', 'floussi'];
 
 export interface BackupData {
   settings: Settings;
@@ -31,7 +31,7 @@ export interface BackupData {
 }
 
 export interface Backup {
-  app: 'flousey';
+  app: 'spnday';
   format: number;
   /** ISO timestamp. */
   exportedAt: string;
@@ -41,11 +41,11 @@ export interface Backup {
 export type ParsedBackup = { ok: true; backup: Backup } | { ok: false; error: string };
 
 export function createBackup(data: BackupData, now: Date = new Date()): Backup {
-  return { app: 'flousey', format: BACKUP_FORMAT, exportedAt: now.toISOString(), data };
+  return { app: 'spnday', format: BACKUP_FORMAT, exportedAt: now.toISOString(), data };
 }
 
 export function backupFileName(today: LocalDate): string {
-  return `flousey-backup-${today}.json`;
+  return `spnday-backup-${today}.json`;
 }
 
 /** "Backup from Sep 15 · 42 transactions · 3 bills · 2 routines" */
@@ -108,7 +108,7 @@ export function parseBackup(text: string): ParsedBackup {
   return {
     ok: true,
     backup: {
-      app: 'flousey',
+      app: 'spnday',
       format: raw.format,
       exportedAt: raw.exportedAt,
       data: { settings, cycles, transactions, bills, routines },

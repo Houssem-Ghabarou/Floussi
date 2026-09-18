@@ -89,7 +89,7 @@ let database: SQLiteDatabase | null = null;
 
 function db(): SQLiteDatabase {
   if (!database) {
-    database = openDatabaseSync('flousey.db');
+    database = openDatabaseSync('spnday.db');
     migrate(database);
   }
   return database;

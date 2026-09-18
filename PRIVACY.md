@@ -1,16 +1,16 @@
-# Privacy Policy — Flousey
+# Privacy Policy — Spnday
 
 **Last updated: 16 September 2026**
 
 ## The short version
 
-Flousey keeps your money on your mind, not on our servers.
+Spnday keeps your money on your mind, not on our servers.
 
 Everything you enter — your balance, your spending, your bills, your routines — is stored **only on your phone**. We have no accounts, no servers and no analytics. We cannot see your data, because it never reaches us. Nothing is sent anywhere unless you choose to export a backup yourself.
 
-## What Flousey stores
+## What Spnday stores
 
-Flousey saves the following on your device, in a private database that belongs to your copy of the app:
+Spnday saves the following on your device, in a private database that belongs to your copy of the app:
 
 - The money you have available, and the balance corrections you make
 - Your transactions: expenses, money received, bill payments and savings transfers
@@ -19,19 +19,19 @@ Flousey saves the following on your device, in a private database that belongs t
 - Your plan settings: currency, next income date, savings target, minimum balance
 - Your preferences: language, reminder choices, widget settings
 
-That's all of it. Flousey never asks for your name, your email, your phone number or your bank login, because it does not need them.
+That's all of it. Spnday never asks for your name, your email, your phone number or your bank login, because it does not need them.
 
-## What Flousey does not do
+## What Spnday does not do
 
 - **No account, no sign-up, no password.** You just open the app and use it.
-- **No servers.** Flousey has no backend. Your data is never uploaded.
-- **No bank connection.** Flousey never connects to your bank and never asks for banking credentials.
+- **No servers.** Spnday has no backend. Your data is never uploaded.
+- **No bank connection.** Spnday never connects to your bank and never asks for banking credentials.
 - **No tracking, no analytics, no advertising.** There is no usage tracking of any kind, no third-party analytics and no ad networks.
 - **No network requests.** The app does not contact the internet while you use it.
 
 ## Reminders
 
-If you turn reminders on, Flousey schedules them **locally on your phone**. The reminder text is created on your device and never leaves it. There is no push server and no device token is sent anywhere. You can turn reminders off at any time in Rules, or in your phone's settings.
+If you turn reminders on, Spnday schedules them **locally on your phone**. The reminder text is created on your device and never leaves it. There is no push server and no device token is sent anywhere. You can turn reminders off at any time in Rules, or in your phone's settings.
 
 ## Home screen widget
 
@@ -39,7 +39,7 @@ The widget reads the same data stored on your device and displays it on your hom
 
 ## Backups — please read this one
 
-Flousey lets you export a backup file containing your financial data. This is the one case where your data can leave the app, and **you are the one who moves it**.
+Spnday lets you export a backup file containing your financial data. This is the one case where your data can leave the app, and **you are the one who moves it**.
 
 When you export a backup, you choose where it goes — Google Drive, iCloud, email, a messaging app, or local storage. From that moment on, the file is covered by the privacy policy of wherever you sent it, not by this one.
 
@@ -49,43 +49,43 @@ Restoring a backup reads the file you pick and replaces the data in the app. Tha
 
 ## Language
 
-Flousey reads your phone's language setting so it can start in the right language. This is read on your device to choose the text you see; it is not stored anywhere else or sent anywhere.
+Spnday reads your phone's language setting so it can start in the right language. This is read on your device to choose the text you see; it is not stored anywhere else or sent anywhere.
 
 ## Deleting your data
 
 You are always in control:
 
 - **Erase all data** in Rules removes your plan, bills, routines and history from the device. This cannot be undone, so export a backup first if you want to keep any of it.
-- **Uninstalling Flousey** removes the app's database from your device along with the app.
+- **Uninstalling Spnday** removes the app's database from your device along with the app.
 
 Because we never receive your data, there is nothing for you to request from us and nothing for us to delete on our side.
 
 ## The app stores
 
-Flousey is distributed through the Apple App Store and Google Play. Those companies may collect their own information about downloads, purchases and crashes under **their** privacy policies, which we do not control. Please see Apple's and Google's privacy policies for what they collect.
+Spnday is distributed through the Apple App Store and Google Play. Those companies may collect their own information about downloads, purchases and crashes under **their** privacy policies, which we do not control. Please see Apple's and Google's privacy policies for what they collect.
 
 ## Children
 
-Flousey is a general-purpose budgeting tool and is not directed at children. It does not knowingly collect information from anyone, of any age, because it does not collect information at all.
+Spnday is a general-purpose budgeting tool and is not directed at children. It does not knowingly collect information from anyone, of any age, because it does not collect information at all.
 
 ## Changes to this policy
 
-**This privacy policy can change.** As Flousey grows, new features may change how it handles data — for example, an optional backup service or optional accounts.
+**This privacy policy can change.** As Spnday grows, new features may change how it handles data — for example, an optional backup service or optional accounts.
 
 When that happens:
 
 - We will update this policy and change the **"Last updated"** date at the top.
 - If a change is significant — particularly anything that would cause data to leave your device — we will make it clear in the app or in the release notes, and any such feature will be **optional and off until you turn it on**.
-- Continuing to use Flousey after a policy update means you accept the updated policy. If you do not agree with a change, you can stop using the app and erase your data as described above.
+- Continuing to use Spnday after a policy update means you accept the updated policy. If you do not agree with a change, you can stop using the app and erase your data as described above.
 
 We will not retroactively change how data you have already entered is handled without telling you.
 
 ## Contact
 
-If you have any question about this policy or about how Flousey handles your data, contact us at:
+If you have any question about this policy or about how Spnday handles your data, contact us at:
 
 **[add your support email address here]**
 
 ---
 
-_Flousey is offline-first by design. Your data stays on your device._
+_Spnday is offline-first by design. Your data stays on your device._

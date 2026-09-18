@@ -71,7 +71,7 @@ export interface Routine {
   enabled: boolean;
 }
 
-/** The languages Flousey speaks. Kept here so domain code never depends on the translation layer. */
+/** The languages Spnday speaks. Kept here so domain code never depends on the translation layer. */
 export type Language = 'en' | 'fr' | 'ar';
 
 /** Which local reminders the user wants. */

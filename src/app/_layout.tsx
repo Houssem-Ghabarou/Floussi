@@ -22,12 +22,12 @@ import { Space, usePalette } from '@/ui/theme';
 import { ToastHost } from '@/ui/toast';
 
 SplashScreen.preventAutoHideAsync();
-// Flousey reads left to right in every language; this also undoes the mirroring older builds set.
+// Spnday reads left to right in every language; this also undoes the mirroring older builds set.
 lockLeftToRight();
 
 const modal = { presentation: 'modal' } as const;
 
-// Links from widgets and reminders (flousey://expense…) open over the tabs, so closing lands on Today.
+// Links from widgets and reminders (spnday://expense…) open over the tabs, so closing lands on Today.
 export const unstable_settings = { anchor: '(tabs)' };
 
 export default function RootLayout() {

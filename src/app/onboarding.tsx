@@ -856,7 +856,7 @@ export default function OnboardingScreen() {
             ) : null}
             <BrandMark size={step === 'welcome' ? 36 : 32} />
             <AppText variant={step === 'welcome' ? 'heading' : 'bodyStrong'} style={styles.brandName}>
-              Flousey
+              Spnday
             </AppText>
           </View>
           {step === 'welcome' ? (

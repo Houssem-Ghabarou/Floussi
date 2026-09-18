@@ -215,7 +215,7 @@ const en = {
   'widget.daysToPayday.one': '{count} day to payday',
   'widget.daysToPayday.other': '{count} days to payday',
   'widget.incomeExpected': 'Income expected',
-  'widget.setUp': 'Open Flousey to set up your plan',
+  'widget.setUp': 'Open Spnday to set up your plan',
   'widget.addExpense': '+ Expense',
   'widget.addMoney': '+ Money',
 
@@ -279,7 +279,7 @@ const en = {
   'today.added': '{name} · {amount} added',
   'today.remindersTitle': 'Want a heads-up before bills are due?',
   'today.remindersBody':
-    "Flousey can remind you the day before a bill, on payday, and when you haven't checked in for a few days. You can change this anytime in Rules.",
+    "Spnday can remind you the day before a bill, on payday, and when you haven't checked in for a few days. You can change this anytime in Rules.",
   'today.remindersTurnOn': 'Turn on reminders',
   'today.remindersOn': 'Reminders are on',
   'today.remindersLater': 'You can turn reminders on anytime in Rules',
@@ -386,12 +386,12 @@ const en = {
   'onb.next.now': 'Next: payments',
   'onb.next.bills': 'Next: protections',
   'onb.next.protect': 'Next: see my plan',
-  'onb.next.plan': 'Enter Flousey today',
+  'onb.next.plan': 'Enter Spnday today',
   'onb.progress': 'Step {step} of {count}',
   'onb.percent': '{percent}% complete',
   'onb.noSignup': 'No sign-up needed',
   'onb.goBack': 'Go back',
-  'onb.logo': 'Flousey logo',
+  'onb.logo': 'Spnday logo',
   'onb.safePaceSoFar': 'Safe pace so far',
   'onb.perDayValue': '{amount}/day',
   'onb.takesMinute': 'Takes about a minute',
@@ -404,7 +404,7 @@ const en = {
   'onb.title': 'Make your money last until your next income.',
   'onb.lead':
     'A calm, manual coach that shows what you can safely spend today — no bank connection, no spreadsheets, no guilt.',
-  'onb.quote': '“Flousey doesn’t move your money or judge your choices. It just keeps you safe until payday.”',
+  'onb.quote': '“Spnday doesn’t move your money or judge your choices. It just keeps you safe until payday.”',
   'onb.feature1Title': 'Start anywhere, even mid-month',
   'onb.feature1Body': 'No past receipts, no clean spreadsheets, no waiting for the 1st of the month.',
   'onb.feature2Title': 'Know your safe daily spend',
@@ -420,7 +420,7 @@ const en = {
   'onb.legendSafe': 'Safe to spend',
   'onb.legendProtected': 'Protected',
   'onb.legendBills': 'Bills',
-  'onb.restore': 'Already use Flousey? Restore a backup',
+  'onb.restore': 'Already use Spnday? Restore a backup',
 
   'onb.nowBadge': 'Zero-judgment starting point',
   'onb.nowTitle': 'Tell us about right now',
@@ -441,7 +441,7 @@ const en = {
   'onb.expectedHint': 'Only used for your summary. We never count money before it arrives.',
   'onb.whyTitle': 'Why this matters',
   'onb.whyBody':
-    'Traditional budgets make you backlog weeks of past coffees. Flousey only cares about the days ahead, and you can correct this number anytime.',
+    'Traditional budgets make you backlog weeks of past coffees. Spnday only cares about the days ahead, and you can correct this number anytime.',
   'onb.firstLook': 'First look at your daily pace',
   'onb.firstLookHint': 'Before bills and savings are protected',
   'onb.perDayFor': '/ day for {days}',
@@ -538,11 +538,11 @@ const en = {
   'privacy.title': 'Privacy',
   'privacy.updated': 'Last updated 16 September 2026',
   'privacy.summary':
-    'Everything you enter — your balance, your spending, your bills and your routines — is stored only on this phone. Flousey has no accounts and no servers, so your data never reaches us and we cannot see it.',
-  'privacy.storedTitle': 'What Flousey stores',
+    'Everything you enter — your balance, your spending, your bills and your routines — is stored only on this phone. Spnday has no accounts and no servers, so your data never reaches us and we cannot see it.',
+  'privacy.storedTitle': 'What Spnday stores',
   'privacy.storedBody':
     'The money you have available and the corrections you make, your expenses and the money you receive, your bills and their due dates, your routines, and your settings: currency, next income date, savings target, minimum balance, language, reminders and widget choices.',
-  'privacy.neverTitle': 'What Flousey never does',
+  'privacy.neverTitle': 'What Spnday never does',
   'privacy.neverBody':
     'No account, no sign-up, no password. No servers and nothing uploaded. No bank connection, and it never asks for banking credentials. No tracking, no analytics, no advertising. The app does not contact the internet while you use it.',
   'privacy.remindersTitle': 'Reminders and the widget',
@@ -553,13 +553,13 @@ const en = {
     'Exporting a backup is the one time your data can leave the app, and you choose where it goes. From that moment the file is covered by wherever you sent it — Drive, email, anywhere else. It holds your financial history in readable form, so treat it like a bank statement.',
   'privacy.deleteTitle': 'Deleting your data',
   'privacy.deleteBody':
-    'Erase all data in Rules removes your plan, bills, routines and history from this phone, and cannot be undone. Uninstalling Flousey removes its database along with it. Because we never receive your data, there is nothing for us to delete on our side.',
+    'Erase all data in Rules removes your plan, bills, routines and history from this phone, and cannot be undone. Uninstalling Spnday removes its database along with it. Because we never receive your data, there is nothing for us to delete on our side.',
   'privacy.storesTitle': 'The app stores',
   'privacy.storesBody':
-    'Flousey is distributed through the App Store and Google Play. Those companies may collect their own information about downloads and crashes, under their own privacy policies, which we do not control.',
+    'Spnday is distributed through the App Store and Google Play. Those companies may collect their own information about downloads and crashes, under their own privacy policies, which we do not control.',
   'privacy.changesTitle': 'This policy can change',
   'privacy.changesBody':
-    'As Flousey grows, new features may change how it handles data. When that happens we update this page and the date above, and anything that would send data off your phone stays optional and off until you turn it on.',
+    'As Spnday grows, new features may change how it handles data. When that happens we update this page and the date above, and anything that would send data off your phone stays optional and off until you turn it on.',
   'privacy.contactTitle': 'Questions',
   'privacy.contactBody': 'If anything here is unclear, get in touch at {email}.',
 
@@ -600,8 +600,8 @@ const en = {
   'rules.unspentHint': 'Spreads over the coming days',
   'rules.reminders': 'Reminders',
   'rules.remindersSubtitle': 'Local notifications, scheduled on this phone',
-  'rules.notificationsOff': 'Notifications are off for Flousey, so these reminders stay silent.',
-  'rules.notificationsBlocked': 'Notifications are blocked for Flousey in your phone settings.',
+  'rules.notificationsOff': 'Notifications are off for Spnday, so these reminders stay silent.',
+  'rules.notificationsBlocked': 'Notifications are blocked for Spnday in your phone settings.',
   'rules.reminderBill': 'Bill due tomorrow',
   'rules.reminderBillHint': '9:00 the day before a bill is due',
   'rules.reminderPayday': 'Payday',
@@ -609,13 +609,13 @@ const en = {
   'rules.reminderCheckIn': 'Evening check-in',
   'rules.reminderCheckInOn': 'Every day at {time}',
   'rules.reminderCheckInOff': 'A calm daily nudge to look at your day',
-  'rules.reminderInactivity': "When you haven't opened Flousey",
+  'rules.reminderInactivity': "When you haven't opened Spnday",
   'rules.reminderInactivityOff': 'Not needed while the daily check-in is on',
   'rules.reminderInactivityOn': 'After 3 days, at 19:00',
   'rules.widget': 'Home screen widget',
   'rules.hideAmounts': 'Hide amounts',
   'rules.hideAmountsHint': 'Show ••• instead of your money on the widget',
-  'rules.widgetHint': 'To add it, touch and hold an empty spot on your home screen, then choose Widgets → Flousey.',
+  'rules.widgetHint': 'To add it, touch and hold an empty spot on your home screen, then choose Widgets → Spnday.',
   'rules.backup': 'Backup',
   'rules.backupHint':
     'Your data lives only on this phone. Export a backup regularly and keep it somewhere safe (Drive, email…).',
@@ -646,7 +646,7 @@ const en = {
   'nav.addExpense': 'Add an expense',
   'header.today': 'Today, {date}',
   'header.statusHint': 'How your safe amount is calculated',
-  'header.logo': 'Flousey logo',
+  'header.logo': 'Spnday logo',
 
   // Activity
   'activity.title': 'All activity',
@@ -805,7 +805,7 @@ const en = {
   'balance.question': 'What does your account show?',
   'balance.intro':
     'Manual tracking drifts: a forgotten taxi, cash given to family. Enter what you really have and we’ll record the difference so your plan matches reality.',
-  'balance.thought': 'Flousey thought you had',
+  'balance.thought': 'Spnday thought you had',
   'balance.less': '{amount} will be recorded as untracked spending.',
   'balance.more': '{amount} more than expected. It will be recorded as a balance correction.',
   'balance.match': 'That matches. Nothing to change.',
@@ -1021,21 +1021,21 @@ const en = {
 
   // Language
   'language.section': 'Language',
-  'language.followsPhone': "Flousey follows your phone's language until you pick one here.",
-  'language.restartTitle': 'Restart Flousey to finish',
+  'language.followsPhone': "Spnday follows your phone's language until you pick one here.",
+  'language.restartTitle': 'Restart Spnday to finish',
   'language.restartMessage':
-    'Arabic reads right to left. Close Flousey and open it again so the whole app follows.',
+    'Arabic reads right to left. Close Spnday and open it again so the whole app follows.',
 
   // Notifications channel (Android settings)
   'notifications.channelName': 'Reminders',
   'notifications.channelDescription': 'Bills due, payday and check-ins',
 
   // Backup flows
-  'backup.shareTitle': 'Save your Flousey backup',
+  'backup.shareTitle': 'Save your Spnday backup',
   'backup.createError.title': "Couldn't create the backup",
   'backup.createError.body': 'Please try again.',
   'backup.pickError.title': "Couldn't open that file",
-  'backup.pickError.body': 'Pick a Flousey backup file (.json).',
+  'backup.pickError.body': 'Pick a Spnday backup file (.json).',
   'backup.restoreError.title': "Couldn't restore",
   'backup.replaceTitle': 'Replace your data?',
   'backup.replaceMessage': 'Everything currently on this phone will be replaced.',
@@ -1045,8 +1045,8 @@ const en = {
   'backup.restored': 'Backup restored',
 
   // Backups
-  'backup.notOurs': "This file isn't a Flousey backup.",
-  'backup.newerVersion': 'This backup was made by a newer version of Flousey. Update the app and try again.',
+  'backup.notOurs': "This file isn't a Spnday backup.",
+  'backup.newerVersion': 'This backup was made by a newer version of Spnday. Update the app and try again.',
   'backup.damaged': 'The backup looks damaged ({what}).',
   'backup.part.exportDate': 'export date',
   'backup.part.settings': 'settings',

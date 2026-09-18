@@ -11,7 +11,7 @@ import { I18nManager } from 'react-native';
 import type { Language } from '@/domain/types';
 import { LANGUAGES, setLanguage } from '@/i18n';
 
-/** The first language of the phone that Flousey speaks, English otherwise. */
+/** The first language of the phone that Spnday speaks, English otherwise. */
 export function deviceLanguage(): Language {
   for (const locale of getLocales()) {
     const code = locale.languageCode;

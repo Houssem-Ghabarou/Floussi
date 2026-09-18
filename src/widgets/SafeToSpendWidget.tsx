@@ -52,16 +52,16 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
 
   if (family === 'accessoryInline') {
     return (
-      <Text modifiers={[widgetURL('flousey://')]}>
-        {props.ready ? `${props.amount} ${props.currency} ${props.caption}` : 'Flousey'}
+      <Text modifiers={[widgetURL('spnday://')]}>
+        {props.ready ? `${props.amount} ${props.currency} ${props.caption}` : 'Spnday'}
       </Text>
     );
   }
 
   if (family === 'accessoryRectangular') {
     return (
-      <VStack alignment="leading" spacing={1} modifiers={[containerBackground('clear', 'widget'), widgetURL('flousey://')]}>
-        <Text modifiers={[font({ size: 11, weight: 'semibold' })]}>{props.ready ? props.label : 'FLOUSEY'}</Text>
+      <VStack alignment="leading" spacing={1} modifiers={[containerBackground('clear', 'widget'), widgetURL('spnday://')]}>
+        <Text modifiers={[font({ size: 11, weight: 'semibold' })]}>{props.ready ? props.label : 'SPNDAY'}</Text>
         <Text modifiers={[font({ size: 20, weight: 'bold' }), lineLimit(1), minimumScaleFactor(0.6)]}>
           {props.ready ? `${props.amount} ${props.currency}` : props.caption}
         </Text>
@@ -70,12 +70,12 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
     );
   }
 
-  const card = [containerBackground(colors.background, 'widget'), widgetURL('flousey://')];
+  const card = [containerBackground(colors.background, 'widget'), widgetURL('spnday://')];
 
   if (!props.ready) {
     return (
       <VStack alignment="leading" spacing={4} modifiers={[...card, fill]}>
-        <Text modifiers={[font({ size: 17, weight: 'bold' }), foregroundStyle(colors.text)]}>Flousey</Text>
+        <Text modifiers={[font({ size: 17, weight: 'bold' }), foregroundStyle(colors.text)]}>Spnday</Text>
         <Text modifiers={[font({ size: 13, weight: 'medium' }), foregroundStyle(colors.secondary)]}>{props.caption}</Text>
       </VStack>
     );
@@ -124,7 +124,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
         <Text modifiers={[font({ size: 11, weight: 'medium' }), foregroundStyle(colors.muted), lineLimit(1), minimumScaleFactor(0.7)]}>
           {props.balance}
         </Text>
-        <Link destination="flousey://expense">
+        <Link destination="spnday://expense">
           <Text
             modifiers={[
               font({ size: 13, weight: 'bold' }),
@@ -136,7 +136,7 @@ const SafeToSpendWidget = (props: WidgetProps, environment: WidgetEnvironment) =
             {props.addExpense}
           </Text>
         </Link>
-        <Link destination="flousey://income">
+        <Link destination="spnday://income">
           <Text
             modifiers={[
               font({ size: 13, weight: 'bold' }),

@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Flousey",
-    "slug": "flousey",
-    "description": "Flousey: know what you can safely spend every day until your next income.",
+    "name": "Spnday",
+    "slug": "spnday",
+    "description": "Spnday: what you can safely spend today, every day until your next income.",
     "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "flousey",
+    "scheme": "spnday",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.houssemgh.Flousey",
+      "bundleIdentifier": "com.spnday.app",
       "buildNumber": "17",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -24,7 +24,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.houssemgh.Flousey",
+      "package": "com.spnday.app",
       "versionCode": 17
     },
     "web": {
@@ -65,8 +65,8 @@
       [
         "expo-widgets",
         {
-          "bundleIdentifier": "com.houssemgh.Flousey.widgets",
-          "groupIdentifier": "group.com.houssemgh.Flousey",
+          "bundleIdentifier": "com.spnday.app.widgets",
+          "groupIdentifier": "group.com.spnday.app",
           "widgets": [
             {
               "name": "SafeToSpend",
@@ -94,7 +94,7 @@
           "widgets": [
             {
               "name": "SafeToSpend",
-              "label": "Flousey · Safe to spend",
+              "label": "Spnday · Safe to spend",
               "description": "What you can safely spend today, with quick actions.",
               "minWidth": "150dp",
               "minHeight": "110dp",
