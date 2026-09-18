@@ -533,6 +533,36 @@ const en = {
   'day.next': 'Next day',
 
   // Rules screen
+  // Privacy policy
+  'privacy.open': 'Privacy policy',
+  'privacy.title': 'Privacy',
+  'privacy.updated': 'Last updated 16 September 2026',
+  'privacy.summary':
+    'Everything you enter — your balance, your spending, your bills and your routines — is stored only on this phone. Flousey has no accounts and no servers, so your data never reaches us and we cannot see it.',
+  'privacy.storedTitle': 'What Flousey stores',
+  'privacy.storedBody':
+    'The money you have available and the corrections you make, your expenses and the money you receive, your bills and their due dates, your routines, and your settings: currency, next income date, savings target, minimum balance, language, reminders and widget choices.',
+  'privacy.neverTitle': 'What Flousey never does',
+  'privacy.neverBody':
+    'No account, no sign-up, no password. No servers and nothing uploaded. No bank connection, and it never asks for banking credentials. No tracking, no analytics, no advertising. The app does not contact the internet while you use it.',
+  'privacy.remindersTitle': 'Reminders and the widget',
+  'privacy.remindersBody':
+    'Reminders are scheduled on this phone and their text is written here, so there is no push server and nothing is sent anywhere. The home screen widget reads the same local data. If you would rather not show money there, turn on Hide amounts in Rules.',
+  'privacy.backupsTitle': 'Backups',
+  'privacy.backupsBody':
+    'Exporting a backup is the one time your data can leave the app, and you choose where it goes. From that moment the file is covered by wherever you sent it — Drive, email, anywhere else. It holds your financial history in readable form, so treat it like a bank statement.',
+  'privacy.deleteTitle': 'Deleting your data',
+  'privacy.deleteBody':
+    'Erase all data in Rules removes your plan, bills, routines and history from this phone, and cannot be undone. Uninstalling Flousey removes its database along with it. Because we never receive your data, there is nothing for us to delete on our side.',
+  'privacy.storesTitle': 'The app stores',
+  'privacy.storesBody':
+    'Flousey is distributed through the App Store and Google Play. Those companies may collect their own information about downloads and crashes, under their own privacy policies, which we do not control.',
+  'privacy.changesTitle': 'This policy can change',
+  'privacy.changesBody':
+    'As Flousey grows, new features may change how it handles data. When that happens we update this page and the date above, and anything that would send data off your phone stays optional and off until you turn it on.',
+  'privacy.contactTitle': 'Questions',
+  'privacy.contactBody': 'If anything here is unclear, get in touch at {email}.',
+
   'rules.title': 'Plan rules',
   'rules.subtitle': 'Everything that shapes your safe pace.',
   'rules.nextIncome': 'Next income',

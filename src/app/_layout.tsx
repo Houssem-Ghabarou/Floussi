@@ -124,6 +124,8 @@ export default function RootLayout() {
           <Stack.Protected guard={!onboarded}>
             <Stack.Screen name="onboarding" />
           </Stack.Protected>
+          {/* Outside both guards: the policy is reachable from onboarding as well as from Rules. */}
+          <Stack.Screen name="privacy" options={modal} />
         </Stack>
         <ToastHost />
         <DialogHost />

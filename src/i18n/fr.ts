@@ -536,6 +536,36 @@ const fr: Catalog = {
   'day.next': 'Jour suivant',
 
   // Rules screen
+  // Privacy policy
+  'privacy.open': 'Confidentialité',
+  'privacy.title': 'Confidentialité',
+  'privacy.updated': 'Mise à jour le 16 septembre 2026',
+  'privacy.summary':
+    'Tout ce que tu saisis — ton solde, tes dépenses, tes factures et tes routines — est stocké uniquement sur ce téléphone. Flousey n’a ni compte ni serveur : tes données ne nous parviennent jamais et nous ne pouvons pas les voir.',
+  'privacy.storedTitle': 'Ce que Flousey enregistre',
+  'privacy.storedBody':
+    'L’argent dont tu disposes et tes corrections de solde, tes dépenses et l’argent que tu reçois, tes factures et leurs échéances, tes routines, et tes réglages : devise, prochaine rentrée, objectif d’épargne, solde minimum, langue, rappels et options du widget.',
+  'privacy.neverTitle': 'Ce que Flousey ne fait jamais',
+  'privacy.neverBody':
+    'Aucun compte, aucune inscription, aucun mot de passe. Aucun serveur et rien d’envoyé. Aucune connexion bancaire, et jamais de demande d’identifiants bancaires. Aucun suivi, aucune analyse, aucune publicité. L’application ne contacte pas Internet pendant que tu l’utilises.',
+  'privacy.remindersTitle': 'Rappels et widget',
+  'privacy.remindersBody':
+    'Les rappels sont planifiés sur ce téléphone et leur texte y est écrit : aucun serveur de notifications, rien n’est envoyé ailleurs. Le widget lit les mêmes données locales. Si tu préfères ne pas y afficher d’argent, active Masquer les montants dans Règles.',
+  'privacy.backupsTitle': 'Sauvegardes',
+  'privacy.backupsBody':
+    'Exporter une sauvegarde est le seul moment où tes données peuvent quitter l’application, et c’est toi qui choisis la destination. À partir de là, le fichier dépend de l’endroit où tu l’as envoyé — Drive, e-mail ou autre. Il contient ton historique financier en clair : traite-le comme un relevé bancaire.',
+  'privacy.deleteTitle': 'Effacer tes données',
+  'privacy.deleteBody':
+    'Effacer toutes les données dans Règles supprime ton plan, tes factures, tes routines et ton historique de ce téléphone, sans retour possible. Désinstaller Flousey supprime aussi sa base de données. Comme nous ne recevons jamais tes données, nous n’avons rien à effacer de notre côté.',
+  'privacy.storesTitle': 'Les magasins d’applications',
+  'privacy.storesBody':
+    'Flousey est distribué via l’App Store et Google Play. Ces sociétés peuvent collecter leurs propres informations sur les téléchargements et les plantages, selon leurs propres politiques de confidentialité, que nous ne contrôlons pas.',
+  'privacy.changesTitle': 'Cette politique peut changer',
+  'privacy.changesBody':
+    'À mesure que Flousey évolue, de nouvelles fonctions peuvent changer sa façon de traiter les données. Le cas échéant, nous mettons à jour cette page et la date ci-dessus, et tout ce qui ferait sortir des données de ton téléphone restera facultatif et désactivé tant que tu ne l’actives pas.',
+  'privacy.contactTitle': 'Des questions',
+  'privacy.contactBody': 'Si quelque chose n’est pas clair, écris-nous à {email}.',
+
   'rules.title': 'Règles du plan',
   'rules.subtitle': 'Tout ce qui façonne ton rythme sûr.',
   'rules.nextIncome': 'Prochaine rentrée',

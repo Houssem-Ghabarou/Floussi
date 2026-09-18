@@ -355,6 +355,7 @@ export default function OnboardingScreen() {
           </View>
 
           <Button label={t('onb.restore')} variant="ghost" onPress={restore} />
+          <Button label={t('privacy.open')} variant="ghost" onPress={() => router.push('/privacy')} />
         </>
       );
       break;

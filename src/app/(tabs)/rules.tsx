@@ -372,6 +372,13 @@ export default function RulesScreen() {
         <AppText variant="caption" tone="muted">
           {t('rules.privacy')}
         </AppText>
+        <Button
+          label={t('privacy.open')}
+          icon="lock"
+          variant="secondary"
+          compact
+          onPress={() => router.push('/privacy')}
+        />
         <Button label={t('rules.eraseAll')} variant="danger" compact onPress={confirmReset} />
       </Card>
     </TabScreen>
